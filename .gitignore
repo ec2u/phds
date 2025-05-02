@@ -4,5 +4,7 @@
 
 /text.*
 
+node_modules/
+
 *~
 ~*
