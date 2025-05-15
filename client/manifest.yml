@@ -1,0 +1,20 @@
+modules:
+  macro:
+    - key: ec2u-phds
+      title: EC2U PhD Agreements Tool
+      description: EC2U AI-based Confluence macro supporting drafting of cotutelle PhD agreements.
+      resource: main
+      render: native
+      resolver:
+        function: resolver
+  function:
+    - key: resolver
+      handler: index.handler
+resources:
+  - key: main
+    path: src/frontend/index.jsx
+app:
+  id: ari:cloud:ecosystem::app/ac772441-2e1c-499a-98a0-25573be5c142
+  runtime:
+    name: nodejs22.x
+

@@ -1,0 +1,32 @@
+{
+  "private": true,
+  "name": "@ec2u/phds",
+  "description": "EC2U PhD Agreements Tool Confluence plugin",
+  "homepage": "https://github.com/ec2u/phds",
+  "repository": "github:ec2u/phds",
+  "bugs": {
+    "url": "https://github.com/ec2u/phds/issues",
+    "email": "cc@ml.ec2u.eu"
+  },
+  "license": "Apache-2.0",
+  "author": {
+    "name": "EC2U Connect Centre",
+    "email": "cc@ml.ec2u.eu",
+    "url": "https://www.ec2u.eu/"
+  },
+  "main": "index.js",
+  "scripts": {
+    "clean": "rm -rf node_modules",
+    "setup": "npm install --legacy-peer-deps",
+    "start": "forge tunnel"
+  },
+  "dependencies": {
+    "@forge/bridge": "^4.5.2",
+    "@forge/react": "^11.2.1",
+    "@forge/resolver": "^1.6.10",
+    "react": "^18.2.0"
+  },
+  "devDependencies": {
+    "@forge/cli": "^11.4.0"
+  }
+}
