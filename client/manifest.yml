@@ -5,6 +5,7 @@ modules:
       description: EC2U AI-based Confluence macro supporting drafting of cotutelle PhD agreements.
       resource: main
       render: native
+      layout: bodied
       resolver:
         function: resolver
   function:
