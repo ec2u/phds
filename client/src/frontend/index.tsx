@@ -1,5 +1,15 @@
 import { invoke } from "@forge/bridge";
-import ForgeReconciler, { AdfRenderer, CodeBlock, useConfig, useProductContext } from "@forge/react";
+import ForgeReconciler, {
+	AdfRenderer,
+	Box,
+	CodeBlock,
+	Tab,
+	TabList,
+	TabPanel,
+	Tabs,
+	useConfig,
+	useProductContext
+} from "@forge/react";
 import React, { useEffect, useState } from "react";
 
 function Macro() {
@@ -15,13 +25,34 @@ function Macro() {
 		invoke<string>("getText", { example: "my-invoke-variable" }).then(setData);
 	}, []);
 
-	return <>
 
-		<CodeBlock language="json" text={JSON.stringify(config, null, 2)}/>
+	return <Tabs id="default">
 
-		{macroBody && <AdfRenderer document={macroBody}/>}
+		<TabList>
+			<Tab>Text</Tab>
+			<Tab>Configuration</Tab>
+			<Tab>Lorem Ipsum</Tab>
+		</TabList>
 
-	</>;
+		<TabPanel>
+			<Box padding="space.300">
+				{macroBody && <AdfRenderer document={macroBody}/>}
+			</Box>
+		</TabPanel>
+
+		<TabPanel>
+			<Box padding="space.300">
+				<CodeBlock language="json" text={JSON.stringify(config, null, 2)}/>
+			</Box>
+		</TabPanel>
+
+		<TabPanel>
+			<Box padding="space.300">
+				This is the content area of the third tab.
+			</Box>
+		</TabPanel>
+
+	</Tabs>;
 }
 
 
