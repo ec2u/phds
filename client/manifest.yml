@@ -12,7 +12,7 @@ modules:
       handler: index.handler
 resources:
   - key: main
-    path: src/frontend/index.jsx
+    path: src/frontend/index.tsx
 app:
   id: ari:cloud:ecosystem::app/ac772441-2e1c-499a-98a0-25573be5c142
   runtime:
