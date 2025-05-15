@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package main.java.eu.ec2u.phds;
+package eu.ec2u.phds;
 
 import com.metreeca.flow.Locator;
 import com.metreeca.flow.gcp.GCPServer;
