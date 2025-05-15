@@ -69,13 +69,17 @@ function Config() {
 	return <Stack space="space.200">
 
 		<Label labelFor="myField">Config field:</Label>
+
 		<Textfield id="myField" value={value} onChange={(e) => setValue(e.target.value)}/>
+
 		<Button appearance="subtle" onClick={() => view.close()}>
 			Close
 		</Button>
+
 		<Button appearance="primary" onClick={() => submit({ myField: value })}>
 			Submit
 		</Button>
+
 		{typeof error !== "undefined" &&
             <SectionMessage appearance={error ? "error" : "success"}>{message}</SectionMessage>}
 

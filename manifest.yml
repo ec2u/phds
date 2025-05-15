@@ -18,7 +18,7 @@ modules:
 
         resource: macro-config
         render: native
-        viewportSize: small
+        viewportSize: max
         title: EC2U PhD Agreements Tool
 
   function:
