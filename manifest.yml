@@ -24,15 +24,15 @@ modules:
   function:
 
     - key: resolver
-      handler: index.handler
+      handler: main/typescript/index.handler
 
 resources:
 
   - key: main
-    path: src/frontend/index.tsx
+    path: src/main/typescript/frontend/index.tsx
 
   - key: macro-config
-    path: src/frontend/config.tsx
+    path: src/main/typescript/frontend/config.tsx
 
 app:
   id: ari:cloud:ecosystem::app/ac772441-2e1c-499a-98a0-25573be5c142

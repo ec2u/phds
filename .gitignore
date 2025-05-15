@@ -4,5 +4,8 @@
 
 /phds.*
 
+/node_modules/
+/target/
+
 *~
 ~*
