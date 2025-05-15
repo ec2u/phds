@@ -37,3 +37,38 @@ jobs:
           mvn --batch-mode --update-snapshots
           -Drevision=${{ github.ref_name }}
           deploy
+  
+
+  build-and-deploy:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - uses: actions/checkout@v4
+      - name: Set up node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Forge CLI
+        run: npm install -g @forge/cli
+
+      - name: Authenticate with Forge
+        run: |
+          echo "${{ secrets.FORGE_EMAIL }}" > ~/.forge-email
+          echo "${{ secrets.FORGE_API_TOKEN }}" > ~/.forge-token
+
+      - name: Build app
+        run: forge lint && forge build
+
+      - name: Deploy to development
+        if: github.ref == 'refs/heads/next'
+        run: forge deploy --environment=development --non-interactive
+
+      - name: Deploy to production
+        if: github.ref == 'refs/heads/main'
+        run: forge deploy --environment=production --non-interactive
