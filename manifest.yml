@@ -16,10 +16,11 @@ modules:
 
       config:
 
+        title: EC2U PhD Agreements Tool
         resource: macro-config
         render: native
         viewportSize: max
-        title: EC2U PhD Agreements Tool
+        openOnInsert: false
 
   function:
 

@@ -14,8 +14,19 @@
  * limitations under the License.
  */
 
-import { view } from "@forge/bridge";
-import ForgeReconciler, { Button, Label, SectionMessage, Stack, Textfield, useConfig } from "@forge/react";
+import { invoke, view } from "@forge/bridge";
+import ForgeReconciler, {
+	AdfRenderer,
+	Box,
+	Button,
+	Inline,
+	SectionMessage,
+	Stack,
+	Textfield,
+	useConfig,
+	useProductContext,
+	xcss
+} from "@forge/react";
 import React, { useEffect, useState } from "react";
 
 const useSubmit=() => {
@@ -34,7 +45,7 @@ const useSubmit=() => {
 			setError(false);
 			setMessage(`Submitted successfully.`);
 
-		} catch ( error: any ) { // error type
+		} catch ( error: any ) { // !!! error type
 
 			setError(true);
 			setMessage(`${error.code}: ${error.message}`);
@@ -56,34 +67,61 @@ function Config() {
 	const [value, setValue]=useState("");
 	const config=useConfig();
 
+
+	const context=useProductContext();
+	const macroBody=context?.extension?.macro?.body;
+
+
 	const {
 		error,
 		message,
 		submit
 	}=useSubmit();
 
+	// useEffect(() => {
+	// 	setValue(config?.myField);
+	// }, [config?.myField]);
+
+
 	useEffect(() => {
-		setValue(config?.myField);
-	}, [config?.myField]);
+		invoke<string>("getText", { example: "my-invoke-variable" }).then(setValue);
+	}, []);
 
-	return <Stack space="space.200">
 
-		<Label labelFor="myField">Config field:</Label>
+	return <Inline shouldWrap={false} alignBlock={"stretch"} grow={"fill"}>
 
-		<Textfield id="myField" value={value} onChange={(e) => setValue(e.target.value)}/>
+		{macroBody && <AdfRenderer document={macroBody}/>}
 
-		<Button appearance="subtle" onClick={() => view.close()}>
-			Close
-		</Button>
+		<Box xcss={xcss({
 
-		<Button appearance="primary" onClick={() => submit({ myField: value })}>
-			Submit
-		</Button>
+			backgroundColor: "color.background.accent.purple.subtlest",
+			padding: "space.200",
+			borderColor: "color.border.discovery",
+			borderWidth: "border.width",
+			borderStyle: "solid",
+			borderRadius: "border.radius",
+			width: "240px",
+			minHeight: "100%"
 
-		{typeof error !== "undefined" &&
-            <SectionMessage appearance={error ? "error" : "success"}>{message}</SectionMessage>}
+		})}>
 
-	</Stack>;
+			<Stack space="space.200" grow={"fill"}>
+
+				<Textfield id="myField" value={value} onChange={(e) => setValue(e.target.value)}/>
+
+				<Button appearance="primary" onClick={() => submit({ myField: value })}>
+					Submit
+				</Button>
+
+				{typeof error !== "undefined" &&
+                    <SectionMessage appearance={error ? "error" : "success"}>{message}</SectionMessage>}
+
+			</Stack>
+
+
+		</Box>
+
+	</Inline>;
 
 }
 
