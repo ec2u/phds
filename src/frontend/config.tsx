@@ -17,17 +17,16 @@
 import { invoke, view } from "@forge/bridge";
 import ForgeReconciler, {
 	AdfRenderer,
-	Box,
 	Button,
 	ButtonGroup,
 	EmptyState,
 	Inline,
 	Select,
-	Stack,
 	useConfig,
 	useProductContext
 } from "@forge/react";
 import React, { useEffect, useState } from "react";
+import { ToolPanel } from "./tiles/panel";
 
 const useSubmit=() => {
 
@@ -88,44 +87,56 @@ function Config() {
 	}, []);
 
 
-	return <Inline shouldWrap={false} alignBlock={"stretch"} grow={"fill"}>
+	return <Inline shouldWrap={false} alignBlock={"stretch"} grow={"fill"} space={"space.400"}>
 
-		<Box xcss={{ width: "50%" }}>
+		<ToolPanel
 
-			<Stack grow={"fill"} space={"space.050"} alignInline={"stretch"}>
+			menu={
+				<ButtonGroup>
+					<Button>Agreement</Button>
+					<Button>References</Button>
+				</ButtonGroup>
+			}
 
-				<Box xcss={{ flexGrow: 0 }}>
-					<Inline>
+			more={
+				<Select isRequired={true} defaultValue={{ label: "English", "value": "en" }}
+					spacing={"compact"} options={[
+					{ label: "Deutsch", value: "de" },       // German
+					{ label: "English", value: "en" },       // English
+					{ label: "Español", value: "es" },       // Spanish
+					{ label: "Français", value: "fr" },      // French
+					{ label: "Italiano", value: "it" },      // Italian
+					{ label: "Português", value: "pt" },     // Portuguese
+					{ label: "Română", value: "ro" },        // Romanian
+					{ label: "Suomi", value: "fi" },         // Finnish
+					{ label: "Svenska", value: "sv" }        // Swedish
+				]}/>
+			}
 
-						<Box xcss={{ flexGrow: 1 }}>
-							<ButtonGroup>
-								<Button>Agreement</Button>
-								<Button>References</Button>
-							</ButtonGroup>
-						</Box>
+		>
 
-						<Box>
-							<Select isRequired={true} defaultValue={{ label: "English", "value": "en" }}
-								spacing={"compact"} options={[
-								{ label: "English", "value": "en" },
-								{ label: "Finnish", "value": "fi" }
-							]}/>
-						</Box>
+			{macroBody && <AdfRenderer document={macroBody}/>}
 
-					</Inline>
-				</Box>
+		</ToolPanel>
 
-				<Box xcss={{ flexGrow: 1 }}>{macroBody && <AdfRenderer document={macroBody}/>}</Box>
+		<ToolPanel
 
-			</Stack>
+			menu={
+				<ButtonGroup>
+					<Button>Highlights</Button>
+					<Button isDisabled={true}>Chat</Button>
+				</ButtonGroup>
+			}
 
-		</Box>
+			more={
+				<Button>Reset</Button>
+			}
 
-		<Box xcss={{ width: "50%" }}>
+		>
 
 			<EmptyState header={"Chat Area"}/>
 
-		</Box>
+		</ToolPanel>
 
 	</Inline>;
 
