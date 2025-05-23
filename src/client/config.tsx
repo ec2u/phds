@@ -21,13 +21,18 @@ import ForgeReconciler, {
 	ButtonGroup,
 	EmptyState,
 	Inline,
+	List,
+	ListItem,
 	Select,
+	Stack,
+	Text,
 	useConfig,
 	useProductContext
 } from "@forge/react";
 import React, { useEffect, useState } from "react";
 import getText from "./ports/text";
-import { ToolPanel } from "./tiles/panel";
+import ToolIssue from "./tiles/issue";
+import ToolPanel from "./tiles/panel";
 
 const useSubmit=() => {
 
@@ -64,8 +69,12 @@ const useSubmit=() => {
 
 function Config() {
 
-	const [value, setValue]=useState("");
 	const config=useConfig();
+
+	const [mode, setMode]=useState<string>("agreement");
+
+	const [value, setValue]=useState("");
+	// const [json, setJSON]=useState<any>();
 
 
 	const context=useProductContext();
@@ -84,8 +93,25 @@ function Config() {
 
 
 	useEffect(() => {
-		getText({ name: "babbo" }).then(setValue);
+		getText({ name: "!!!" }).then(setValue);
 	}, []);
+
+	// useEffect(() => {
+	// 	listAttachments().then(setJSON);
+	// }, []);
+
+
+	function doShowAgreement() {
+		setMode("agreement");
+	}
+
+	function doShowReferences() {
+		setMode("references");
+	}
+
+	function doShowReference(id: string) {
+		setMode(id);
+	}
 
 
 	return <Inline shouldWrap={false} alignBlock={"stretch"} grow={"fill"} space={"space.400"}>
@@ -94,8 +120,10 @@ function Config() {
 
 			menu={
 				<ButtonGroup>
-					<Button>Agreement</Button>
-					<Button>References</Button>
+					<Button appearance={mode === "agreement" ? "primary" : "default"}
+						onClick={doShowAgreement}>Agreement</Button>
+					<Button appearance={mode === "references" ? "primary" : "default"}
+						onClick={doShowReferences}>References</Button>
 				</ButtonGroup>
 			}
 
@@ -114,17 +142,36 @@ function Config() {
 				]}/>
 			}
 
-		>
+		>{
 
-			{macroBody && <AdfRenderer document={macroBody}/>}
+			mode === "agreement" ? macroBody && <AdfRenderer document={macroBody}/>
 
-		</ToolPanel>
+				: mode === "references" ? <List type={"unordered"}>
+						<ListItem><Button appearance={"subtle"} onClick={() => doShowReference("")}>Caesiums sunt urias de
+							salvus clinias. </Button></ListItem>
+						<ListItem><Button appearance={"subtle"} onClick={() => doShowReference("")}>Ausus de regius ventus,
+							promissio decor.</Button></ListItem>
+						<ListItem><Button appearance={"subtle"} onClick={() => doShowReference("")}>Raptus torquis saepe
+							prensionems clabulare est.</Button></ListItem>
+						<ListItem><Button appearance={"subtle"} onClick={() => doShowReference("")}>Ire interdum ducunt ad
+							clemens tumultumque.</Button></ListItem>
+					</List>
+
+					: <Text>Est placidus amor, cesaris. Cum lacta velum, omnes glutenes manifestum placidus, magnum
+						plasmatores.
+						Albus, ferox galluss cito locus de mirabilis, rusticus ventus.
+						Domesticus, fortis bursas aegre amor de grandis, bassus lumen.
+						Cum frondator crescere, omnes gloses demitto bi-color, grandis accentores.
+						Cum competition crescere, omnes nuptiaes pugna audax, ferox messores.
+						monss congregabo.</Text>
+
+		}</ToolPanel>
 
 		<ToolPanel
 
 			menu={
 				<ButtonGroup>
-					<Button>Highlights</Button>
+					<Button>Issues</Button>
 					<Button isDisabled={true}>Chat</Button>
 				</ButtonGroup>
 			}
@@ -135,7 +182,18 @@ function Config() {
 
 		>
 
-			<EmptyState header={value}/>
+			<Stack space={"space.200"}>
+
+				<ToolIssue/>
+				<ToolIssue/>
+				<ToolIssue/>
+				<ToolIssue/>
+
+				<EmptyState header={value}/>
+
+			</Stack>
+
+			{/* <CodeBlock language={"json"} text={JSON.stringify(json, null, 4)}/> */}
 
 		</ToolPanel>
 

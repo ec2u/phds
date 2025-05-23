@@ -42,8 +42,5 @@ app:
 
 permissions:
   scopes:
-    - read:confluence-content.summary
-    - read:confluence-content.all
-    - write:confluence-content
     - read:attachment:confluence
-    - write:attachment:confluence
+    - delete:attachment:confluence

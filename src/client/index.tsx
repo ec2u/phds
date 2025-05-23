@@ -27,6 +27,7 @@ import ForgeReconciler, {
 	useProductContext
 } from "@forge/react";
 import React, { useEffect, useState } from "react";
+import listAttachments from "./ports/attachments";
 
 function Macro() {
 
@@ -36,9 +37,14 @@ function Macro() {
 	const macroBody=context?.extension?.macro?.body;
 
 	const [data, setData]=useState<string>();
+	const [json, setJSON]=useState<any>();
 
 	useEffect(() => {
 		invoke<string>("getText", { example: "my-invoke-variable" }).then(setData);
+	}, []);
+
+	useEffect(() => {
+		listAttachments().then(setJSON);
 	}, []);
 
 
@@ -47,7 +53,7 @@ function Macro() {
 		<TabList>
 			<Tab>Text</Tab>
 			<Tab>Configuration</Tab>
-			<Tab>Lorem Ipsum</Tab>
+			<Tab>Attachments</Tab>
 		</TabList>
 
 		<TabPanel>
@@ -63,9 +69,7 @@ function Macro() {
 		</TabPanel>
 
 		<TabPanel>
-			<Box padding="space.300">
-				This is the content area of the third tab.
-			</Box>
+			<CodeBlock language="json" text={JSON.stringify(json, null, 2)}/>
 		</TabPanel>
 
 	</Tabs>;

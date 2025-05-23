@@ -3,10 +3,13 @@ import { Request } from "@forge/resolver";
 
 export async function listAttachments({ context }: Request) {
 
-	const pageId=context.contentId;
+	const id="4358156";
+	// const id=context.extension.content.id;
 
-	const response=await api.asApp().requestConfluence(route`/wiki/api/v2/pages/${pageId}/attachments`, {
-		method: "GET"
+	console.log(id); // 840957953
+
+	const response=await api.asApp().requestConfluence(route`/wiki/api/v2/pages/${id}`, {
+		headers: { "Accept": "application/json" }
 	});
 
 	if ( !response.ok ) {

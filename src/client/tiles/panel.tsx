@@ -1,7 +1,7 @@
 import { Box, Inline, Stack } from "@forge/react";
 import React, { ReactNode } from "react";
 
-export function ToolPanel({
+export default function ToolPanel({
 
 	menu,
 	more,
@@ -33,7 +33,7 @@ export function ToolPanel({
 			<Box xcss={{
 
 				flexGrow: 1,
-				maxHeight: "50em",
+				height: "60em",
 				padding: "space.200",
 				overflowY: "auto",
 
@@ -41,6 +41,7 @@ export function ToolPanel({
 				borderWidth: "border.width",
 				borderRadius: "border.radius",
 				borderColor: "color.border.accent.gray"
+
 			}}>{
 
 				children
