@@ -1,5 +1,20 @@
-import { invoke } from "@forge/bridge";
+import { Request } from "@forge/resolver";
 
-export function _getText(payload: { name: string }) {
-	return invoke<string>("getText", payload);
+
+type Hello={
+	name: string;
+};
+
+type R<T>={
+
+	context: Request["context"],
+	payload: T & Request["payload"];
+
+}
+
+
+export default function getText({ context, payload: { name } }: Request) {
+
+	return `ciao ${name}!`;
+
 }

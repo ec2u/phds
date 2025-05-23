@@ -14,64 +14,15 @@
  * limitations under the License.
  */
 
-import Resolver, { Request } from "@forge/resolver";
+import Resolver from "@forge/resolver";
+import { listAttachments } from "./attachments";
+import getText from "./text";
 
-
-function getText({ context, payload: { name } }: Request) {
-
-	return `ciao ${name}!`;
-
-}
 
 export const handler=new Resolver()
 
 	.define(getText.name, getText)
+	.define(listAttachments.name, listAttachments)
 
 	.getDefinitions();
 
-
-//// Read Attachments /////////////////////////////////////////////////////////////////////////////////////////////////
-
-// import { route } from '@forge/api';
-//
-// resolver.define('getAttachments', async ({ context }) => {
-// 	const contentId = context.contentId;
-//
-// 	const response = await route.get(`/wiki/rest/api/content/${contentId}/child/attachment`);
-// 	const data = await response.json();
-//
-// 	return data.results.map((attachment) => ({
-// 		id: attachment.id,
-// 		title: attachment.title,
-// 		mediaType: attachment.metadata.mediaType,
-// 		downloadLink: attachment._links.download,
-// 	}));
-// });
-
-
-//// Add Attachments //////////////////////////////////////////////////////////////////////////////////////////////////
-
-// import FormData from 'form-data';
-//
-// resolver.define('uploadAttachment', async ({ context, payload }) => {
-// 	const contentId = context.contentId;
-// 	const { fileName, fileContent, contentType } = payload;
-//
-// 	const form = new FormData();
-// 	form.append('file', Buffer.from(fileContent, 'base64'), {
-// 		filename: fileName,
-// 		contentType,
-// 	});
-//
-// 	const response = await route.fetch(`/wiki/rest/api/content/${contentId}/child/attachment`, {
-// 		method: 'POST',
-// 		headers: {
-// 			'X-Atlassian-Token': 'no-check',
-// 			...form.getHeaders(),
-// 		},
-// 		body: form,
-// 	});
-//
-// 	return await response.json();
-//
-// });

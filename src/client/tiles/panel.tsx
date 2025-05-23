@@ -21,7 +21,7 @@ export function ToolPanel({
 
 		<Stack grow={"fill"} space={"space.400"} alignInline={"stretch"}>
 
-			<Box xcss={{ flexGrow: 0 }}>
+			<Box>
 				<Inline>
 
 					<Box xcss={{ flexGrow: 1 }}>{menu}</Box>

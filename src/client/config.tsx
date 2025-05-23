@@ -26,7 +26,7 @@ import ForgeReconciler, {
 	useProductContext
 } from "@forge/react";
 import React, { useEffect, useState } from "react";
-import { _getText } from "../server/text";
+import getText from "./ports/text";
 import { ToolPanel } from "./tiles/panel";
 
 const useSubmit=() => {
@@ -84,7 +84,7 @@ function Config() {
 
 
 	useEffect(() => {
-		_getText({ name: "zio" }).then(setValue);
+		getText({ name: "babbo" }).then(setValue);
 	}, []);
 
 
