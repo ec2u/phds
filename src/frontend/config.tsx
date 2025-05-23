@@ -19,13 +19,13 @@ import ForgeReconciler, {
 	AdfRenderer,
 	Box,
 	Button,
+	ButtonGroup,
+	EmptyState,
 	Inline,
-	SectionMessage,
+	Select,
 	Stack,
-	Textfield,
 	useConfig,
-	useProductContext,
-	xcss
+	useProductContext
 } from "@forge/react";
 import React, { useEffect, useState } from "react";
 
@@ -90,34 +90,40 @@ function Config() {
 
 	return <Inline shouldWrap={false} alignBlock={"stretch"} grow={"fill"}>
 
-		{macroBody && <AdfRenderer document={macroBody}/>}
+		<Box xcss={{ width: "50%" }}>
 
-		<Box xcss={xcss({
+			<Stack grow={"fill"} space={"space.050"} alignInline={"stretch"}>
 
-			backgroundColor: "color.background.accent.purple.subtlest",
-			padding: "space.200",
-			borderColor: "color.border.discovery",
-			borderWidth: "border.width",
-			borderStyle: "solid",
-			borderRadius: "border.radius",
-			width: "240px",
-			minHeight: "100%"
+				<Box xcss={{ flexGrow: 0 }}>
+					<Inline>
 
-		})}>
+						<Box xcss={{ flexGrow: 1 }}>
+							<ButtonGroup>
+								<Button>Agreement</Button>
+								<Button>References</Button>
+							</ButtonGroup>
+						</Box>
 
-			<Stack space="space.200" grow={"fill"}>
+						<Box>
+							<Select isRequired={true} defaultValue={{ label: "English", "value": "en" }}
+								spacing={"compact"} options={[
+								{ label: "English", "value": "en" },
+								{ label: "Finnish", "value": "fi" }
+							]}/>
+						</Box>
 
-				<Textfield id="myField" value={value} onChange={(e) => setValue(e.target.value)}/>
+					</Inline>
+				</Box>
 
-				<Button appearance="primary" onClick={() => submit({ myField: value })}>
-					Submit
-				</Button>
-
-				{typeof error !== "undefined" &&
-                    <SectionMessage appearance={error ? "error" : "success"}>{message}</SectionMessage>}
+				<Box xcss={{ flexGrow: 1 }}>{macroBody && <AdfRenderer document={macroBody}/>}</Box>
 
 			</Stack>
 
+		</Box>
+
+		<Box xcss={{ width: "50%" }}>
+
+			<EmptyState header={"Chat Area"}/>
 
 		</Box>
 
