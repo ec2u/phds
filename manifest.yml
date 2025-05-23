@@ -25,18 +25,17 @@ modules:
   function:
 
     - key: resolver
-      handler: index.handler
+      handler: server/index.handler
 
 resources:
 
   - key: main
-    path: src/frontend/index.tsx
+    path: src/client/index.tsx
 
   - key: macro-config
-    path: src/frontend/config.tsx
+    path: src/client/config.tsx
 
 app:
   id: ari:cloud:ecosystem::app/ac772441-2e1c-499a-98a0-25573be5c142
   runtime:
     name: nodejs22.x
-

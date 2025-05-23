@@ -28,9 +28,9 @@ forge install --upgrade # Install or upgrade the app in a development site
 
 This is a client-side only Forge application with the following key components:
 
-- `src/frontend/index.tsx`: Main React component with tabbed UI interface
-- `src/frontend/config.tsx`: Configuration UI for the macro with form submission
-- `src/resolvers/index.ts`: Forge resolver that handles backend function calls
+- `src/client/index.tsx`: Main React component with tabbed UI interface
+- `src/client/config.tsx`: Configuration UI for the macro with form submission
+- `src/server/index.ts`: Forge resolver that handles backend function calls
 - `manifest.yml`: Forge app configuration defining the macro registration and resources
 
 ## Architecture
@@ -40,7 +40,7 @@ This is a client-side only Forge application with the following key components:
 The application follows Atlassian Forge architecture:
 
 1. **Frontend Components**: React components using Forge UI library that render within Confluence
-2. **Resolver Functions**: Server-side functions that can be invoked from the frontend via `invoke()`
+2. **Resolver Functions**: Server-side functions that can be invoked from the client via `invoke()`
 3. **Configuration System**: Separate UI for macro configuration with form submission via `view.submit()`
 
 ### Component Communication

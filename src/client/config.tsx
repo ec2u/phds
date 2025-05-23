@@ -134,7 +134,7 @@ function Config() {
 
 		>
 
-			<EmptyState header={"Chat Area"}/>
+			<EmptyState header={value}/>
 
 		</ToolPanel>
 
