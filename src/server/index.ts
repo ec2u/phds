@@ -14,15 +14,18 @@
  * limitations under the License.
  */
 
-import Resolver from "@forge/resolver";
+import Resolver, { Request } from "@forge/resolver";
+
+
+function getText({ context, payload: { name } }: Request) {
+
+	return `ciao ${name}!`;
+
+}
 
 export const handler=new Resolver()
 
-	.define("getText", (req) => {
-
-		return "ciao!!!";
-
-	})
+	.define(getText.name, getText)
 
 	.getDefinitions();
 

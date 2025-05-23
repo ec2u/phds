@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { invoke, view } from "@forge/bridge";
+import { view } from "@forge/bridge";
 import ForgeReconciler, {
 	AdfRenderer,
 	Button,
@@ -26,6 +26,7 @@ import ForgeReconciler, {
 	useProductContext
 } from "@forge/react";
 import React, { useEffect, useState } from "react";
+import { _getText } from "../server/text";
 import { ToolPanel } from "./tiles/panel";
 
 const useSubmit=() => {
@@ -83,7 +84,7 @@ function Config() {
 
 
 	useEffect(() => {
-		invoke<string>("getText", { example: "my-invoke-variable" }).then(setValue);
+		_getText({ name: "zio" }).then(setValue);
 	}, []);
 
 
