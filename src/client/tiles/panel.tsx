@@ -19,7 +19,7 @@ export function ToolPanel({
 
 	return <Box xcss={{ width: "50%" }}>
 
-		<Stack grow={"fill"} space={"space.400"} alignInline={"stretch"}>
+		<Stack grow={"fill"} space={"space.100"} alignInline={"stretch"}>
 
 			<Box>
 				<Inline>
@@ -30,7 +30,22 @@ export function ToolPanel({
 				</Inline>
 			</Box>
 
-			<Box xcss={{ flexGrow: 1 }}>{children}</Box>
+			<Box xcss={{
+
+				flexGrow: 1,
+				maxHeight: "50em",
+				padding: "space.200",
+				overflowY: "auto",
+
+				borderStyle: "solid",
+				borderWidth: "border.width",
+				borderRadius: "border.radius",
+				borderColor: "color.border.accent.gray"
+			}}>{
+
+				children
+
+			}</Box>
 
 		</Stack>
 
