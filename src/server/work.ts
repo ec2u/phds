@@ -1,10 +1,5 @@
 import { Request } from "@forge/resolver";
 
-
-type Hello={
-	name: string;
-};
-
 type R<T>={
 
 	context: Request["context"],
