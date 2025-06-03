@@ -19,7 +19,7 @@
     "clean": "rm -rf node_modules",
     "setup": "npm install --legacy-peer-deps",
     "issue": "forge deploy",
-    "start": "forge tunnel"
+    "start": "npx dotenv -- forge tunnel"
   },
   "dependencies": {
     "@forge/bridge": "^4.5.2",
@@ -33,6 +33,7 @@
     "@types/mime-types": "^3.0.0",
     "@types/node": "^22.15.18",
     "@types/react": "^19.1.4",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "dotenv-cli": "^8.0.0"
   }
 }

@@ -29,7 +29,8 @@ import ForgeReconciler, {
 import { json } from "node:stream/consumers";
 import React, { useEffect, useState } from "react";
 import { Attachment } from "../shared/attachments";
-import { getAttachment, listAttachments } from "./ports/attachments";
+import { createAttachment, listAttachments } from "./ports/attachments";
+import { translate } from "./ports/gemini";
 import { ToolReferences } from "./views/references";
 
 function Macro() {
@@ -42,6 +43,10 @@ function Macro() {
 	const [data, setData]=useState<string>();
 	const [attachments, setAttachments]=useState<Attachment[]>();
 
+
+	useEffect(() => {
+		translate({ text: "", target: "en" }).then(setData);
+	}, []);
 
 	useEffect(() => {
 		listAttachments().then(setAttachments);
@@ -61,7 +66,7 @@ function Macro() {
 			<Box padding="space.300">
 
 				<ToolReferences attachments={attachments} onClick={attachment =>
-					getAttachment(attachment).then(setData)
+					createAttachment(attachment).then(setData)
 				}/>
 
 				<CodeBlock language={"json"} text={data ?? ""}/>

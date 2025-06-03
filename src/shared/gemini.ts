@@ -14,17 +14,11 @@
  * limitations under the License.
  */
 
-import Resolver, { ResolverFunction } from "@forge/resolver";
-import { createAttachment, listAttachments } from "./attachments";
-import { translate } from "./gemini";
+export interface Translation {
 
+	text: string;
 
-export const handler=new Resolver()
+	target: string; // BCP 47 language tag, for instance it-CH
+	source?: string; //  BCP 47 language tag; undefined for auto-detection
 
-	.define(listAttachments.name, listAttachments as ResolverFunction)
-	.define(createAttachment.name, createAttachment as ResolverFunction)
-
-	.define(translate.name, translate as ResolverFunction)
-
-	.getDefinitions();
-
+}

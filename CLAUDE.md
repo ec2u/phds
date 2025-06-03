@@ -2,6 +2,26 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Inbox
+
+```shell
+forge variables list
+forge variables set --encrypt --environment {environment} {key} {value}
+forge variables unset --encrypt --environment {environment} {key}
+```
+
+Local environment (.env) for tunnelling
+
+```dotenv
+FORGE_USER_VAR_{key}={value}
+```
+
+run as
+
+```shell
+npx dotenv -- forge tunnel
+```
+
 ## Project Overview
 
 The EC2U PhD Agreements Tool is an AI-based Confluence macro supporting drafting of cotutelle PhD agreements. It

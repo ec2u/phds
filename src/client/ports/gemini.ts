@@ -14,17 +14,9 @@
  * limitations under the License.
  */
 
-import Resolver, { ResolverFunction } from "@forge/resolver";
-import { createAttachment, listAttachments } from "./attachments";
-import { translate } from "./gemini";
+import { invoke } from "@forge/bridge";
+import { Translation } from "../../shared/gemini";
 
-
-export const handler=new Resolver()
-
-	.define(listAttachments.name, listAttachments as ResolverFunction)
-	.define(createAttachment.name, createAttachment as ResolverFunction)
-
-	.define(translate.name, translate as ResolverFunction)
-
-	.getDefinitions();
-
+export function translate(translation: Translation) {
+	return invoke<string>("translate", translation);
+}

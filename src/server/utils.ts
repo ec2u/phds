@@ -25,6 +25,18 @@ export interface Request<T extends NativeRequest["payload"]> {
 }
 
 
+export function secret(key: string) {
+
+	const value=process.env[key];
+
+	if ( !value ) {
+		throw new Error(`undefined environment variable <${key}>`);
+	}
+
+	return value;
+}
+
+
 export function query(params: Record<string, string>) {
 	return new URLSearchParams(params).toString();
 }

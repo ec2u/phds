@@ -50,7 +50,7 @@ export async function listAttachments({ context }: Request<{}>) {
 }
 
 
-export async function getAttachment({ context, payload: attachment }: Request<Attachment>) {
+export async function createAttachment({ payload: attachment }: Request<Attachment>) {
 
 	const id=attachment.id;
 	const page=attachment.pageId ?? "";
