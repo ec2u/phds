@@ -49,8 +49,14 @@ permissions:
     - read:attachment:confluence
     - delete:attachment:confluence
 
-#  external:
-#    fetch:
-#      backend:
-#        - https://ec2u.atlassian.net
+  external:
+    fetch:
+      backend:
+        - remote: gemini
+
+remotes:
+  - key: gemini
+    baseUrl: https://generativelanguage.googleapis.com
+    operations:
+      - fetch
 

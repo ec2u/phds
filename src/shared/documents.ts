@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 
-import { Document } from "./documents";
+export interface Document {
 
-export interface Translation {
-
-	target: string; // BCP 47 language tag, for instance 'it-CH'
-	source: Document;
+	title: string;
+	locale: string; // BCP 47 language tag, for instance 'en' or 'it-CH'
+	content: string;
 
 }

@@ -45,7 +45,10 @@ function Macro() {
 
 
 	useEffect(() => {
-		translate({ text: "", target: "en" }).then(setData);
+		translate({
+			source: { title: "test", locale: "it", content: "Quel ramo del lago di Como che vogle ad oriente" },
+			target: "en"
+		}).then(setData);
 	}, []);
 
 	useEffect(() => {
