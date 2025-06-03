@@ -14,15 +14,14 @@
  * limitations under the License.
  */
 
-import Resolver from "@forge/resolver";
-import { listAttachments } from "./attachments";
-import getText from "./text";
+import Resolver, { ResolverFunction } from "@forge/resolver";
+import { getAttachment, listAttachments } from "./attachments";
 
 
 export const handler=new Resolver()
 
-	.define(getText.name, getText)
-	.define(listAttachments.name, listAttachments)
+	.define(listAttachments.name, listAttachments as ResolverFunction)
+	.define(getAttachment.name, getAttachment as ResolverFunction)
 
 	.getDefinitions();
 

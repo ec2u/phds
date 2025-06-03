@@ -14,13 +14,17 @@
  * limitations under the License.
  */
 
-import { invoke } from "@forge/bridge";
-import { Attachment } from "../../shared/attachments";
+import { InvokePayload } from "@forge/bridge/out/types";
+import { Request as NativeRequest } from "@forge/resolver";
+import { URLSearchParams } from "url";
 
-export function listAttachments() {
-	return invoke<Attachment[]>("listAttachments", {});
+
+export interface Request<T extends NativeRequest["payload"]> {
+	payload: T;
+	context: InvokePayload["context"];
 }
 
-export function getAttachment(attachment: Attachment) {
-	return invoke<string>("getAttachment", attachment);
+
+export function query(params: Record<string, string>) {
+	return new URLSearchParams(params).toString();
 }

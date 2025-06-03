@@ -14,13 +14,15 @@
  * limitations under the License.
  */
 
-import { invoke } from "@forge/bridge";
-import { Attachment } from "../../shared/attachments";
+import { Text } from "@forge/react";
+import React from "react";
 
-export function listAttachments() {
-	return invoke<Attachment[]>("listAttachments", {});
-}
-
-export function getAttachment(attachment: Attachment) {
-	return invoke<string>("getAttachment", attachment);
+export function ToolReference() {
+	return <Text>Est placidus amor, cesaris. Cum lacta velum, omnes glutenes manifestum placidus, magnum
+		plasmatores.
+		Albus, ferox galluss cito locus de mirabilis, rusticus ventus.
+		Domesticus, fortis bursas aegre amor de grandis, bassus lumen.
+		Cum frondator crescere, omnes gloses demitto bi-color, grandis accentores.
+		Cum competition crescere, omnes nuptiaes pugna audax, ferox messores.
+		monss congregabo.</Text>;
 }

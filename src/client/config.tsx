@@ -22,18 +22,18 @@ import ForgeReconciler, {
 	ButtonGroup,
 	EmptyState,
 	Inline,
-	List,
-	ListItem,
 	Select,
 	Stack,
-	Text,
 	useConfig,
 	useProductContext
 } from "@forge/react";
 import React, { useEffect, useState } from "react";
-import getText from "./ports/text";
-import ToolIssue from "./tiles/issue";
-import ToolPanel from "./tiles/panel";
+import { Attachment } from "../shared/attachments";
+import ToolIssue from "././views/issue";
+import ToolPanel from "././views/panel";
+import { listAttachments } from "./ports/attachments";
+import { ToolReference } from "./views/reference";
+import { ToolReferences } from "./views/references";
 
 const useSubmit=() => {
 
@@ -81,6 +81,8 @@ function Config() {
 	const context=useProductContext();
 	const macroBody=context?.extension?.macro?.body;
 
+	const [attachments, setAttachments]=useState<Attachment[]>();
+
 
 	const {
 		error,
@@ -94,12 +96,8 @@ function Config() {
 
 
 	useEffect(() => {
-		getText({ name: "babbo" }).then(setValue);
+		listAttachments().then(setAttachments);
 	}, []);
-
-	// useEffect(() => {
-	// 	listAttachments().then(setJSON);
-	// }, []);
 
 
 	function doShowAgreement() {
@@ -146,7 +144,7 @@ function Config() {
 		>{
 
 			mode === "agreement" ? ToolAgreement(macroBody)
-				: mode === "references" ? ToolReferences(doShowReference)
+				: mode === "references" ? <ToolReferences attachments={attachments}/>
 					: ToolReference()
 
 		}</ToolPanel>
@@ -190,29 +188,6 @@ function Config() {
 
 function ToolAgreement(macroBody: DocNode) {
 	return macroBody && <AdfRenderer document={macroBody}/>;
-}
-
-function ToolReferences(doShowReference: (id: string) => void) {
-	return <List type={"unordered"}>
-		<ListItem><Button appearance={"subtle"} onClick={() => doShowReference("")}>Caesiums sunt urias de
-			salvus clinias. </Button></ListItem>
-		<ListItem><Button appearance={"subtle"} onClick={() => doShowReference("")}>Ausus de regius ventus,
-			promissio decor.</Button></ListItem>
-		<ListItem><Button appearance={"subtle"} onClick={() => doShowReference("")}>Raptus torquis saepe
-			prensionems clabulare est.</Button></ListItem>
-		<ListItem><Button appearance={"subtle"} onClick={() => doShowReference("")}>Ire interdum ducunt ad
-			clemens tumultumque.</Button></ListItem>
-	</List>;
-}
-
-function ToolReference() {
-	return <Text>Est placidus amor, cesaris. Cum lacta velum, omnes glutenes manifestum placidus, magnum
-		plasmatores.
-		Albus, ferox galluss cito locus de mirabilis, rusticus ventus.
-		Domesticus, fortis bursas aegre amor de grandis, bassus lumen.
-		Cum frondator crescere, omnes gloses demitto bi-color, grandis accentores.
-		Cum competition crescere, omnes nuptiaes pugna audax, ferox messores.
-		monss congregabo.</Text>;
 }
 
 

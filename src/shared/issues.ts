@@ -14,13 +14,19 @@
  * limitations under the License.
  */
 
-import { invoke } from "@forge/bridge";
-import { Attachment } from "../../shared/attachments";
+interface Issues {
 
-export function listAttachments() {
-	return invoke<Attachment[]>("listAttachments", {});
+	title: string;
+	description: string;
+
+	citations: Citation[];
+
 }
 
-export function getAttachment(attachment: Attachment) {
-	return invoke<string>("getAttachment", attachment);
+interface Citation {
+
+	source: string;
+	offset: number;
+	length: number;
+
 }

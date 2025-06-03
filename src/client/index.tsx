@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-import { invoke } from "@forge/bridge";
 import ForgeReconciler, {
 	AdfRenderer,
 	Box,
 	CodeBlock,
+	EmptyState,
 	Tab,
 	TabList,
 	TabPanel,
@@ -26,8 +26,11 @@ import ForgeReconciler, {
 	useConfig,
 	useProductContext
 } from "@forge/react";
+import { json } from "node:stream/consumers";
 import React, { useEffect, useState } from "react";
-import listAttachments from "./ports/attachments";
+import { Attachment } from "../shared/attachments";
+import { getAttachment, listAttachments } from "./ports/attachments";
+import { ToolReferences } from "./views/references";
 
 function Macro() {
 
@@ -37,25 +40,34 @@ function Macro() {
 	const macroBody=context?.extension?.macro?.body;
 
 	const [data, setData]=useState<string>();
-	const [json, setJSON]=useState<any>();
+	const [attachments, setAttachments]=useState<Attachment[]>();
+
 
 	useEffect(() => {
-		invoke<string>("getText", { example: "my-invoke-variable" }).then(setData);
-	}, []);
-
-	useEffect(() => {
-		listAttachments().then(setJSON);
+		listAttachments().then(setAttachments);
 	}, []);
 
 
 	return <Tabs id="default">
 
 		<TabList>
-			<Tab>Text</Tab>
 			<Tab>References</Tab>
+			<Tab>Text</Tab>
 			<Tab>Issues</Tab>
 
 		</TabList>
+
+		<TabPanel>
+			<Box padding="space.300">
+
+				<ToolReferences attachments={attachments} onClick={attachment =>
+					getAttachment(attachment).then(setData)
+				}/>
+
+				<CodeBlock language={"json"} text={data ?? ""}/>
+
+			</Box>
+		</TabPanel>
 
 		<TabPanel>
 			<Box padding="space.300">
@@ -64,12 +76,9 @@ function Macro() {
 		</TabPanel>
 
 		<TabPanel>
-			<CodeBlock language="json" text={JSON.stringify(json, null, 2)}/>
-		</TabPanel>
-
-		<TabPanel>
 			<Box padding="space.300">
-				<CodeBlock language="json" text={JSON.stringify(config, null, 2)}/>
+				<EmptyState header={"Work in progress…"}/>
+				<CodeBlock language={"json"} text={data ?? ""}/>
 			</Box>
 		</TabPanel>
 
