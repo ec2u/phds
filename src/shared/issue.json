@@ -1,0 +1,57 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "Issue": {
+      "type": "object",
+      "properties": {
+        "title": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "citations": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Citation"
+          }
+        }
+      },
+      "required": [
+        "title",
+        "description",
+        "citations"
+      ],
+      "additionalProperties": false
+    },
+    "Citation": {
+      "type": "object",
+      "properties": {
+        "source": {
+          "type": "string"
+        },
+        "offset": {
+          "type": "number"
+        },
+        "length": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "source",
+        "offset",
+        "length"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "type": "object",
+  "oneOf": [
+    {
+      "$ref": "#/definitions/Issue"
+    },
+    {
+      "$ref": "#/definitions/Citation"
+    }
+  ]
+}

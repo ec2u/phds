@@ -16,7 +16,7 @@
 
 import Resolver from "@forge/resolver";
 import { listAttachments } from "./attachments";
-import getText from "./work";
+import getText from "./text";
 
 
 export const handler=new Resolver()

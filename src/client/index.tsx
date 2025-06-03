@@ -52,8 +52,9 @@ function Macro() {
 
 		<TabList>
 			<Tab>Text</Tab>
-			<Tab>Configuration</Tab>
-			<Tab>Attachments</Tab>
+			<Tab>References</Tab>
+			<Tab>Issues</Tab>
+
 		</TabList>
 
 		<TabPanel>
@@ -63,13 +64,13 @@ function Macro() {
 		</TabPanel>
 
 		<TabPanel>
-			<Box padding="space.300">
-				<CodeBlock language="json" text={JSON.stringify(config, null, 2)}/>
-			</Box>
+			<CodeBlock language="json" text={JSON.stringify(json, null, 2)}/>
 		</TabPanel>
 
 		<TabPanel>
-			<CodeBlock language="json" text={JSON.stringify(json, null, 2)}/>
+			<Box padding="space.300">
+				<CodeBlock language="json" text={JSON.stringify(config, null, 2)}/>
+			</Box>
 		</TabPanel>
 
 	</Tabs>;

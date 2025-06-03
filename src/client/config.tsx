@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import type { DocNode } from "@atlaskit/adf-schema";
 import { view } from "@forge/bridge";
 import ForgeReconciler, {
 	AdfRenderer,
@@ -93,7 +94,7 @@ function Config() {
 
 
 	useEffect(() => {
-		getText({ name: "!!!" }).then(setValue);
+		getText({ name: "babbo" }).then(setValue);
 	}, []);
 
 	// useEffect(() => {
@@ -144,26 +145,9 @@ function Config() {
 
 		>{
 
-			mode === "agreement" ? macroBody && <AdfRenderer document={macroBody}/>
-
-				: mode === "references" ? <List type={"unordered"}>
-						<ListItem><Button appearance={"subtle"} onClick={() => doShowReference("")}>Caesiums sunt urias de
-							salvus clinias. </Button></ListItem>
-						<ListItem><Button appearance={"subtle"} onClick={() => doShowReference("")}>Ausus de regius ventus,
-							promissio decor.</Button></ListItem>
-						<ListItem><Button appearance={"subtle"} onClick={() => doShowReference("")}>Raptus torquis saepe
-							prensionems clabulare est.</Button></ListItem>
-						<ListItem><Button appearance={"subtle"} onClick={() => doShowReference("")}>Ire interdum ducunt ad
-							clemens tumultumque.</Button></ListItem>
-					</List>
-
-					: <Text>Est placidus amor, cesaris. Cum lacta velum, omnes glutenes manifestum placidus, magnum
-						plasmatores.
-						Albus, ferox galluss cito locus de mirabilis, rusticus ventus.
-						Domesticus, fortis bursas aegre amor de grandis, bassus lumen.
-						Cum frondator crescere, omnes gloses demitto bi-color, grandis accentores.
-						Cum competition crescere, omnes nuptiaes pugna audax, ferox messores.
-						monss congregabo.</Text>
+			mode === "agreement" ? ToolAgreement(macroBody)
+				: mode === "references" ? ToolReferences(doShowReference)
+					: ToolReference()
 
 		}</ToolPanel>
 
@@ -199,6 +183,36 @@ function Config() {
 
 	</Inline>;
 
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+function ToolAgreement(macroBody: DocNode) {
+	return macroBody && <AdfRenderer document={macroBody}/>;
+}
+
+function ToolReferences(doShowReference: (id: string) => void) {
+	return <List type={"unordered"}>
+		<ListItem><Button appearance={"subtle"} onClick={() => doShowReference("")}>Caesiums sunt urias de
+			salvus clinias. </Button></ListItem>
+		<ListItem><Button appearance={"subtle"} onClick={() => doShowReference("")}>Ausus de regius ventus,
+			promissio decor.</Button></ListItem>
+		<ListItem><Button appearance={"subtle"} onClick={() => doShowReference("")}>Raptus torquis saepe
+			prensionems clabulare est.</Button></ListItem>
+		<ListItem><Button appearance={"subtle"} onClick={() => doShowReference("")}>Ire interdum ducunt ad
+			clemens tumultumque.</Button></ListItem>
+	</List>;
+}
+
+function ToolReference() {
+	return <Text>Est placidus amor, cesaris. Cum lacta velum, omnes glutenes manifestum placidus, magnum
+		plasmatores.
+		Albus, ferox galluss cito locus de mirabilis, rusticus ventus.
+		Domesticus, fortis bursas aegre amor de grandis, bassus lumen.
+		Cum frondator crescere, omnes gloses demitto bi-color, grandis accentores.
+		Cum competition crescere, omnes nuptiaes pugna audax, ferox messores.
+		monss congregabo.</Text>;
 }
 
 
