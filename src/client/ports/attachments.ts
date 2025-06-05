@@ -21,6 +21,6 @@ export function listAttachments() {
 	return invoke<Attachment[]>("listAttachments", {});
 }
 
-export function createAttachment(attachment: Attachment) {
-	return invoke<string>("createAttachment", attachment);
+export function retrieveAttachment(attachment: Attachment) {
+	return invoke<string>("retrieveAttachment", attachment);
 }

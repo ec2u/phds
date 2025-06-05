@@ -68,7 +68,7 @@ const useSubmit=() => {
 };
 
 
-function Config() {
+function ToolConfig() {
 
 	const config=useConfig();
 
@@ -195,6 +195,6 @@ function ToolAgreement(macroBody: DocNode) {
 
 ForgeReconciler.render(
 	<React.StrictMode>
-		<Config/>
+		<ToolConfig/>
 	</React.StrictMode>
 );

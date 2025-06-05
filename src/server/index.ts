@@ -15,16 +15,15 @@
  */
 
 import Resolver, { ResolverFunction } from "@forge/resolver";
-import { createAttachment, listAttachments } from "./attachments";
+import { listAttachments, retrieveAttachment } from "./attachments";
 import { translate } from "./gemini";
 
 
 export const handler=new Resolver()
 
 	.define(listAttachments.name, listAttachments as ResolverFunction)
-	.define(createAttachment.name, createAttachment as ResolverFunction)
+	.define(retrieveAttachment.name, retrieveAttachment as ResolverFunction)
 
 	.define(translate.name, translate as ResolverFunction)
 
 	.getDefinitions();
-

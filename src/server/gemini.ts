@@ -65,7 +65,9 @@ export async function translate({ payload: { source, target } }: Request<Transla
 		}
 	}]);
 
-	return result.response.text();
+	// !!! delete stale uploads
+
+	return result.response.text(); // !!! convert exceptions to status objects
 
 
 	async function upload(document: Document) {
@@ -90,7 +92,7 @@ export async function translate({ payload: { source, target } }: Request<Transla
 			throw new Error(`File ${meta.name} failed to process`);
 		}
 
-		return meta;
+		return meta; // !!! convert exceptions to status objects
 	}
 
 }

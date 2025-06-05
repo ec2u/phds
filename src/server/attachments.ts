@@ -40,17 +40,20 @@ export async function listAttachments({ context }: Request<{}>) {
 
 		return data.results;
 
-	} else { // !!! error response
+	} else {
 
-		console.log(response);
+		console.error(response);
 
-		throw new Error(`Failed to fetch attachments: ${response.status} ${response.statusText}`);
+		throw {
+			code: response.status,
+			text: response.statusText
+		};
 
 	}
 }
 
 
-export async function createAttachment({ payload: attachment }: Request<Attachment>) {
+export async function retrieveAttachment({ payload: attachment }: Request<Attachment>) {
 
 	const id=attachment.id;
 	const page=attachment.pageId ?? "";
@@ -69,14 +72,14 @@ export async function createAttachment({ payload: attachment }: Request<Attachme
 
 		return await response.text();
 
-	} else { // !!! error response
+	} else {
 
-		console.log(response);
+		console.error(response);
 
-		throw new Error(`Failed to fetch attachment <${attachment.downloadLink}>: ${response.status} ${response.statusText}`);
+		throw {
+			code: response.status,
+			text: response.statusText
+		};
 
 	}
 }
-
-
-

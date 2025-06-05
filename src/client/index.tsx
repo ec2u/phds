@@ -17,39 +17,52 @@
 import ForgeReconciler, {
 	AdfRenderer,
 	Box,
-	CodeBlock,
 	EmptyState,
+	Spinner,
 	Tab,
 	TabList,
 	TabPanel,
 	Tabs,
+	Text,
 	useConfig,
 	useProductContext
 } from "@forge/react";
-import { json } from "node:stream/consumers";
 import React, { useEffect, useState } from "react";
+import { Content, isNull, isStatus, isUndefined } from "../shared";
 import { Attachment } from "../shared/attachments";
-import { createAttachment, listAttachments } from "./ports/attachments";
+import { listAttachments, retrieveAttachment } from "./ports/attachments";
 import { translate } from "./ports/gemini";
 import { ToolReferences } from "./views/references";
 
-function Macro() {
+
+//// !!! //////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+function monitor<T>(setter: (value: Content<T>) => void): (promise: Promise<T>) => void {
+	return promise => {
+
+		setter(null);
+
+		promise.then(setter).catch(error =>
+			setter(isStatus(error) ? error : { code: 999, text: JSON.stringify(error, null, 4) })
+		);
+
+	};
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+function ToolMacro() {
 
 	const context=useProductContext();
 	const config=useConfig();
 
 	const macroBody=context?.extension?.macro?.body;
 
-	const [data, setData]=useState<string>();
 	const [attachments, setAttachments]=useState<Attachment[]>();
 
+	const [data, setData]=useState<Content<string>>();
 
-	useEffect(() => {
-		translate({
-			source: { title: "test", locale: "it", content: "Quel ramo del lago di Como che vogle ad oriente" },
-			target: "en"
-		}).then(setData);
-	}, []);
 
 	useEffect(() => {
 		listAttachments().then(setAttachments);
@@ -69,10 +82,23 @@ function Macro() {
 			<Box padding="space.300">
 
 				<ToolReferences attachments={attachments} onClick={attachment =>
-					createAttachment(attachment).then(setData)
+					monitor(setData)(retrieveAttachment(attachment).then(value => {
+
+						return translate({
+
+							source: { title: attachment.title, content: value, locale: "en" }, // !!! locale
+							target: "it"
+
+						});
+
+					}))
 				}/>
 
-				<CodeBlock language={"json"} text={data ?? ""}/>
+				{isUndefined(data) ? undefined
+					: isNull(data) ? <Spinner label={"Loading…"}/>
+						: isStatus(data) ? <Text>{JSON.stringify(data)}</Text>
+							: <Text>{data}</Text>
+				}
 
 			</Box>
 		</TabPanel>
@@ -86,7 +112,6 @@ function Macro() {
 		<TabPanel>
 			<Box padding="space.300">
 				<EmptyState header={"Work in progress…"}/>
-				<CodeBlock language={"json"} text={data ?? ""}/>
 			</Box>
 		</TabPanel>
 
@@ -98,6 +123,6 @@ function Macro() {
 
 ForgeReconciler.render(
 	<React.StrictMode>
-		<Macro/>
+		<ToolMacro/>
 	</React.StrictMode>
 );
