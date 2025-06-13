@@ -14,9 +14,14 @@
  * limitations under the License.
  */
 
-import { EmptyState } from "@forge/react";
+import { EmptyState, Icon } from "@forge/react";
 import React from "react";
 
 export function ToolChat() {
-	return <EmptyState header={"Work in progress…"}/>;
+
+	return <EmptyState
+		header={"Work in Progress…"}
+		primaryAction={<Icon label={""} glyph={"warning"} size={"large"} primaryColor={"color.icon.warning"}/>}
+	/>;
+
 }

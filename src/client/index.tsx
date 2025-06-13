@@ -77,7 +77,7 @@ function ToolMacro() {
 
 			tab === Tab.Agreement ? <ToolText>{body}</ToolText>
 				: tab === Tab.References ? <ToolReferences onClick={setTab}/>
-					: tab === Tab.Issues ? <ToolIssues language={language}/>
+					: tab === Tab.Issues ? <ToolIssues/>
 						: tab === Tab.Chat ? <ToolChat/>
 							: <ToolReference language={language}>{tab}</ToolReference>
 

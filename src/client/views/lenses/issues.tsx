@@ -14,19 +14,15 @@
  * limitations under the License.
  */
 
-import { Language } from "../../../shared/languages";
 
+import { EmptyState, Icon } from "@forge/react";
+import React from "react";
 
-export function ToolIssues({
+export function ToolIssues() {
 
-	language
-
-}: {
-
-	language: Language
-
-}) {
-
-	return null;
+	return <EmptyState
+		header={"Work in Progress…"}
+		primaryAction={<Icon label={""} glyph={"warning"} size={"large"} primaryColor={"color.icon.warning"}/>}
+	/>;
 
 }

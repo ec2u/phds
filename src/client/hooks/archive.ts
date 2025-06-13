@@ -19,18 +19,19 @@ import { createContext, createElement, ReactNode, useContext, useState } from "r
 import { asTrace, immutable, Status, Update } from "../../shared";
 import { Attachment } from "../../shared/attachments";
 import { Document } from "../../shared/documents";
-import { Language } from "../../shared/languages";
-import { listAttachments } from "../ports/attachments";
+import { defaultLanguage, Language } from "../../shared/languages";
+import { listAttachments, retrieveAttachment } from "../ports/attachments";
+import { translate } from "../ports/gemini";
 import { createAsyncEmitter, Emitter } from "../shims/emitters";
 
 
 const Context=createContext<Archive>(immutable({
 
-	list(monitor: (content: Status<ReadonlyArray<Attachment>>) => void): void {
+	list(monitor: (status: Status<ReadonlyArray<Attachment>>) => void): void {
 		throw new Error("undefined archive");
 	},
 
-	lookup(monitor: (content: Status<Document>) => void, attachment: Attachment, locale: Language): void {
+	lookup(monitor: (status: Status<Document>) => void, attachment: Attachment, language: Language): void {
 		throw new Error("undefined archive");
 	}
 
@@ -41,9 +42,9 @@ const Context=createContext<Archive>(immutable({
 
 export interface Archive {
 
-	list(monitor: (content: Status<ReadonlyArray<Attachment>>) => void): void;
+	list(monitor: (status: Status<ReadonlyArray<Attachment>>) => void): void;
 
-	lookup(monitor: (content: Status<Document>) => void, attachment: Attachment, locale: Language): void;
+	lookup(monitor: (status: Status<Document>) => void, attachment: Attachment, language: Language): void;
 
 }
 
@@ -67,12 +68,12 @@ export function ToolArchive({
 
 		value: immutable({
 
-			list(monitor: (content: Status<ReadonlyArray<Attachment>>) => void) {
+			list(monitor: (status: Status<ReadonlyArray<Attachment>>) => void) {
 				list(createAsyncEmitter(monitor));
 			},
 
-			lookup(monitor: (content: Status<Document>) => void, attachment: Attachment, locale: Language) {
-				lookup(createAsyncEmitter(monitor), attachment, locale);
+			lookup(monitor: (status: Status<Document>) => void, attachment: Attachment, language: Language) {
+				lookup(createAsyncEmitter(monitor), attachment, language);
 			}
 
 		}),
@@ -97,71 +98,23 @@ export function ToolArchive({
 		}
 	}
 
-	async function lookup(emitter: Emitter<Status<Document>>, attachment: Attachment, locale: Language) {
+	async function lookup(emitter: Emitter<Status<Document>>, attachment: Attachment, language: Language) {
 		try {
 
-			await scan(emitter);
+			const attachments=await scan(emitter);
+			const content=await fetch(emitter, attachment);
 
+			// !!! await extract(emitter);
 
-			// // !!! check if updated translation is available
-			//
-			//
-			// // !!! check if updated full text is available
-			//
-			// useEffect(() => {
-			//
-			// 	if ( attachment ) {
-			//
-			// 		setStatus("Retrieving");
-			//
-			// 		retrieveAttachment(attachment)
-			// 			.then(setContent)
-			// 			.then(clearStatus)
-			// 			.catch(setStatus);
-			//
-			// 	}
-			//
-			// }, [attachment]);
-			//
-			// // !!! extract full text
-			// // !!! save full text and remove stale versions
-			//
-			// useEffect(() => {
-			//
-			// 	if ( content ) {
-			//
-			// 		console.log(content);
-			//
-			// 		setStatus("Translating");
-			//
-			// 		translate({
-			// 			target: language,
-			// 			source: {
-			// 				title: attachment.title,
-			// 				language: defaultLanguage, // !!! auto
-			// 				content // decode from base64
-			// 			}
-			// 		})
-			// 			.then(setTranslation)
-			// 			.then(clearStatus)
-			// 			.catch(setStatus);
-			//
-			// 	}
-			//
-			// }, [content, language]);
-			//
-			// // !!! save translation and remove stale versions
+			const document={
+				title: attachment.title,
+				language: defaultLanguage, // !!!
+				content
+			};
 
-			emitter.emit(Update.Fetching);
-			await delay(500);
+			const xlation=await xlate(emitter, document, language);
 
-			emitter.emit(Update.Extracting);
-			await delay(800);
-
-			emitter.emit(Update.Translating);
-			await delay(700);
-
-			emitter.emit({ title: attachment.title, language: locale, content: "" });
+			emitter.emit({ title: attachment.title, language: language, content: xlation });
 
 		} catch ( error ) {
 
@@ -197,6 +150,37 @@ export function ToolArchive({
 		}
 	}
 
+	async function fetch(emitter: Emitter<Status<Document>>, attachment: Attachment): Promise<string> {
+
+		emitter.emit(Update.Fetching);
+
+		return await retrieveAttachment(attachment);
+	}
+
+	async function extract(emitter: Emitter<Status<Document>>) {
+
+		emitter.emit(Update.Extracting);
+
+		// !!! check if updated full text is available
+		// !!! extract full text
+		// !!! save full text and remove stale versions
+
+		await delay(800);
+	}
+
+	async function xlate(emitter: Emitter<Status<Document>>, source: Document, target: Language): Promise<string> {
+
+		emitter.emit(Update.Translating);
+
+		// !!! check if updated translation is available
+		// !!! translate from native language (which one?)
+		// !!! save translation and remove stale versions
+
+		return await translate({
+			source,
+			target
+		});
+	}
 
 }
 

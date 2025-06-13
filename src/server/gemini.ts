@@ -16,7 +16,7 @@
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { GoogleAIFileManager } from "@google/generative-ai/server";
-import { asTrace, isString } from "../shared";
+import { asTrace } from "../shared";
 import { Document } from "../shared/documents";
 import { Translation } from "../shared/gemini";
 import { Request, secret } from "./utils";
@@ -50,7 +50,7 @@ export async function translate({ payload: { source, target } }: Request<Transla
 
 			model: model,
 			systemInstruction: `
-				- translate the provided markdown document from ${source.language} to ${target}
+				- translate the provided Markdown document from ${source} to ${target}
 				- make sure to preserve the semantic structure of the document in terms of elements such as section
 				  headings, tables and bullet lists
 				- make absolutely sure to retain all textual content; this is vital: do not remove anything
@@ -82,9 +82,7 @@ export async function translate({ payload: { source, target } }: Request<Transla
 	async function upload(document: Document) {
 		try {
 
-			const buffer=isString(document.content)
-				? Buffer.from(document.content, "utf8")
-				: Buffer.from(document.content);
+			const buffer=Buffer.from(document.content, "utf8");
 
 			const response=await manager.uploadFile(buffer, {
 				mimeType: markdown,

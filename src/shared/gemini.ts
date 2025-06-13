@@ -20,7 +20,7 @@ import { Language } from "./languages";
 
 export interface Translation {
 
-	readonly target: Language;
 	readonly source: Document;
+	readonly target: Language;
 
 }
