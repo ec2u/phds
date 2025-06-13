@@ -15,9 +15,10 @@
  */
 
 import { List, ListItem, Pressable, Spinner } from "@forge/react";
-import React, { useEffect, useState } from "react";
+import React from "react";
+import { isNumber, isTrace } from "../../../shared";
 import { Attachment, compareAttachments } from "../../../shared/attachments";
-import { listAttachments } from "../../ports/attachments";
+import { useAttachments } from "../../hooks/attachments";
 
 export function ToolReferences({
 
@@ -27,20 +28,16 @@ export function ToolReferences({
 
 	onClick?: (attachment: Attachment) => void
 
-
 }) {
 
-	const [attachments, setAttachments]=useState<Attachment[]>();
+	const attachments=useAttachments();
 
-	useEffect(() => {
-		listAttachments().then(setAttachments);
-	}, []);
 
-	return attachments === undefined ? <Spinner label={"Loading…"}/>
+	return isNumber(attachments) ? <Spinner label={"Loading…"}/>
 
-		// !!! <EmptyState/> with recovery actions on error
+		: isTrace(attachments) ? <Spinner label={"Loading…"}/> // !!! factor from ToolIssues
 
-		: <List type={"unordered"}>{attachments.sort(compareAttachments).map(attachment => <>
+			: <List type={"unordered"}>{[...attachments].sort(compareAttachments).map(attachment => <>
 
 			<ListItem key={attachment.id}>
 

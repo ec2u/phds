@@ -15,21 +15,20 @@
  */
 
 import { useEffect, useState } from "react";
-import { Document } from "../../shared/documents";
-import { Language } from "../../shared/languages";
+import { Attachment } from "../../shared/attachments";
 import { Status, Update, useArchive } from "./archive";
 
-export function useDocument(id: string, locale: Language): Status<Document> {
+export function useAttachments() {
 
-	const { lookup }=useArchive();
+	const { list }=useArchive();
 
-	const [document, setDocument]=useState<Status<Document>>(Update.Initializing);
+	const [attachments, setAttachments]=useState<Status<ReadonlyArray<Attachment>>>(Update.Initializing);
 
 	useEffect(() => {
 
-		return lookup(setDocument, id, locale);
+		return list(setAttachments);
 
-	}, [id, locale]);
+	}, []);
 
-	return document;
+	return attachments;
 }

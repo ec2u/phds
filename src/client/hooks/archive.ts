@@ -26,7 +26,11 @@ import { createAsyncEmitter, Emitter } from "../shims/emitters";
 
 const Context=createContext<Archive>(immutable({
 
-	lookup(id: string, locale: Language): Promise<string> {
+	list(monitor: (content: Status<ReadonlyArray<Attachment>>) => void): void {
+		throw new Error("undefined archive");
+	},
+
+	lookup(monitor: (content: Status<Document>) => void, id: string, locale: Language): void {
 		throw new Error("undefined archive");
 	}
 
@@ -35,7 +39,7 @@ const Context=createContext<Archive>(immutable({
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-export type Status=Update | Document | Trace;
+export type Status<T>=Update | T | Trace;
 
 export const enum Update {
 	Initializing,
@@ -47,7 +51,9 @@ export const enum Update {
 
 export interface Archive {
 
-	lookup(id: string, locale: Language, consumer: (content: Status) => void): void;
+	list(monitor: (content: Status<ReadonlyArray<Attachment>>) => void): void;
+
+	lookup(monitor: (content: Status<Document>) => void, id: string, locale: Language): void;
 
 }
 
@@ -64,15 +70,19 @@ export function ToolArchive({
 
 	const context=useProductContext(); // !!! read macro body as a virtual attachment
 
-	const [attachments, setAttachments]=useState<Attachment[]>();
+	const [attachments, setAttachments]=useState<ReadonlyArray<Attachment>>();
 
 
 	return createElement(Context.Provider, {
 
 		value: immutable({
 
-			lookup(id: string, locale: Language, consumer: (content: Status) => void) {
-				lookup(id, locale, createAsyncEmitter(consumer));
+			list(monitor: (content: Status<ReadonlyArray<Attachment>>) => void) {
+				list(createAsyncEmitter(monitor));
+			},
+
+			lookup(monitor: (content: Status<Document>) => void, id: string, locale: Language) {
+				lookup(createAsyncEmitter(monitor), id, locale);
 			}
 
 		}),
@@ -81,30 +91,12 @@ export function ToolArchive({
 
 	});
 
-
-	async function lookup(id: string, locale: Language, emitter: Emitter<Update | Document | Trace>) {
+	async function list(emitter: Emitter<Status<ReadonlyArray<Attachment>>>) {
 		try {
 
-			if ( attachments === undefined ) {
+			await scan(emitter);
 
-				emitter.emit(Update.Scanning);
-
-				await listAttachments().then(setAttachments);
-
-			}
-
-			emitter.emit(Update.Fetching);
-			await delay(500);
-
-			emitter.emit(Update.Extracting);
-			await delay(800);
-
-			emitter.emit(Update.Translating);
-			await delay(700);
-
-			const document={ id, language: locale, content: "" };
-
-			emitter.emit(document);
+			if ( attachments ) { emitter.emit(attachments);}
 
 		} catch ( error ) {
 
@@ -116,6 +108,57 @@ export function ToolArchive({
 
 		}
 	}
+
+	async function lookup(emitter: Emitter<Status<Document>>, id: string, locale: Language) {
+		try {
+
+			await scan(emitter);
+
+			emitter.emit(Update.Fetching);
+			await delay(500);
+
+			emitter.emit(Update.Extracting);
+			await delay(800);
+
+			emitter.emit(Update.Translating);
+			await delay(700);
+
+			emitter.emit({ id, language: locale, content: "" });
+
+		} catch ( error ) {
+
+			emitter.emit(asTrace(error));
+
+		} finally {
+
+			emitter.close();
+
+		}
+	}
+
+
+	async function scan(emitter: Emitter<Status<any>>): Promise<ReadonlyArray<Attachment>> {
+		if ( attachments === undefined ) {
+
+			emitter.emit(Update.Scanning);
+
+			return await listAttachments()
+				.then(immutable)
+				.then(attachments => {
+
+					setAttachments(attachments);
+
+					return attachments;
+
+				});
+
+		} else {
+
+			return attachments;
+
+		}
+	}
+
 
 }
 
