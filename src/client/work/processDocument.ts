@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-import { createAsyncEmitter } from "./createAsyncEmitter";
+
+import { createAsyncEmitter } from "../../shared/emitters";
 
 export type PipelineUpdate=
 	| { type: "progress"; stage: string; message?: string }

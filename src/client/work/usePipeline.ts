@@ -15,7 +15,7 @@
  */
 
 import { useEffect, useState } from "react";
-import { createAsyncEmitter } from "./createAsyncEmitter";
+import { createAsyncEmitter } from "../../shared/emitters";
 import { PipelineUpdate, processDocument } from "./processDocument";
 
 function lookup(docId: string, consumer: (update: PipelineUpdate) => void) {

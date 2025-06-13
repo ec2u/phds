@@ -14,9 +14,48 @@
  * limitations under the License.
  */
 
-import { immutable } from "../../shared";
 
-export function createAsyncEmitter<T>() {
+import { immutable } from "./index";
+
+/**
+ * An async emitter that can emit values and be consumed as an async iterator.
+ * @template T The type of values emitted
+ */
+export interface Emitter<T> {
+
+	/**
+	 * Emits a value to the async iterator.
+	 * @param value The value to emit
+	 * @returns true if the value was emitted successfully, false if the emitter is closed
+	 */
+	readonly emit: (value: T) => boolean;
+
+	/**
+	 * Closes the emitter, preventing further emissions and completing any pending iterations.
+	 */
+	readonly close: () => void;
+
+	/**
+	 * Returns an async generator that yields emitted values.
+	 * @returns An async generator for the emitted values
+	 */
+	readonly [Symbol.asyncIterator]: () => AsyncGenerator<T>;
+
+}
+
+/**
+ * Creates a new async emitter that can emit values and be consumed as an async iterator.
+ *
+ * The emitter uses a queue-based approach to handle backpressure:
+ *
+ * - When consumers are waiting, values are delivered immediately
+ * - When no consumers are waiting, values are queued for later consumption
+ * - Once closed, no new values can be emitted
+ *
+ * @template T The type of values to emit
+ * @returns A new immutable emitter instance
+ */
+export function createAsyncEmitter<T>(): Emitter<T> {
 
 	const pending: T[]=[];
 	const waiting: ((value: IteratorResult<T>) => void)[]=[];
