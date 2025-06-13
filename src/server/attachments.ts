@@ -70,7 +70,7 @@ export async function retrieveAttachment({ payload: attachment }: Request<Attach
 
 	if ( response.ok ) {
 
-		return await response.text();
+		return await response.text(); // !!! raw data
 
 	} else {
 

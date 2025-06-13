@@ -53,3 +53,10 @@ export interface AttachmentLinks {
 	webui: string;
 	download: string;
 }
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+export function compareAttachments(x: Attachment, y: Attachment) {
+	return x.title.localeCompare(y.title);
+}

@@ -14,15 +14,18 @@
  * limitations under the License.
  */
 
-import { Text } from "@forge/react";
+import type { DocNode } from "@atlaskit/adf-schema";
+import { AdfRenderer } from "@forge/react";
 import React from "react";
 
-export function ToolReference() {
-	return <Text>Est placidus amor, cesaris. Cum lacta velum, omnes glutenes manifestum placidus, magnum
-		plasmatores.
-		Albus, ferox galluss cito locus de mirabilis, rusticus ventus.
-		Domesticus, fortis bursas aegre amor de grandis, bassus lumen.
-		Cum frondator crescere, omnes gloses demitto bi-color, grandis accentores.
-		Cum competition crescere, omnes nuptiaes pugna audax, ferox messores.
-		monss congregabo.</Text>;
+export function ToolText({
+
+	children: text
+
+}: {
+
+	children: DocNode
+
+}) {
+	return text && <AdfRenderer document={text}/>;
 }

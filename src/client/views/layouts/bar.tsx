@@ -14,57 +14,39 @@
  * limitations under the License.
  */
 
-import { Box, Inline, Stack } from "@forge/react";
+import { Box, Inline } from "@forge/react";
 import React, { ReactNode } from "react";
 
-export default function ToolPanel({
+export function ToolBar({
 
 	menu,
-	more,
-
-	children
+	more
 
 }: {
 
-	menu: ReactNode
-	more?: ReactNode
-
-	children: ReactNode
+	menu: ReactNode,
+	more?: ReactNode,
 
 }) {
 
-	return <Box xcss={{ width: "50%" }}>
+	return <Box xcss={{
 
-		<Stack grow={"fill"} space={"space.100"} alignInline={"stretch"}>
+		paddingBottom: "space.200",
+		marginBottom: "space.300",
 
-			<Box>
-				<Inline>
+		borderWidth: "border.width",
+		borderColor: "color.border.accent.gray",
+		borderBottomStyle: "solid"
 
-					<Box xcss={{ flexGrow: 1 }}>{menu}</Box>
-					<Box>{more}</Box>
+	}}>
 
-				</Inline>
-			</Box>
+		<Inline>
 
-			<Box xcss={{
+			<Box xcss={{ flexGrow: 1 }}>{menu}</Box>
+			<Box>{more}</Box>
 
-				flexGrow: 1,
-				height: "60em",
-				padding: "space.200",
-				overflowY: "auto",
-
-				borderStyle: "solid",
-				borderWidth: "border.width",
-				borderRadius: "border.radius",
-				borderColor: "color.border.accent.gray"
-
-			}}>{
-
-				children
-
-			}</Box>
-
-		</Stack>
+		</Inline>
 
 	</Box>;
+
 }

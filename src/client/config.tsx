@@ -14,26 +14,26 @@
  * limitations under the License.
  */
 
-import type { DocNode } from "@atlaskit/adf-schema";
 import { view } from "@forge/bridge";
 import ForgeReconciler, {
-	AdfRenderer,
+	Box,
 	Button,
 	ButtonGroup,
 	EmptyState,
 	Inline,
-	Select,
 	Stack,
 	useConfig,
 	useProductContext
 } from "@forge/react";
 import React, { useEffect, useState } from "react";
 import { Attachment } from "../shared/attachments";
-import ToolIssue from "././views/issue";
-import ToolPanel from "././views/panel";
 import { listAttachments } from "./ports/attachments";
-import { ToolReference } from "./views/reference";
-import { ToolReferences } from "./views/references";
+import { ToolBar } from "./views/layouts/bar";
+import ToolPanel from "./views/layouts/panel";
+import ToolIssue from "./views/lenses/issue";
+import { ToolLanguage } from "./views/lenses/language";
+import { ToolReferences } from "./views/lenses/references";
+import { ToolText } from "./views/lenses/text";
 
 const useSubmit=() => {
 
@@ -113,81 +113,70 @@ function ToolConfig() {
 	}
 
 
-	return <Inline shouldWrap={false} alignBlock={"stretch"} grow={"fill"} space={"space.400"}>
+	return <Inline shouldWrap={false} alignBlock={"stretch"} grow={"fill"} space={"space.500"}>
 
-		<ToolPanel
+		<Box xcss={{ width: "50%" }}>
 
-			menu={
-				<ButtonGroup>
-					<Button appearance={mode === "agreement" ? "primary" : "default"}
-						onClick={doShowAgreement}>Agreement</Button>
-					<Button appearance={mode === "references" ? "primary" : "default"}
-						onClick={doShowReferences}>References</Button>
-				</ButtonGroup>
-			}
+			<ToolPanel header={<ToolBar
 
-			more={
-				<Select isRequired={true} defaultValue={{ label: "English", "value": "en" }}
-					spacing={"compact"} options={[
-					{ label: "Deutsch", value: "de" },       // German
-					{ label: "English", value: "en" },       // English
-					{ label: "Español", value: "es" },       // Spanish
-					{ label: "Français", value: "fr" },      // French
-					{ label: "Italiano", value: "it" },      // Italian
-					{ label: "Português", value: "pt" },     // Portuguese
-					{ label: "Română", value: "ro" },        // Romanian
-					{ label: "Suomi", value: "fi" },         // Finnish
-					{ label: "Svenska", value: "sv" }        // Swedish
-				]}/>
-			}
+				menu={
+					<ButtonGroup>
 
-		>{
+						<Button appearance={mode === "agreement" ? "primary" : "default"}
+							onClick={doShowAgreement}>Agreement</Button>
 
-			mode === "agreement" ? ToolAgreement(macroBody)
-				: mode === "references" ? <ToolReferences attachments={attachments}/>
-					: ToolReference()
+						<Button appearance={mode === "references" ? "primary" : "default"}
+							onClick={doShowReferences}>References</Button>
 
-		}</ToolPanel>
+					</ButtonGroup>
+				}
 
-		<ToolPanel
+				more={<ToolLanguage/>}
 
-			menu={
-				<ButtonGroup>
-					<Button>Issues</Button>
-					<Button isDisabled={true}>Chat</Button>
-				</ButtonGroup>
-			}
+			/>}>{
 
-			more={
-				<Button>Reset</Button>
-			}
+				mode === "agreement" ? <ToolText>{macroBody}</ToolText>
+					: mode === "references" ? <ToolReferences attachments={attachments}/>
+						: null // !!! ToolReference()
 
-		>
+			}</ToolPanel>
 
-			<Stack space={"space.200"}>
+		</Box>
 
-				<ToolIssue/>
-				<ToolIssue/>
-				<ToolIssue/>
-				<ToolIssue/>
+		<Box xcss={{ width: "50%" }}>
 
-				<EmptyState header={value}/>
+			<ToolPanel header={<ToolBar
 
-			</Stack>
+				menu={
+					<ButtonGroup>
+						<Button>Issues</Button>
+						<Button isDisabled={true}>Chat</Button>
+					</ButtonGroup>
+				}
 
-			{/* <CodeBlock language={"json"} text={JSON.stringify(json, null, 4)}/> */}
+				more={<Button>Reset</Button>}
 
-		</ToolPanel>
+			/>}>
+
+				<Stack space={"space.200"}>
+
+					<ToolIssue/>
+					<ToolIssue/>
+					<ToolIssue/>
+					<ToolIssue/>
+
+					<EmptyState header={value}/>
+
+				</Stack>
+
+				{/* <CodeBlock language={"json"} text={JSON.stringify(json, null, 4)}/> */}
+
+			</ToolPanel>
+
+		</Box>
 
 	</Inline>;
 
-}
-
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-function ToolAgreement(macroBody: DocNode) {
-	return macroBody && <AdfRenderer document={macroBody}/>;
 }
 
 

@@ -14,43 +14,31 @@
  * limitations under the License.
  */
 
-import ForgeReconciler, {
-	AdfRenderer,
-	Box,
-	EmptyState,
-	Spinner,
-	Tab,
-	TabList,
-	TabPanel,
-	Tabs,
-	Text,
-	useConfig,
-	useProductContext
-} from "@forge/react";
+import ForgeReconciler, { Button, ButtonGroup, EmptyState, useConfig, useProductContext } from "@forge/react";
 import React, { useEffect, useState } from "react";
-import { Content, isNull, isStatus, isUndefined } from "../shared";
 import { Attachment } from "../shared/attachments";
-import { listAttachments, retrieveAttachment } from "./ports/attachments";
-import { translate } from "./ports/gemini";
-import { ToolReferences } from "./views/references";
+import { listAttachments } from "./ports/attachments";
+import { ToolBar } from "./views/layouts/bar";
+import { ToolLanguage } from "./views/lenses/language";
+import { ToolReference } from "./views/lenses/reference";
+import { ToolReferences } from "./views/lenses/references";
+import { ToolText } from "./views/lenses/text";
 
 
-//// !!! //////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-function monitor<T>(setter: (value: Content<T>) => void): (promise: Promise<T>) => void {
-	return promise => {
-
-		setter(null);
-
-		promise.then(setter).catch(error =>
-			setter(isStatus(error) ? error : { code: 999, text: JSON.stringify(error, null, 4) })
-		);
-
-	};
+const enum Mode {
+	Agreement,
+	References,
+	Issues,
+	Chat
 }
 
+const tabs=[
+	{ mode: Mode.Agreement, label: "Agreement", disabled: false },
+	{ mode: Mode.References, label: "References", disabled: false },
+	{ mode: Mode.Issues, label: "Issues", disabled: true },
+	{ mode: Mode.Chat, label: "Chat", disabled: true }
+];
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 function ToolMacro() {
 
@@ -61,61 +49,45 @@ function ToolMacro() {
 
 	const [attachments, setAttachments]=useState<Attachment[]>();
 
-	const [data, setData]=useState<Content<string>>();
-
-
 	useEffect(() => {
 		listAttachments().then(setAttachments);
 	}, []);
 
 
-	return <Tabs id="default">
+	const [mode, setMode]=useState<Mode | Attachment>(Mode.References); // !!!
 
-		<TabList>
-			<Tab>References</Tab>
-			<Tab>Text</Tab>
-			<Tab>Issues</Tab>
+	return <>
 
-		</TabList>
+		<ToolBar
 
-		<TabPanel>
-			<Box padding="space.300">
+			menu={
+				<ButtonGroup>{tabs.map(({ mode: tab, label, disabled }) =>
+					<Button key={tab} isSelected={mode === tab} isDisabled={disabled}
 
-				<ToolReferences attachments={attachments} onClick={attachment =>
-					monitor(setData)(retrieveAttachment(attachment).then(value => {
+						onClick={() => setMode(tab)}
 
-						return translate({
+					>{label}</Button>
+				)}</ButtonGroup>
+			}
 
-							source: { title: attachment.title, content: value, locale: "en" }, // !!! locale
-							target: "it"
 
-						});
+			more={<ToolLanguage/>}
 
-					}))
-				}/>
+		/>
 
-				{isUndefined(data) ? undefined
-					: isNull(data) ? <Spinner label={"Loading…"}/>
-						: isStatus(data) ? <Text>{JSON.stringify(data)}</Text>
-							: <Text>{data}</Text>
-				}
 
-			</Box>
-		</TabPanel>
+		{
 
-		<TabPanel>
-			<Box padding="space.300">
-				{macroBody && <AdfRenderer document={macroBody}/>}
-			</Box>
-		</TabPanel>
+			mode === Mode.Agreement ? <ToolText>{macroBody}</ToolText>
+				: mode === Mode.References ? <ToolReferences attachments={attachments} onClick={setMode}/>
+					: mode === Mode.Issues ? <EmptyState header={"Work in progress…"}/>
+						: mode === Mode.Chat ? <EmptyState header={"Work in progress…"}/>
+							: <ToolReference>{mode}</ToolReference>
 
-		<TabPanel>
-			<Box padding="space.300">
-				<EmptyState header={"Work in progress…"}/>
-			</Box>
-		</TabPanel>
+		}
 
-	</Tabs>;
+	</>;
+
 }
 
 

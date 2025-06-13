@@ -16,11 +16,27 @@
 
 
 /**
- * Checks if a value is undefined.
+ * Checks if a value is not `undefined` or `null`.
+ *
+ * @param value the value to check
+ *
+ * @return `true` if the value is defined; `false` otherwise
+ */
+export function isDefined<T>(value: undefined | null | T): value is T {
+	return value !== undefined && value !== null;
+}
+
+/**
+ * Checks if a value is `undefined`.
+ *
+ * @param value the value to check
+ *
+ * @return `true` if the value is `undefined`; `false` otherwise
  */
 export function isUndefined(value: unknown): value is undefined {
 	return value === undefined;
 }
+
 
 /**
  * Checks if a value is null.
@@ -69,9 +85,7 @@ export function isArray<T=unknown>(value: unknown, is?: (value: unknown) => valu
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-export type Content<T>=null | T | Status;
-
-interface Status {
+export interface Trace {
 
 	code: number;
 	text: string;
@@ -79,6 +93,10 @@ interface Status {
 }
 
 
-export function isStatus(value: unknown): value is Status {
+export function isTrace(value: unknown): value is Trace {
 	return isObject(value) && isNumber(value.code) && isString(value.text);
+}
+
+export function asTrace(value: unknown) {
+	return isTrace(value) ? value : { code: 999, text: JSON.stringify(value, null, 4) };
 }

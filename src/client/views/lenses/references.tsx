@@ -16,7 +16,7 @@
 
 import { List, ListItem, Pressable, Spinner } from "@forge/react";
 import React from "react";
-import { Attachment } from "../../shared/attachments";
+import { Attachment, compareAttachments } from "../../../shared/attachments";
 
 export function ToolReferences({
 
@@ -37,15 +37,18 @@ export function ToolReferences({
 
 		// !!! <EmptyState/> with recovery actions on error
 
-		: <List type={"unordered"}>{attachments.sort((x, y) =>
-
-			x.title.localeCompare(y.title)
-		).map(attachment => <>
+		: <List type={"unordered"}>{attachments.sort(compareAttachments).map(attachment => <>
 
 			<ListItem key={attachment.id}>
-				<Pressable onClick={() => onClick?.(attachment)}>{
+
+				<Pressable backgroundColor={"color.background.neutral.subtle"}
+
+					onClick={() => onClick?.(attachment)}
+
+				>{
 					attachment.title.replace(/\.pdf$/, "")
 				}</Pressable>
+
 			</ListItem>
 
 		</>)}</List>;
