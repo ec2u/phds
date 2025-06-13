@@ -14,11 +14,13 @@
  * limitations under the License.
  */
 
-import ForgeReconciler, { Button, ButtonGroup, EmptyState, useConfig, useProductContext } from "@forge/react";
+import ForgeReconciler, { Button, ButtonGroup, useConfig, useProductContext } from "@forge/react";
 import React, { useState } from "react";
 import { Attachment } from "../shared/attachments";
 import { defaultLocale, Locale } from "../shared/languages";
 import { ToolBar } from "./views/layouts/bar";
+import { ToolChat } from "./views/lenses/chat";
+import { ToolIssues } from "./views/lenses/issues";
 import { ToolLanguage } from "./views/lenses/language";
 import { ToolReference } from "./views/lenses/reference";
 import { ToolReferences } from "./views/lenses/references";
@@ -35,7 +37,7 @@ const enum Tab {
 const tabs=[
 	{ tab: Tab.Agreement, label: "Agreement", disabled: false },
 	{ tab: Tab.References, label: "References", disabled: false },
-	{ tab: Tab.Issues, label: "Issues", disabled: true },
+	{ tab: Tab.Issues, label: "Issues", disabled: false },
 	{ tab: Tab.Chat, label: "Chat", disabled: true }
 ];
 
@@ -48,7 +50,7 @@ function ToolMacro() {
 	const body=context?.extension?.macro?.body;
 
 
-	const [tab, setTab]=useState<Tab | Attachment>(Tab.References); // !!!
+	const [tab, setTab]=useState<Tab | Attachment>(Tab.Issues); // !!!
 	const [locale, setLocale]=useState<Locale>(defaultLocale);
 
 
@@ -74,8 +76,8 @@ function ToolMacro() {
 
 			tab === Tab.Agreement ? <ToolText>{body}</ToolText>
 				: tab === Tab.References ? <ToolReferences onClick={setTab}/>
-					: tab === Tab.Issues ? <EmptyState header={"Work in progress…"}/>
-						: tab === Tab.Chat ? <EmptyState header={"Work in progress…"}/>
+					: tab === Tab.Issues ? <ToolIssues/>
+						: tab === Tab.Chat ? <ToolChat/>
 							: <ToolReference locale={locale}>{tab}</ToolReference>
 
 		}

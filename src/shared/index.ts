@@ -83,6 +83,29 @@ export function isArray<T=unknown>(value: unknown, is?: (value: unknown) => valu
 }
 
 
+/**
+ * Checks if a value is a symbol.
+ *
+ * @param value the value to check
+ *
+ * @return `true` if the value is a symbol; `false` otherwise
+ */
+export function isSymbol(value: unknown): value is Symbol {
+	return typeof value === "symbol";
+}
+
+/**
+ * Checks if a value is a function.
+ *
+ * @param value the value to check
+ *
+ * @return `true` if the value is a function; `false` otherwise
+ */
+export function isFunction(value: unknown): value is Function {
+	return value instanceof Function;
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 export interface Trace {
@@ -121,7 +144,7 @@ export function immutable<T=any>(value: T): Readonly<typeof value> {
 
 		return Object.freeze(Reflect.ownKeys(value as any).reduce((object: any, key) => {
 
-			object[key]=immutable((value as any)[key]);
+			object[key]=isSymbol(key) ? (value as any)[key] : immutable((value as any)[key]);
 
 			return object;
 
