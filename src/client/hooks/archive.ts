@@ -16,7 +16,7 @@
 
 import { useProductContext } from "@forge/react";
 import { createContext, createElement, ReactNode, useContext, useState } from "react";
-import { asTrace, immutable, Trace } from "../../shared";
+import { asTrace, immutable, Status, Update } from "../../shared";
 import { Attachment } from "../../shared/attachments";
 import { Document } from "../../shared/documents";
 import { Language } from "../../shared/languages";
@@ -30,7 +30,7 @@ const Context=createContext<Archive>(immutable({
 		throw new Error("undefined archive");
 	},
 
-	lookup(monitor: (content: Status<Document>) => void, id: string, locale: Language): void {
+	lookup(monitor: (content: Status<Document>) => void, attachment: Attachment, locale: Language): void {
 		throw new Error("undefined archive");
 	}
 
@@ -39,21 +39,11 @@ const Context=createContext<Archive>(immutable({
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-export type Status<T>=Update | T | Trace;
-
-export const enum Update {
-	Initializing,
-	Scanning,
-	Fetching,
-	Extracting,
-	Translating
-}
-
 export interface Archive {
 
 	list(monitor: (content: Status<ReadonlyArray<Attachment>>) => void): void;
 
-	lookup(monitor: (content: Status<Document>) => void, id: string, locale: Language): void;
+	lookup(monitor: (content: Status<Document>) => void, attachment: Attachment, locale: Language): void;
 
 }
 
@@ -81,8 +71,8 @@ export function ToolArchive({
 				list(createAsyncEmitter(monitor));
 			},
 
-			lookup(monitor: (content: Status<Document>) => void, id: string, locale: Language) {
-				lookup(createAsyncEmitter(monitor), id, locale);
+			lookup(monitor: (content: Status<Document>) => void, attachment: Attachment, locale: Language) {
+				lookup(createAsyncEmitter(monitor), attachment, locale);
 			}
 
 		}),
@@ -109,10 +99,60 @@ export function ToolArchive({
 		}
 	}
 
-	async function lookup(emitter: Emitter<Status<Document>>, id: string, locale: Language) {
+	async function lookup(emitter: Emitter<Status<Document>>, attachment: Attachment, locale: Language) {
 		try {
 
 			await scan(emitter);
+
+
+			// // !!! check if updated translation is available
+			//
+			//
+			// // !!! check if updated full text is available
+			//
+			// useEffect(() => {
+			//
+			// 	if ( attachment ) {
+			//
+			// 		setStatus("Retrieving");
+			//
+			// 		retrieveAttachment(attachment)
+			// 			.then(setContent)
+			// 			.then(clearStatus)
+			// 			.catch(setStatus);
+			//
+			// 	}
+			//
+			// }, [attachment]);
+			//
+			// // !!! extract full text
+			// // !!! save full text and remove stale versions
+			//
+			// useEffect(() => {
+			//
+			// 	if ( content ) {
+			//
+			// 		console.log(content);
+			//
+			// 		setStatus("Translating");
+			//
+			// 		translate({
+			// 			target: language,
+			// 			source: {
+			// 				title: attachment.title,
+			// 				language: defaultLanguage, // !!! auto
+			// 				content // decode from base64
+			// 			}
+			// 		})
+			// 			.then(setTranslation)
+			// 			.then(clearStatus)
+			// 			.catch(setStatus);
+			//
+			// 	}
+			//
+			// }, [content, language]);
+			//
+			// // !!! save translation and remove stale versions
 
 			emitter.emit(Update.Fetching);
 			await delay(500);
@@ -123,7 +163,7 @@ export function ToolArchive({
 			emitter.emit(Update.Translating);
 			await delay(700);
 
-			emitter.emit({ id, language: locale, content: "" });
+			emitter.emit({ title: attachment.title, language: locale, content: "" });
 
 		} catch ( error ) {
 

@@ -14,12 +14,7 @@
  * limitations under the License.
  */
 
-import { EmptyState, Icon, Spinner, Text } from "@forge/react";
-import React from "react";
-import { isNumber, isTrace, Trace } from "../../../shared";
 import { Language } from "../../../shared/languages";
-import { Update } from "../../hooks/archive";
-import { useDocument } from "../../hooks/document";
 
 
 export function ToolIssues({
@@ -32,38 +27,6 @@ export function ToolIssues({
 
 }) {
 
-	const status=useDocument("zot", language);
-
-	return isNumber(status) ? Updating(status)
-		: isTrace(status) ? Error(status)
-			: <Text>{status.content}</Text>;
-
-
-	function Updating(update: Update) {
-
-		const messages={
-			[Update.Initializing]: "Initializing...",
-			[Update.Scanning]: "Scanning Attachments...",
-			[Update.Fetching]: "Fetching Content...",
-			[Update.Extracting]: "Extracting Text...",
-			[Update.Translating]: "Translating..."
-		};
-
-		return <EmptyState header={messages[update]} description={<Spinner/>}/>;
-	}
-
-	function Error(trace: Trace) {
-
-		const code=trace.code;
-		const text=trace.text
-			? trace.text.replace(/^./, c => c.toUpperCase())
-			: "Unable to process document";
-
-		return <EmptyState width={"narrow"}
-			header={"Processing Error"}
-			description={`${text} (${code})`}
-			primaryAction={<Icon label={""} glyph={"error"} size={"large"} primaryColor={"color.icon.warning"}/>}
-		/>;
-	}
+	return null;
 
 }

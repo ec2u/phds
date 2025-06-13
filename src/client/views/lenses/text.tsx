@@ -27,5 +27,7 @@ export function ToolText({
 	children: DocNode
 
 }) {
+
 	return text && <AdfRenderer document={text}/>;
+
 }

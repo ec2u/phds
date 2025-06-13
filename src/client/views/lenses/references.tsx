@@ -14,11 +14,13 @@
  * limitations under the License.
  */
 
-import { List, ListItem, Pressable, Spinner } from "@forge/react";
+import { List, ListItem, Pressable } from "@forge/react";
 import React from "react";
-import { isNumber, isTrace } from "../../../shared";
+import { isTrace, isUpdate } from "../../../shared";
 import { Attachment, compareAttachments } from "../../../shared/attachments";
 import { useAttachments } from "../../hooks/attachments";
+import { ToolTrace } from "./trace";
+import { ToolUpdate } from "./update";
 
 export function ToolReferences({
 
@@ -32,12 +34,17 @@ export function ToolReferences({
 
 	const attachments=useAttachments();
 
+	if ( isUpdate(attachments) ) {
 
-	return isNumber(attachments) ? <Spinner label={"Loading…"}/>
+		return <ToolUpdate>{attachments}</ToolUpdate>;
 
-		: isTrace(attachments) ? <Spinner label={"Loading…"}/> // !!! factor from ToolIssues
+	} else if ( isTrace(attachments) ) {
 
-			: <List type={"unordered"}>{[...attachments].sort(compareAttachments).map(attachment => <>
+		return <ToolTrace>{attachments}</ToolTrace>;
+
+	} else {
+
+		return <List type={"unordered"}>{[...attachments].sort(compareAttachments).map(attachment => <>
 
 			<ListItem key={attachment.id}>
 
@@ -51,11 +58,15 @@ export function ToolReferences({
 					onClick={() => onClick?.(attachment)}
 
 				>{
+
 					attachment.title.replace(/\.pdf$/, "")
+
 				}</Pressable>
 
 			</ListItem>
 
 		</>)}</List>;
+
+	}
 
 }

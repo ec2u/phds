@@ -14,12 +14,27 @@
  * limitations under the License.
  */
 
-import { Language } from "./languages";
+import { EmptyState, Spinner } from "@forge/react";
+import React from "react";
+import { Update } from "../../../shared";
 
-export interface Document {
+export function ToolUpdate({
 
-	readonly title: string;
-	readonly language: Language;
-	readonly content: string;
+	children: update
 
+}: {
+
+	children: Update
+
+}) {
+
+	const messages={
+		[Update.Initializing]: "Initializing...",
+		[Update.Scanning]: "Scanning Attachments...",
+		[Update.Fetching]: "Fetching Content...",
+		[Update.Extracting]: "Extracting Text...",
+		[Update.Translating]: "Translating..."
+	};
+
+	return <EmptyState header={messages[update]} description={<Spinner/>}/>;
 }

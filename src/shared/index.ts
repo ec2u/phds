@@ -40,6 +40,10 @@ export function isUndefined(value: unknown): value is undefined {
 
 /**
  * Checks if a value is null.
+ *
+ * @param value the value to check
+ *
+ * @return `true` if the value is `null`; `false` otherwise
  */
 export function isNull(value: unknown): value is null {
 	return value === null;
@@ -47,6 +51,10 @@ export function isNull(value: unknown): value is null {
 
 /**
  * Checks if a value is a boolean.
+ *
+ * @param value the value to check
+ *
+ * @return `true` if the value is a boolean; `false` otherwise
  */
 export function isBoolean(value: unknown): value is boolean {
 	return typeof value === "boolean";
@@ -54,6 +62,10 @@ export function isBoolean(value: unknown): value is boolean {
 
 /**
  * Checks if a value is a finite number.
+ *
+ * @param value the value to check
+ *
+ * @return `true` if the value is a finite number; `false` otherwise
  */
 export function isNumber(value: unknown): value is number {
 	return Number.isFinite(value);
@@ -61,6 +73,10 @@ export function isNumber(value: unknown): value is number {
 
 /**
  * Checks if a value is a string.
+ *
+ * @param value the value to check
+ *
+ * @return `true` if the value is a string; `false` otherwise
  */
 export function isString(value: unknown): value is string {
 	return typeof value === "string";
@@ -68,6 +84,10 @@ export function isString(value: unknown): value is string {
 
 /**
  * Checks if a value is a plain object.
+ *
+ * @param value the value to check
+ *
+ * @return `true` if the value is a plain object; `false` otherwise
  *
  * @see https://stackoverflow.com/a/52694022/739773
  */
@@ -77,6 +97,11 @@ export function isObject(value: unknown): value is Record<any, any> & ({ bind?: 
 
 /**
  * Checks if a value is an array.
+ *
+ * @param value the value to check
+ * @param is optional type guard function to check array elements
+ *
+ * @return `true` if the value is an array (optionally with elements matching the type guard); `false` otherwise
  */
 export function isArray<T=unknown>(value: unknown, is?: (value: unknown) => value is T): value is T[] {
 	return Array.isArray(value) && (is === undefined || value.every(is));
@@ -108,21 +133,84 @@ export function isFunction(value: unknown): value is Function {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * Status type representing operation state as either an update, result data, or error trace.
+ *
+ * @template T the type of result data
+ */
+export type Status<T>=Update | T | Trace;
+
+/**
+ * Enumeration of operation update states.
+ */
+export const enum Update {
+	/** Operation is initializing */
+	Initializing,
+	/** Operation is scanning for resources */
+	Scanning,
+	/** Operation is fetching data */
+	Fetching,
+	/** Operation is extracting content */
+	Extracting,
+	/** Operation is translating content */
+	Translating
+}
+
+/**
+ * Error trace information.
+ */
 export interface Trace {
-
+	/** Error code */
 	readonly code: number;
+	/** Error message or description */
 	readonly text: string;
-
 }
 
 
+/**
+ * Checks if a value is a valid Update enum value.
+ *
+ * @param value the value to check
+ *
+ * @return `true` if the value is a valid Update; `false` otherwise
+ */
+export function isUpdate(value: unknown): value is Update {
+	return isNumber(value) && value >= Update.Initializing && value <= Update.Translating;
+}
+
+/**
+ * Converts a value to an Update enum value if valid.
+ *
+ * @param value the value to convert
+ *
+ * @return the Update value if valid; `undefined` otherwise
+ */
+export function asUpdate(value: unknown): undefined | Update {
+	return isUpdate(value) ? value : undefined;
+}
+
+
+/**
+ * Checks if a value is a valid Trace object.
+ *
+ * @param value the value to check
+ *
+ * @return `true` if the value is a valid Trace; `false` otherwise
+ */
 export function isTrace(value: unknown): value is Trace {
 	return isObject(value)
 		&& isNumber(value.code)
 		&& isString(value.text);
 }
 
-export function asTrace(value: unknown) {
+/**
+ * Converts a value to a Trace object.
+ *
+ * @param value the value to convert
+ *
+ * @return the Trace if valid; otherwise a Trace with code 999 and stringified value
+ */
+export function asTrace(value: unknown): Trace {
 	return isTrace(value) ? value : { code: 999, text: JSON.stringify(value, null, 4) };
 }
 

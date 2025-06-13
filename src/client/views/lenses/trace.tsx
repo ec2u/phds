@@ -14,12 +14,28 @@
  * limitations under the License.
  */
 
-import { Language } from "./languages";
+import { EmptyState, Icon } from "@forge/react";
+import React from "react";
+import { Trace } from "../../../shared";
 
-export interface Document {
+export function ToolTrace({
 
-	readonly title: string;
-	readonly language: Language;
-	readonly content: string;
+	children: trace
 
+}: {
+
+	children: Trace
+
+}) {
+
+	const code=trace.code;
+	const text=trace.text
+		? trace.text.replace(/^./, c => c.toUpperCase())
+		: "Unable to process document";
+
+	return <EmptyState width={"narrow"}
+		header={"Processing Error"}
+		description={`${text} (${code})`}
+		primaryAction={<Icon label={""} glyph={"error"} size={"large"} primaryColor={"color.icon.warning"}/>}
+	/>;
 }

@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
-import { EmptyState, Spinner, Text } from "@forge/react";
-import React, { useEffect, useState } from "react";
-import { isDefined, isString, isTrace, Trace } from "../../../shared";
+import { Text } from "@forge/react";
+import React from "react";
+import { isTrace, isUpdate } from "../../../shared";
 import { Attachment } from "../../../shared/attachments";
-import { defaultLanguage, Language } from "../../../shared/languages";
-import { retrieveAttachment } from "../../ports/attachments";
-import { translate } from "../../ports/gemini";
+import { Language } from "../../../shared/languages";
+import { useDocument } from "../../hooks/document";
+import { ToolTrace } from "./trace";
+import { ToolUpdate } from "./update";
 
 export function ToolReference({
 
@@ -36,91 +37,19 @@ export function ToolReference({
 
 }) {
 
+	const document=useDocument(attachment, language);
 
-	const [status, setStatus]=useState<string | Trace>();
+	if ( isUpdate(document) ) {
 
-	const [content, setContent]=useState<string>();
-	const [translation, setTranslation]=useState<string>();
+		return <ToolUpdate>{document}</ToolUpdate>;
 
+	} else if ( isTrace(document) ) {
 
-	function clearStatus() {
-		setStatus(undefined);
-	}
-
-	// !!! check if updated translation is available
-
-
-	// !!! check if updated full text is available
-
-	useEffect(() => {
-
-		if ( attachment ) {
-
-			setStatus("Retrieving");
-
-			retrieveAttachment(attachment)
-				.then(setContent)
-				.then(clearStatus)
-				.catch(setStatus);
-
-		}
-
-	}, [attachment]);
-
-	// !!! extract full text
-	// !!! save full text and remove stale versions
-
-	useEffect(() => {
-
-		if ( content ) {
-
-			console.log(content);
-
-			setStatus("Translating");
-
-			translate({
-				target: language,
-				source: {
-					id: attachment.title,
-					language: defaultLanguage, // !!! auto
-					content // decode from base64
-				}
-			})
-				.then(setTranslation)
-				.then(clearStatus)
-				.catch(setStatus);
-
-		}
-
-	}, [content, language]);
-
-	// !!! save translation and remove stale versions
-
-	if ( isTrace(status) ) {
-
-		return <EmptyState
-			header={`;( Unable to process ${attachment.title}`} // !!! move title to description
-			description={JSON.stringify(status, null, 4)} // !!! human-readable message
-		/>;
-
-	} else if ( isString(status) ) {
-
-		return <EmptyState
-			header={`${status ?? "Loading"}…`}
-			description={<Spinner/>}
-		/>;
-
-	} else if ( isDefined(translation) ) {
-
-		if ( isString(translation) ) {
-			return <Text>{translation}</Text>;
-		} else {
-			return <Text>Binary!</Text>;
-		}
+		return <ToolTrace>{document}</ToolTrace>;
 
 	} else {
 
-		return null;
+		return <Text>{document.content}</Text>; // !!! markdown
 
 	}
 

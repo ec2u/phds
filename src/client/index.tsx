@@ -36,9 +36,9 @@ const enum Tab {
 }
 
 const tabs=[
-	{ tab: Tab.Agreement, label: "Agreement", disabled: false },
-	{ tab: Tab.References, label: "References", disabled: false },
-	{ tab: Tab.Issues, label: "Issues", disabled: false },
+	{ tab: Tab.Agreement, label: "Agreement" },
+	{ tab: Tab.References, label: "References" },
+	{ tab: Tab.Issues, label: "Issues", disabled: true },
 	{ tab: Tab.Chat, label: "Chat", disabled: true }
 ];
 
@@ -51,7 +51,7 @@ function ToolMacro() {
 	const body=context?.extension?.macro?.body;
 
 
-	const [tab, setTab]=useState<Tab | Attachment>(Tab.Issues); // !!!
+	const [tab, setTab]=useState<Tab | Attachment>(Tab.References); // !!!
 	const [language, setLanguage]=useState<Language>(defaultLanguage);
 
 
