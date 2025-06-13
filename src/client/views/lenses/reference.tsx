@@ -37,6 +37,7 @@ export function ToolReference({
 
 }) {
 
+
 	const [status, setStatus]=useState<string | Trace>();
 
 	const [content, setContent]=useState<Content>();
@@ -47,6 +48,10 @@ export function ToolReference({
 		setStatus(undefined);
 	}
 
+	// !!! check if updated translation is available
+
+
+	// !!! check if updated full text is available
 
 	useEffect(() => {
 
@@ -62,6 +67,9 @@ export function ToolReference({
 		}
 
 	}, [attachment]);
+
+	// !!! extract full text
+	// !!! save full text and remove stale versions
 
 	useEffect(() => {
 
@@ -83,15 +91,22 @@ export function ToolReference({
 
 		}
 
-	}, [content]);
+	}, [content, locale]);
 
-	// !!! save translation
+	// !!! save translation and remove stale versions
 
 	if ( isTrace(status) ) {
 
 		return <EmptyState
-			header={`;( Unable to process ${attachment.title}`} // move title to description
+			header={`;( Unable to process ${attachment.title}`} // !!! move title to description
 			description={JSON.stringify(status, null, 4)} // !!! human-readable message
+		/>;
+
+	} else if ( isString(status) ) {
+
+		return <EmptyState
+			header={`${status ?? "Loading"}…`}
+			description={<Spinner/>}
 		/>;
 
 	} else if ( isDefined(translation) ) {
@@ -104,10 +119,7 @@ export function ToolReference({
 
 	} else {
 
-		return <EmptyState
-			header={`${status ?? "Loading"}…`}
-			description={<Spinner/>}
-		/>;
+		return null;
 
 	}
 

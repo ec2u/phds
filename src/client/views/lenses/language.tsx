@@ -33,7 +33,7 @@ export function ToolLanguage({
 
 	return <Select spacing={"compact"} isRequired={true}
 
-		defaultValue={{ value: locale, label: languages[locale] }}
+		value={{ value: locale, label: languages[locale] }}
 		onChange={option => onChange(option.value)}
 
 		options={Object.entries(languages).map(([value, label]) => ({
