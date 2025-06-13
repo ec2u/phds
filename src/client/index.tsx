@@ -17,7 +17,7 @@
 import ForgeReconciler, { Button, ButtonGroup, useConfig, useProductContext } from "@forge/react";
 import React, { useState } from "react";
 import { Attachment } from "../shared/attachments";
-import { defaultLocale, Locale } from "../shared/languages";
+import { defaultLanguage, Language } from "../shared/languages";
 import { ToolBar } from "./views/layouts/bar";
 import { ToolChat } from "./views/lenses/chat";
 import { ToolIssues } from "./views/lenses/issues";
@@ -51,7 +51,7 @@ function ToolMacro() {
 
 
 	const [tab, setTab]=useState<Tab | Attachment>(Tab.Issues); // !!!
-	const [locale, setLocale]=useState<Locale>(defaultLocale);
+	const [locale, setLocale]=useState<Language>(defaultLanguage);
 
 
 	return <>

@@ -18,8 +18,7 @@ import { EmptyState, Spinner, Text } from "@forge/react";
 import React, { useEffect, useState } from "react";
 import { isDefined, isString, isTrace, Trace } from "../../../shared";
 import { Attachment } from "../../../shared/attachments";
-import { Content } from "../../../shared/documents";
-import { defaultLocale, Locale } from "../../../shared/languages";
+import { defaultLanguage, Language } from "../../../shared/languages";
 import { retrieveAttachment } from "../../ports/attachments";
 import { translate } from "../../ports/gemini";
 
@@ -31,7 +30,7 @@ export function ToolReference({
 
 }: {
 
-	locale: Locale
+	locale: Language
 
 	children: Attachment
 
@@ -40,8 +39,8 @@ export function ToolReference({
 
 	const [status, setStatus]=useState<string | Trace>();
 
-	const [content, setContent]=useState<Content>();
-	const [translation, setTranslation]=useState<Content>();
+	const [content, setContent]=useState<string>();
+	const [translation, setTranslation]=useState<string>();
 
 
 	function clearStatus() {
@@ -75,14 +74,16 @@ export function ToolReference({
 
 		if ( content ) {
 
+			console.log(content);
+
 			setStatus("Translating");
 
 			translate({
 				target: locale,
 				source: {
 					title: attachment.title,
-					locale: defaultLocale, // !!! auto
-					content
+					language: defaultLanguage, // !!! auto
+					content // decode from base64
 				}
 			})
 				.then(setTranslation)

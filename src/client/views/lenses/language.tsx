@@ -16,7 +16,7 @@
 
 import { Select } from "@forge/react";
 import React from "react";
-import { languages, Locale } from "../../../shared/languages";
+import { Language, languages } from "../../../shared/languages";
 
 
 export function ToolLanguage({
@@ -26,8 +26,8 @@ export function ToolLanguage({
 
 }: {
 
-	locale: Locale
-	onChange: (locale: Locale) => void
+	locale: Language
+	onChange: (locale: Language) => void
 
 }) {
 

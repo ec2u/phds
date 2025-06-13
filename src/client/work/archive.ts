@@ -16,15 +16,34 @@
 
 
 import { createAsyncEmitter } from "../../shared/emitters";
+import { Language } from "../../shared/languages";
 
-export type PipelineUpdate=
+export type Update=
 	| { type: "progress"; stage: string; message?: string }
 	| { type: "result"; data: any }
 	| { type: "error"; error: Error }
 	| { type: "done" };
 
 
-export async function processDocument(docId: string, emitter: ReturnType<typeof createAsyncEmitter<PipelineUpdate>>) {
+export function lookup(id: string, locale: Language, consumer: (update: Update) => void) {
+
+	async function consume(consumer: (update: Update) => void) {
+		for await (const update of emitter) {consumer(update);}
+	}
+
+	const emitter=createAsyncEmitter<Update>();
+
+	consume(consumer); // for await must run inside an async function
+
+	process(id, locale, emitter);
+
+	return () => emitter.close();
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+async function process(id: string, locale: Language, emitter: ReturnType<typeof createAsyncEmitter<Update>>) {
 	try {
 
 		emitter.emit({ type: "progress", stage: "retrieval", message: "Fetching document" });

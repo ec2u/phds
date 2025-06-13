@@ -14,16 +14,12 @@
  * limitations under the License.
  */
 
-import { Locale } from "./languages";
-
-
-export type Content=string | ArrayBuffer;
+import { Language } from "./languages";
 
 export interface Document {
 
 	readonly title: string;
-	readonly locale: Locale;
-
-	readonly content: Content;
+	readonly language: Language;
+	readonly content: string;
 
 }

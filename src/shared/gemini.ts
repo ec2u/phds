@@ -16,11 +16,11 @@
 
 import { Document } from "./documents";
 
-import { Locale } from "./languages";
+import { Language } from "./languages";
 
 export interface Translation {
 
-	readonly target: Locale;
+	readonly target: Language;
 	readonly source: Document;
 
 }

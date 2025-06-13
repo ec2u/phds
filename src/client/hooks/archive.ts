@@ -16,12 +16,12 @@
 
 import { createContext, createElement, ReactNode, useContext } from "react";
 import { immutable } from "../../shared";
-import { Locale } from "../../shared/languages";
+import { Language } from "../../shared/languages";
 
 
 const Context=createContext<Archive>(immutable({
 
-	lookup(id: string, locale: Locale): Promise<string> {
+	lookup(id: string, locale: Language): Promise<string> {
 		throw new Error("undefined archive");
 	}
 
@@ -32,7 +32,7 @@ const Context=createContext<Archive>(immutable({
 
 export interface Archive {
 
-	lookup(id: string, locale: Locale): Promise<string>;
+	lookup(id: string, locale: Language): Promise<string>;
 
 }
 
@@ -51,7 +51,7 @@ export function ToolArchive({
 
 		value: immutable({
 
-			lookup(id: string, locale: Locale): Promise<string> {
+			lookup(id: string, locale: Language): Promise<string> {
 				throw new Error("undefined archive");
 			}
 

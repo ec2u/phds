@@ -16,12 +16,13 @@
 
 import { List, ListItem } from "@forge/react";
 import React from "react";
-import { usePipeline } from "../../work/usePipeline";
+import { defaultLanguage } from "../../../shared/languages";
+import { useDocument } from "../../work/document";
 
 
 export function ToolIssues() {
 
-	const updates=usePipeline("zot");
+	const updates=useDocument("zot", defaultLanguage);
 
 	return <List type={"unordered"}>{updates.map(update => {
 

@@ -27,7 +27,7 @@ import ForgeReconciler, {
 } from "@forge/react";
 import React, { useEffect, useState } from "react";
 import { Attachment } from "../shared/attachments";
-import { defaultLocale } from "../shared/languages";
+import { defaultLanguage } from "../shared/languages";
 import { listAttachments } from "./ports/attachments";
 import { ToolBar } from "./views/layouts/bar";
 import ToolPanel from "./views/layouts/panel";
@@ -132,7 +132,7 @@ function ToolConfig() {
 					</ButtonGroup>
 				}
 
-				more={<ToolLanguage locale={defaultLocale} onChange={() => {}}/>}
+				more={<ToolLanguage locale={defaultLanguage} onChange={() => {}}/>}
 
 			/>}>{
 

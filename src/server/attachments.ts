@@ -17,12 +17,7 @@
 import api, { route } from "@forge/api";
 import { asTrace } from "../shared";
 import { Attachment, AttachmentsResponse } from "../shared/attachments";
-import { Content } from "../shared/documents";
 import { query, Request } from "./utils";
-
-
-const textuals=[".txt", ".md"];
-
 
 export async function listAttachments({ context }: Request<{}>) {
 
@@ -57,12 +52,10 @@ export async function listAttachments({ context }: Request<{}>) {
 }
 
 
-export async function retrieveAttachment({ payload: attachment }: Request<Attachment>): Promise<Content> {
+export async function retrieveAttachment({ payload: attachment }: Request<Attachment>): Promise<string> {
 
 	const id=attachment.id;
 	const page=attachment.pageId ?? "";
-
-	// !!! handle missing page id
 
 	const url=route`/wiki/rest/api/content/${page}/child/attachment/${id}/download`;
 
@@ -74,12 +67,7 @@ export async function retrieveAttachment({ payload: attachment }: Request<Attach
 
 	if ( response.ok ) {
 
-		const title=attachment.title.toLowerCase();
-		const textual=textuals.some(extension => title.endsWith(extension));
-
-		return textual
-			? await response.text()
-			: await response.arrayBuffer();
+		return Buffer.from(await response.arrayBuffer()).toString("base64");
 
 	} else {
 

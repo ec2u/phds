@@ -15,34 +15,19 @@
  */
 
 import { useEffect, useState } from "react";
-import { createAsyncEmitter } from "../../shared/emitters";
-import { PipelineUpdate, processDocument } from "./processDocument";
-
-function lookup(docId: string, consumer: (update: PipelineUpdate) => void) {
-
-	async function consume(consumer: (update: PipelineUpdate) => void) {
-		for await (const update of emitter) {consumer(update);}
-	}
-
-	const emitter=createAsyncEmitter<PipelineUpdate>();
-
-	consume(consumer);
-
-	processDocument(docId, emitter);
-
-	return () => emitter.close();
-}
+import { Language } from "../../shared/languages";
+import { lookup, Update } from "./archive";
 
 
-export function usePipeline(id: string): PipelineUpdate[] {
+export function useDocument(id: string, locale: Language): Update[] {
 
-	const [updates, setUpdates]=useState<PipelineUpdate[]>([]);
+	const [updates, setUpdates]=useState<Update[]>([]);
 
 	useEffect(() => {
 
-		return lookup(id, update => setUpdates(prev => [...prev, update]));
+		return lookup(id, locale, update => setUpdates(prev => [...prev, update]));
 
-	}, [id]);
+	}, [id, locale]);
 
 	return updates;
 }

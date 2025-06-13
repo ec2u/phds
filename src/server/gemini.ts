@@ -50,7 +50,7 @@ export async function translate({ payload: { source, target } }: Request<Transla
 
 			model: model,
 			systemInstruction: `
-				- translate the provided markdown document from ${source.locale} to ${target}
+				- translate the provided markdown document from ${source.language} to ${target}
 				- make sure to preserve the semantic structure of the document in terms of elements such as section
 				  headings, tables and bullet lists
 				- make absolutely sure to retain all textual content; this is vital: do not remove anything

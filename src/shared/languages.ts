@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-export type Locale=keyof typeof languages;
+export type Language=keyof typeof languages;
 
-export const defaultLocale="en" as const;
+export const defaultLanguage="en" as const;
 
 export const languages: { [key: string]: string }={
 	de: "Deutsch",
