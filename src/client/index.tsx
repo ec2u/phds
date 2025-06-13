@@ -25,7 +25,7 @@ import { ToolReferences } from "./views/lenses/references";
 import { ToolText } from "./views/lenses/text";
 
 
-const enum Mode {
+const enum Tab {
 	Agreement,
 	References,
 	Issues,
@@ -33,10 +33,10 @@ const enum Mode {
 }
 
 const tabs=[
-	{ mode: Mode.Agreement, label: "Agreement", disabled: false },
-	{ mode: Mode.References, label: "References", disabled: false },
-	{ mode: Mode.Issues, label: "Issues", disabled: true },
-	{ mode: Mode.Chat, label: "Chat", disabled: true }
+	{ tab: Tab.Agreement, label: "Agreement", disabled: false },
+	{ tab: Tab.References, label: "References", disabled: false },
+	{ tab: Tab.Issues, label: "Issues", disabled: true },
+	{ tab: Tab.Chat, label: "Chat", disabled: true }
 ];
 
 
@@ -45,22 +45,22 @@ function ToolMacro() {
 	const context=useProductContext();
 	const config=useConfig();
 
-	const macroBody=context?.extension?.macro?.body;
+	const body=context?.extension?.macro?.body;
 
 
-	const [mode, setMode]=useState<Mode | Attachment>(Mode.References); // !!!
+	const [tab, setTab]=useState<Tab | Attachment>(Tab.References); // !!!
 	const [locale, setLocale]=useState<Locale>(defaultLocale);
 
 	return <>
 
 		<ToolBar
 
-			menu={<ButtonGroup>{tabs.map(({ mode: tab, label, disabled }) =>
-					<Button key={tab} isSelected={mode === tab} isDisabled={disabled}
+			menu={<ButtonGroup>{tabs.map(({ tab: selected, label, disabled }) =>
+				<Button key={selected} isSelected={tab === selected} isDisabled={disabled}
 
-						onClick={() => setMode(tab)}
+					onClick={() => setTab(selected)}
 
-					>{label}</Button>
+				>{label}</Button>
 			)}</ButtonGroup>}
 
 
@@ -71,11 +71,11 @@ function ToolMacro() {
 
 		{
 
-			mode === Mode.Agreement ? <ToolText>{macroBody}</ToolText>
-				: mode === Mode.References ? <ToolReferences onClick={setMode}/>
-					: mode === Mode.Issues ? <EmptyState header={"Work in progress…"}/>
-						: mode === Mode.Chat ? <EmptyState header={"Work in progress…"}/>
-							: <ToolReference locale={locale}>{mode}</ToolReference>
+			tab === Tab.Agreement ? <ToolText>{body}</ToolText>
+				: tab === Tab.References ? <ToolReferences onClick={setTab}/>
+					: tab === Tab.Issues ? <EmptyState header={"Work in progress…"}/>
+						: tab === Tab.Chat ? <EmptyState header={"Work in progress…"}/>
+							: <ToolReference locale={locale}>{tab}</ToolReference>
 
 		}
 
