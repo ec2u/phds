@@ -100,3 +100,5 @@ export function isTrace(value: unknown): value is Trace {
 export function asTrace(value: unknown) {
 	return isTrace(value) ? value : { code: 999, text: JSON.stringify(value, null, 4) };
 }
+
+export { defaultLocale } from "./languages";

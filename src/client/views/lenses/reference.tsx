@@ -14,21 +14,28 @@
  * limitations under the License.
  */
 
-import { EmptyState, Spinner, Text } from "@forge/react";
+import { EmptyState, Spinner, Stack, Text } from "@forge/react";
 import React, { useEffect, useState } from "react";
 import { asTrace, isDefined, isTrace, Trace } from "../../../shared";
 import { Attachment } from "../../../shared/attachments";
+import { Locale } from "../../../shared/languages";
 import { retrieveAttachment } from "../../ports/attachments";
 
 export function ToolReference({
+
+	locale,
 
 	children: attachment
 
 }: {
 
+	locale: Locale
+
 	children: Attachment
 
 }) {
+
+	console.log(locale);
 
 	const [content, setContent]=useState<string | Trace>(); // !!! raw data
 
@@ -39,6 +46,9 @@ export function ToolReference({
 	}, [attachment]);
 
 	return isTrace(content) ? <EmptyState header={"!!!"}/> // !!! message + recovery
-		: isDefined(content) ? <Text>{content}</Text> // !!! markdown
+		: isDefined(content) ? <Stack>
+				<Text>{locale}</Text>
+				<Text>{content}</Text>
+			</Stack> // !!! markdown
 			: <Spinner/>; // !!! message
 }

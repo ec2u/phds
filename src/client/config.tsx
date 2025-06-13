@@ -26,6 +26,7 @@ import ForgeReconciler, {
 	useProductContext
 } from "@forge/react";
 import React, { useEffect, useState } from "react";
+import { defaultLocale } from "../shared";
 import { Attachment } from "../shared/attachments";
 import { listAttachments } from "./ports/attachments";
 import { ToolBar } from "./views/layouts/bar";
@@ -131,12 +132,12 @@ function ToolConfig() {
 					</ButtonGroup>
 				}
 
-				more={<ToolLanguage/>}
+				more={<ToolLanguage locale={defaultLocale} onChange={() => {}}/>}
 
 			/>}>{
 
 				mode === "agreement" ? <ToolText>{macroBody}</ToolText>
-					: mode === "references" ? <ToolReferences attachments={attachments}/>
+					: mode === "references" ? <ToolReferences/>
 						: null // !!! ToolReference()
 
 			}</ToolPanel>

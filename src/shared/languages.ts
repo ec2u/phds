@@ -14,33 +14,29 @@
  * limitations under the License.
  */
 
-import { Select } from "@forge/react";
-import React from "react";
-import { languages, Locale } from "../../../shared/languages";
-
-
-export function ToolLanguage({
-
-	locale,
-	onChange
-
-}: {
-
-	locale: Locale
-	onChange: (locale: Locale) => void
-
-}) {
-
-	return <Select spacing={"compact"} isRequired={true}
-
-		defaultValue={{ value: locale, label: languages[locale] }}
-		onChange={option => onChange(option.value)}
-
-		options={Object.entries(languages).map(([value, label]) => ({
-			value,
-			label
-		}))}
-
-	/>;
-
+export enum Locale {
+	DE="de",
+	EN="en",
+	ES="es",
+	FR="fr",
+	IT="it",
+	PT="pt",
+	RO="ro",
+	FI="fi",
+	SV="sv"
 }
+
+
+export const defaultLocale=Locale.EN;
+
+export const languages: { [key in Locale]: string }={
+	[Locale.DE]: "Deutsch",
+	[Locale.EN]: "English",
+	[Locale.ES]: "Español",
+	[Locale.FR]: "Français",
+	[Locale.IT]: "Italiano",
+	[Locale.PT]: "Português",
+	[Locale.RO]: "Română",
+	[Locale.FI]: "Suomi",
+	[Locale.SV]: "Svenska"
+};

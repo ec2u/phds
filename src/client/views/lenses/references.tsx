@@ -15,23 +15,26 @@
  */
 
 import { List, ListItem, Pressable, Spinner } from "@forge/react";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Attachment, compareAttachments } from "../../../shared/attachments";
+import { listAttachments } from "../../ports/attachments";
 
 export function ToolReferences({
 
 	onClick,
 
-	attachments
-
 }: {
 
 	onClick?: (attachment: Attachment) => void
 
-	attachments: undefined | Attachment[]
-
 
 }) {
+
+	const [attachments, setAttachments]=useState<Attachment[]>();
+
+	useEffect(() => {
+		listAttachments().then(setAttachments);
+	}, []);
 
 	return attachments === undefined ? <Spinner label={"Loading…"}/>
 
@@ -41,7 +44,12 @@ export function ToolReferences({
 
 			<ListItem key={attachment.id}>
 
-				<Pressable backgroundColor={"color.background.neutral.subtle"}
+				<Pressable xcss={{
+
+					color: "color.link",
+					backgroundColor: "color.background.neutral.subtle"
+
+				}}
 
 					onClick={() => onClick?.(attachment)}
 

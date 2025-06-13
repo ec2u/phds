@@ -15,9 +15,9 @@
  */
 
 import ForgeReconciler, { Button, ButtonGroup, EmptyState, useConfig, useProductContext } from "@forge/react";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Attachment } from "../shared/attachments";
-import { listAttachments } from "./ports/attachments";
+import { defaultLocale, Locale } from "../shared/languages";
 import { ToolBar } from "./views/layouts/bar";
 import { ToolLanguage } from "./views/lenses/language";
 import { ToolReference } from "./views/lenses/reference";
@@ -47,31 +47,24 @@ function ToolMacro() {
 
 	const macroBody=context?.extension?.macro?.body;
 
-	const [attachments, setAttachments]=useState<Attachment[]>();
-
-	useEffect(() => {
-		listAttachments().then(setAttachments);
-	}, []);
-
 
 	const [mode, setMode]=useState<Mode | Attachment>(Mode.References); // !!!
+	const [locale, setLocale]=useState<Locale>(defaultLocale);
 
 	return <>
 
 		<ToolBar
 
-			menu={
-				<ButtonGroup>{tabs.map(({ mode: tab, label, disabled }) =>
+			menu={<ButtonGroup>{tabs.map(({ mode: tab, label, disabled }) =>
 					<Button key={tab} isSelected={mode === tab} isDisabled={disabled}
 
 						onClick={() => setMode(tab)}
 
 					>{label}</Button>
-				)}</ButtonGroup>
-			}
+			)}</ButtonGroup>}
 
 
-			more={<ToolLanguage/>}
+			more={<ToolLanguage locale={locale} onChange={setLocale}/>}
 
 		/>
 
@@ -79,10 +72,10 @@ function ToolMacro() {
 		{
 
 			mode === Mode.Agreement ? <ToolText>{macroBody}</ToolText>
-				: mode === Mode.References ? <ToolReferences attachments={attachments} onClick={setMode}/>
+				: mode === Mode.References ? <ToolReferences onClick={setMode}/>
 					: mode === Mode.Issues ? <EmptyState header={"Work in progress…"}/>
 						: mode === Mode.Chat ? <EmptyState header={"Work in progress…"}/>
-							: <ToolReference>{mode}</ToolReference>
+							: <ToolReference locale={locale}>{mode}</ToolReference>
 
 		}
 
