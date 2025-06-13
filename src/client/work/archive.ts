@@ -15,23 +15,30 @@
  */
 
 
+import { asTrace, Trace } from "../../shared";
+import { Document } from "../../shared/documents";
 import { createAsyncEmitter } from "../../shared/emitters";
 import { Language } from "../../shared/languages";
 
-export type Update=
-	| { type: "progress"; stage: string; message?: string }
-	| { type: "result"; data: any }
-	| { type: "error"; error: Error }
-	| { type: "done" };
+export type Status=Update | Document | Trace;
 
 
-export function lookup(id: string, locale: Language, consumer: (update: Update) => void) {
+export const enum Update {
+	Initializing,
+	Scanning,
+	Fetching,
+	Extracting,
+	Translating
+}
 
-	async function consume(consumer: (update: Update) => void) {
+
+export function lookup(id: string, locale: Language, consumer: (content: Status) => void) {
+
+	async function consume(consumer: (update: Status) => void) {
 		for await (const update of emitter) {consumer(update);}
 	}
 
-	const emitter=createAsyncEmitter<Update>();
+	const emitter=createAsyncEmitter<Status>();
 
 	consume(consumer); // for await must run inside an async function
 
@@ -43,27 +50,27 @@ export function lookup(id: string, locale: Language, consumer: (update: Update) 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-async function process(id: string, locale: Language, emitter: ReturnType<typeof createAsyncEmitter<Update>>) {
+async function process(id: string, language: Language, emitter: ReturnType<typeof createAsyncEmitter<Status>>) {
 	try {
 
-		emitter.emit({ type: "progress", stage: "retrieval", message: "Fetching document" });
+		emitter.emit(Update.Scanning);
 		await delay(500);
 
-		emitter.emit({ type: "progress", stage: "extraction", message: "Extracting text" });
+		emitter.emit(Update.Fetching);
+		await delay(500);
+
+		emitter.emit(Update.Extracting);
 		await delay(800);
 
-		emitter.emit({ type: "progress", stage: "translation", message: "Translating content" });
+		emitter.emit(Update.Translating);
 		await delay(700);
 
-		emitter.emit({ type: "progress", stage: "analysis", message: "Analyzing content" });
-		await delay(600);
+		const document={ id, language, content: "" };
+		emitter.emit(document);
 
-		emitter.emit({ type: "result", data: { summary: "Sample analysis result" } });
-		emitter.emit({ type: "done" });
+	} catch ( error ) {
 
-	} catch ( err ) {
-
-		emitter.emit({ type: "error", error: err instanceof Error ? err : new Error(String(err)) });
+		emitter.emit(asTrace(error));
 
 	} finally {
 

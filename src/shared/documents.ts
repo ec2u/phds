@@ -18,7 +18,7 @@ import { Language } from "./languages";
 
 export interface Document {
 
-	readonly title: string;
+	readonly id: string;
 	readonly language: Language;
 	readonly content: string;
 

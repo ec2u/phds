@@ -88,7 +88,7 @@ export async function translate({ payload: { source, target } }: Request<Transla
 
 			const response=await manager.uploadFile(buffer, {
 				mimeType: markdown,
-				displayName: document.title
+				displayName: document.id
 			});
 
 			const meta=response.file;

@@ -51,7 +51,7 @@ function ToolMacro() {
 
 
 	const [tab, setTab]=useState<Tab | Attachment>(Tab.Issues); // !!!
-	const [locale, setLocale]=useState<Language>(defaultLanguage);
+	const [language, setLanguage]=useState<Language>(defaultLanguage);
 
 
 	return <>
@@ -67,7 +67,7 @@ function ToolMacro() {
 			)}</ButtonGroup>}
 
 
-			more={<ToolLanguage locale={locale} onChange={setLocale}/>}
+			more={<ToolLanguage locale={language} onChange={setLanguage}/>}
 
 		/>
 
@@ -76,9 +76,9 @@ function ToolMacro() {
 
 			tab === Tab.Agreement ? <ToolText>{body}</ToolText>
 				: tab === Tab.References ? <ToolReferences onClick={setTab}/>
-					: tab === Tab.Issues ? <ToolIssues/>
+					: tab === Tab.Issues ? <ToolIssues language={language}/>
 						: tab === Tab.Chat ? <ToolChat/>
-							: <ToolReference locale={locale}>{tab}</ToolReference>
+							: <ToolReference language={language}>{tab}</ToolReference>
 
 		}
 

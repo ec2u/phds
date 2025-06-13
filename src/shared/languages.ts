@@ -18,7 +18,7 @@ export type Language=keyof typeof languages;
 
 export const defaultLanguage="en" as const;
 
-export const languages: { [key: string]: string }={
+export const languages={
 	de: "Deutsch",
 	en: "English",
 	es: "Español",
@@ -28,4 +28,4 @@ export const languages: { [key: string]: string }={
 	ro: "Română",
 	fi: "Suomi",
 	sv: "Svenska"
-};
+} as const;

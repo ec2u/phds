@@ -24,13 +24,13 @@ import { translate } from "../../ports/gemini";
 
 export function ToolReference({
 
-	locale,
+	language,
 
 	children: attachment
 
 }: {
 
-	locale: Language
+	language: Language
 
 	children: Attachment
 
@@ -79,9 +79,9 @@ export function ToolReference({
 			setStatus("Translating");
 
 			translate({
-				target: locale,
+				target: language,
 				source: {
-					title: attachment.title,
+					id: attachment.title,
 					language: defaultLanguage, // !!! auto
 					content // decode from base64
 				}
@@ -92,7 +92,7 @@ export function ToolReference({
 
 		}
 
-	}, [content, locale]);
+	}, [content, language]);
 
 	// !!! save translation and remove stale versions
 
