@@ -18,8 +18,8 @@ import { EmptyState, Icon, Spinner, Text } from "@forge/react";
 import React from "react";
 import { isNumber, isTrace, Trace } from "../../../shared";
 import { Language } from "../../../shared/languages";
-import { Update } from "../../work/archive";
-import { useDocument } from "../../work/document";
+import { Update } from "../../hooks/archive";
+import { useDocument } from "../../hooks/document";
 
 
 export function ToolIssues({

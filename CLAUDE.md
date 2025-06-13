@@ -61,3 +61,4 @@ The application follows Atlassian Forge architecture:
 - Forge does not support TypeScript path aliases - use relative imports only
 - Prefer using type checking utilities from `shared/index.ts` (e.g., `isString()`, `isDefined()`) instead of native
   `typeof` checks for consistency
+- DO NOT reformat existing code formatting/spacing - preserve the author's original style

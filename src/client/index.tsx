@@ -18,6 +18,7 @@ import ForgeReconciler, { Button, ButtonGroup, useConfig, useProductContext } fr
 import React, { useState } from "react";
 import { Attachment } from "../shared/attachments";
 import { defaultLanguage, Language } from "../shared/languages";
+import { ToolArchive } from "./hooks/archive";
 import { ToolBar } from "./views/layouts/bar";
 import { ToolChat } from "./views/lenses/chat";
 import { ToolIssues } from "./views/lenses/issues";
@@ -91,6 +92,10 @@ function ToolMacro() {
 
 ForgeReconciler.render(
 	<React.StrictMode>
-		<ToolMacro/>
+
+		<ToolArchive>
+			<ToolMacro/>
+		</ToolArchive>
+
 	</React.StrictMode>
 );

@@ -15,7 +15,7 @@
  */
 
 
-import { immutable } from "./index";
+import { immutable } from "../../shared";
 
 /**
  * An async emitter that can emit values and be consumed as an async iterator.
@@ -53,9 +53,10 @@ export interface Emitter<T> {
  * - Once closed, no new values can be emitted
  *
  * @template T The type of values to emit
+ * @param consumer Optional consumer function that will receive all emitted values
  * @returns A new immutable emitter instance
  */
-export function createAsyncEmitter<T>(): Emitter<T> {
+export function createAsyncEmitter<T>(consumer?: (content: T) => void): Emitter<T> {
 
 	const pending: T[]=[];
 	const waiting: ((value: IteratorResult<T>) => void)[]=[];
@@ -105,9 +106,18 @@ export function createAsyncEmitter<T>(): Emitter<T> {
 		}
 	}
 
-	return immutable({
+	const emitter=immutable({
 		emit,
 		close,
 		[Symbol.asyncIterator]: generator
 	});
+
+
+	if ( consumer ) { // for await must run inside an async function
+		(async (consumer: (value: T) => void) => {
+			for await (const value of emitter) { consumer(value); }
+		})(consumer);
+	}
+
+	return emitter;
 }

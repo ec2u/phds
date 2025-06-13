@@ -16,18 +16,20 @@
 
 import { useEffect, useState } from "react";
 import { Language } from "../../shared/languages";
-import { lookup, Status, Update } from "./archive";
+import { Status, Update, useArchive } from "./archive";
 
 
 export function useDocument(id: string, locale: Language): Status {
 
-	const [updates, setUpdates]=useState<Status>(Update.Initializing);
+	const { lookup }=useArchive();
+
+	const [status, setStatus]=useState<Status>(Update.Initializing);
 
 	useEffect(() => {
 
-		return lookup(id, locale, setUpdates);
+		return lookup(id, locale, setStatus);
 
 	}, [id, locale]);
 
-	return updates;
+	return status;
 }
