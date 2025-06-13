@@ -103,4 +103,33 @@ export function asTrace(value: unknown) {
 	return isTrace(value) ? value : { code: 999, text: JSON.stringify(value, null, 4) };
 }
 
-export { defaultLocale } from "./languages";
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * Creates an immutable deep clone.
+ *
+ * @warning Only processes plain objects and arrays recursively; all other values (including built-ins like Date,
+ *     RegExp, etc.) are treated as atomic and returned as-is. Does not handle circular references.
+ *
+ * @param value the value to be cloned
+ *
+ * @return a deeply immutable clone of `value`
+ */
+export function immutable<T=any>(value: T): Readonly<typeof value> {
+	if ( Array.isArray(value) || isObject(value) ) {
+
+		return Object.freeze(Reflect.ownKeys(value as any).reduce((object: any, key) => {
+
+			object[key]=immutable((value as any)[key]);
+
+			return object;
+
+		}, Array.isArray(value) ? [] : {}));
+
+	} else {
+
+		return value as any;
+
+	}
+}

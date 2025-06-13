@@ -26,8 +26,8 @@ import ForgeReconciler, {
 	useProductContext
 } from "@forge/react";
 import React, { useEffect, useState } from "react";
-import { defaultLocale } from "../shared";
 import { Attachment } from "../shared/attachments";
+import { defaultLocale } from "../shared/languages";
 import { listAttachments } from "./ports/attachments";
 import { ToolBar } from "./views/layouts/bar";
 import ToolPanel from "./views/layouts/panel";

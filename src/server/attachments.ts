@@ -31,7 +31,6 @@ export async function listAttachments({ context }: Request<{}>) {
 	const response=await api.asApp().requestConfluence(route`/wiki/api/v2/pages/${id}/attachments?${query({
 
 		status: "current"
-		// !!! mediaType: "application/pdf"
 
 	})}`, {
 

@@ -26,7 +26,7 @@ export interface Attachment {
 	readonly id: string;
 	readonly status: string;
 	readonly title: string;
-	readonly createdAt: string;
+	readonly createdAt: string; // ISO UTC timestamp (e.g. "2025-06-03T13:19:04.077Z")
 	readonly pageId?: string;
 	readonly blogPostId?: string;
 	readonly customContentId?: string;

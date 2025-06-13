@@ -16,10 +16,10 @@
 
 import { EmptyState, Spinner, Text } from "@forge/react";
 import React, { useEffect, useState } from "react";
-import { defaultLocale, isDefined, isString, isTrace, Trace } from "../../../shared";
+import { isDefined, isString, isTrace, Trace } from "../../../shared";
 import { Attachment } from "../../../shared/attachments";
 import { Content } from "../../../shared/documents";
-import { Locale } from "../../../shared/languages";
+import { defaultLocale, Locale } from "../../../shared/languages";
 import { retrieveAttachment } from "../../ports/attachments";
 import { translate } from "../../ports/gemini";
 
