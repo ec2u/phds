@@ -84,9 +84,7 @@ export function ToolArchive({
 	async function list(emitter: Emitter<Status<ReadonlyArray<Attachment>>>) {
 		try {
 
-			await scan(emitter);
-
-			if ( attachments ) { emitter.emit(attachments);}
+			emitter.emit(await scan(emitter));
 
 		} catch ( error ) {
 
