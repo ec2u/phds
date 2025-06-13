@@ -14,29 +14,18 @@
  * limitations under the License.
  */
 
-export enum Locale {
-	DE="de",
-	EN="en",
-	ES="es",
-	FR="fr",
-	IT="it",
-	PT="pt",
-	RO="ro",
-	FI="fi",
-	SV="sv"
-}
+export type Locale=keyof typeof languages;
 
+export const defaultLocale="en" as const;
 
-export const defaultLocale=Locale.EN;
-
-export const languages: { [key in Locale]: string }={
-	[Locale.DE]: "Deutsch",
-	[Locale.EN]: "English",
-	[Locale.ES]: "Español",
-	[Locale.FR]: "Français",
-	[Locale.IT]: "Italiano",
-	[Locale.PT]: "Português",
-	[Locale.RO]: "Română",
-	[Locale.FI]: "Suomi",
-	[Locale.SV]: "Svenska"
+export const languages: { [key: string]: string }={
+	de: "Deutsch",
+	en: "English",
+	es: "Español",
+	fr: "Français",
+	it: "Italiano",
+	pt: "Português",
+	ro: "Română",
+	fi: "Suomi",
+	sv: "Svenska"
 };

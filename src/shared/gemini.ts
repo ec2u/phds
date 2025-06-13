@@ -20,7 +20,7 @@ import { Locale } from "./languages";
 
 export interface Translation {
 
-	target: Locale;
-	source: Document;
+	readonly target: Locale;
+	readonly source: Document;
 
 }

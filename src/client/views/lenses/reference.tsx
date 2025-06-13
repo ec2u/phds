@@ -16,7 +16,7 @@
 
 import { EmptyState, Spinner, Text } from "@forge/react";
 import React, { useEffect, useState } from "react";
-import { isDefined, isString, isTrace, Trace } from "../../../shared";
+import { defaultLocale, isDefined, isString, isTrace, Trace } from "../../../shared";
 import { Attachment } from "../../../shared/attachments";
 import { Content } from "../../../shared/documents";
 import { Locale } from "../../../shared/languages";
@@ -81,7 +81,7 @@ export function ToolReference({
 				target: locale,
 				source: {
 					title: attachment.title,
-					locale: Locale.EN, // !!! auto
+					locale: defaultLocale, // !!! auto
 					content
 				}
 			})

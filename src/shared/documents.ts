@@ -21,9 +21,9 @@ export type Content=string | ArrayBuffer;
 
 export interface Document {
 
-	title: string;
-	locale: Locale;
+	readonly title: string;
+	readonly locale: Locale;
 
-	content: Content;
+	readonly content: Content;
 
 }

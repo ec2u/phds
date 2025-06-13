@@ -15,43 +15,43 @@
  */
 
 export interface AttachmentsResponse {
-	results: Attachment[];
-	_links: {
-		next?: string;
-		base: string;
+	readonly results: Attachment[];
+	readonly _links: {
+		readonly next?: string;
+		readonly base: string;
 	};
 }
 
 export interface Attachment {
-	id: string;
-	status: string;
-	title: string;
-	createdAt: string;
-	pageId?: string;
-	blogPostId?: string;
-	customContentId?: string;
-	mediaType: string;
-	mediaTypeDescription: string;
-	comment: string;
-	fileId: string;
-	fileSize: number;
-	webuiLink: string;
-	downloadLink: string;
-	version: AttachmentVersion;
-	_links: AttachmentLinks;
+	readonly id: string;
+	readonly status: string;
+	readonly title: string;
+	readonly createdAt: string;
+	readonly pageId?: string;
+	readonly blogPostId?: string;
+	readonly customContentId?: string;
+	readonly mediaType: string;
+	readonly mediaTypeDescription: string;
+	readonly comment: string;
+	readonly fileId: string;
+	readonly fileSize: number;
+	readonly webuiLink: string;
+	readonly downloadLink: string;
+	readonly version: AttachmentVersion;
+	readonly _links: AttachmentLinks;
 }
 
 export interface AttachmentVersion {
-	createdAt: string;
-	message: string;
-	number: number;
-	minorEdit: boolean;
-	authorId: string;
+	readonly createdAt: string;
+	readonly message: string;
+	readonly number: number;
+	readonly minorEdit: boolean;
+	readonly authorId: string;
 }
 
 export interface AttachmentLinks {
-	webui: string;
-	download: string;
+	readonly webui: string;
+	readonly download: string;
 }
 
 

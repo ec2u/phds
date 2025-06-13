@@ -16,17 +16,17 @@
 
 interface Issues {
 
-	title: string;
-	description: string;
+	readonly title: string;
+	readonly description: string;
 
-	citations: Citation[];
+	readonly citations: Citation[];
 
 }
 
 interface Citation {
 
-	source: string;
-	offset: number;
-	length: number;
+	readonly source: string;
+	readonly offset: number;
+	readonly length: number;
 
 }
