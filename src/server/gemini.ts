@@ -16,6 +16,7 @@
 
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { GoogleAIFileManager } from "@google/generative-ai/server";
+import { asTrace, isString } from "../shared";
 import { Document } from "../shared/documents";
 import { Translation } from "../shared/gemini";
 import { Request, secret } from "./utils";
@@ -41,58 +42,75 @@ export async function translate({ payload: { source, target } }: Request<Transla
 	const client=new GoogleGenerativeAI(key);
 	const manager=new GoogleAIFileManager(key);
 
-	const file=await upload(source);
+	try {
 
-	const session=client.getGenerativeModel({
+		const file=await upload(source);
 
-		model: model,
-		systemInstruction: `
-			- translate the provided markdown document from ${source.locale} to ${target}
-			- make sure to preserve the semantic structure of the document in terms of elements such as section
-			  headings, tables and bullet lists
-			- make absolutely sure to retain all textual content; this is vital: do not remove anything
-			- reply with the source markdown code, without wrapping it within a markdown code block
-			`
+		const session=client.getGenerativeModel({
 
-	}).startChat({
-		generationConfig: setup
-	});
+			model: model,
+			systemInstruction: `
+				- translate the provided markdown document from ${source.locale} to ${target}
+				- make sure to preserve the semantic structure of the document in terms of elements such as section
+				  headings, tables and bullet lists
+				- make absolutely sure to retain all textual content; this is vital: do not remove anything
+				- reply with the source markdown code, without wrapping it within a markdown code block
+				`
 
-	const result=await session.sendMessage([{
-		fileData: {
-			mimeType: file.mimeType,
-			fileUri: file.uri
-		}
-	}]);
+		}).startChat({
+			generationConfig: setup
+		});
 
-	// !!! delete stale uploads
+		const result=await session.sendMessage([{
+			fileData: {
+				mimeType: file.mimeType,
+				fileUri: file.uri
+			}
+		}]);
 
-	return result.response.text(); // !!! convert exceptions to status objects
+		// uploads are deleted after 48 hours (https://ai.google.dev/gemini-api/docs/files#delete-uploaded)
+
+		return result.response.text();
+
+	} catch ( error ) {
+
+		throw asTrace(error);
+
+	}
 
 
 	async function upload(document: Document) {
+		try {
 
-		const buffer=Buffer.from(document.content, "utf8");
+			const buffer=isString(document.content)
+				? Buffer.from(document.content, "utf8")
+				: Buffer.from(document.content);
 
-		const response=await manager.uploadFile(buffer, {
-			mimeType: markdown,
-			displayName: document.title
-		});
+			const response=await manager.uploadFile(buffer, {
+				mimeType: markdown,
+				displayName: document.title
+			});
 
-		const meta=response.file;
+			const meta=response.file;
 
-		let f=await manager.getFile(meta.name);
+			let f=await manager.getFile(meta.name);
 
-		while ( f.state === "PROCESSING" ) {
-			await new Promise(resolve => setTimeout(resolve, 10_000));
-			f= await manager.getFile(meta.name);
+			while ( f.state === "PROCESSING" ) {
+				await new Promise(resolve => setTimeout(resolve, 10_000));
+				f= await manager.getFile(meta.name);
+			}
+
+			if ( f.state !== "ACTIVE" ) {
+				throw new Error(`File ${meta.name} failed to process`);
+			}
+
+			return meta;
+
+		} catch ( error ) {
+
+			throw asTrace(error);
+
 		}
-
-		if ( f.state !== "ACTIVE" ) {
-			throw new Error(`File ${meta.name} failed to process`);
-		}
-
-		return meta; // !!! convert exceptions to status objects
 	}
 
 }

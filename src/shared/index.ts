@@ -87,14 +87,16 @@ export function isArray<T=unknown>(value: unknown, is?: (value: unknown) => valu
 
 export interface Trace {
 
-	code: number;
-	text: string;
+	readonly code: number;
+	readonly text: string;
 
 }
 
 
 export function isTrace(value: unknown): value is Trace {
-	return isObject(value) && isNumber(value.code) && isString(value.text);
+	return isObject(value)
+		&& isNumber(value.code)
+		&& isString(value.text);
 }
 
 export function asTrace(value: unknown) {

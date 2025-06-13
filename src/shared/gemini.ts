@@ -16,9 +16,11 @@
 
 import { Document } from "./documents";
 
+import { Locale } from "./languages";
+
 export interface Translation {
 
-	target: string; // BCP 47 language tag, for instance 'it-CH'
+	target: Locale;
 	source: Document;
 
 }

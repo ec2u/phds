@@ -57,3 +57,7 @@ The application follows Atlassian Forge architecture:
 - TypeScript configuration targets ES2020 with CommonJS modules
 - All source files include Apache 2.0 license headers
 - The project uses Forge's built-in build system (no custom webpack/build config needed)
+- Follow modern TypeScript naming conventions: use camelCase for constants, not SCREAMING_SNAKE_CASE
+- Forge does not support TypeScript path aliases - use relative imports only
+- Prefer using type checking utilities from `shared/index.ts` (e.g., `isString()`, `isDefined()`) instead of native
+  `typeof` checks for consistency

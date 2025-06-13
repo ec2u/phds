@@ -14,10 +14,16 @@
  * limitations under the License.
  */
 
+import { Locale } from "./languages";
+
+
+export type Content=string | ArrayBuffer;
+
 export interface Document {
 
 	title: string;
-	locale: string; // BCP 47 language tag, for instance 'en' or 'it-CH'
-	content: string;
+	locale: Locale;
+
+	content: Content;
 
 }

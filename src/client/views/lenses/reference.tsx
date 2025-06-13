@@ -14,12 +14,14 @@
  * limitations under the License.
  */
 
-import { EmptyState, Spinner, Stack, Text } from "@forge/react";
+import { EmptyState, Spinner, Text } from "@forge/react";
 import React, { useEffect, useState } from "react";
-import { asTrace, isDefined, isTrace, Trace } from "../../../shared";
+import { isDefined, isString, isTrace, Trace } from "../../../shared";
 import { Attachment } from "../../../shared/attachments";
+import { Content } from "../../../shared/documents";
 import { Locale } from "../../../shared/languages";
 import { retrieveAttachment } from "../../ports/attachments";
+import { translate } from "../../ports/gemini";
 
 export function ToolReference({
 
@@ -35,20 +37,78 @@ export function ToolReference({
 
 }) {
 
-	console.log(locale);
+	const [status, setStatus]=useState<string | Trace>();
 
-	const [content, setContent]=useState<string | Trace>(); // !!! raw data
+	const [content, setContent]=useState<Content>();
+	const [translation, setTranslation]=useState<Content>();
+
+
+	function clearStatus() {
+		setStatus(undefined);
+	}
+
 
 	useEffect(() => {
 
-		retrieveAttachment(attachment).then(setContent).catch(error => setContent(asTrace(error)));
+		if ( attachment ) {
+
+			setStatus("Retrieving");
+
+			retrieveAttachment(attachment)
+				.then(setContent)
+				.then(clearStatus)
+				.catch(setStatus);
+
+		}
 
 	}, [attachment]);
 
-	return isTrace(content) ? <EmptyState header={"!!!"}/> // !!! message + recovery
-		: isDefined(content) ? <Stack>
-				<Text>{locale}</Text>
-				<Text>{content}</Text>
-			</Stack> // !!! markdown
-			: <Spinner/>; // !!! message
+	useEffect(() => {
+
+		if ( content ) {
+
+			setStatus("Translating");
+
+			translate({
+				target: locale,
+				source: {
+					title: attachment.title,
+					locale: Locale.EN, // !!! auto
+					content
+				}
+			})
+				.then(setTranslation)
+				.then(clearStatus)
+				.catch(setStatus);
+
+		}
+
+	}, [content]);
+
+	// !!! save translation
+
+	if ( isTrace(status) ) {
+
+		return <EmptyState
+			header={`;( Unable to process ${attachment.title}`} // move title to description
+			description={JSON.stringify(status, null, 4)} // !!! human-readable message
+		/>;
+
+	} else if ( isDefined(translation) ) {
+
+		if ( isString(translation) ) {
+			return <Text>{translation}</Text>;
+		} else {
+			return <Text>Binary!</Text>;
+		}
+
+	} else {
+
+		return <EmptyState
+			header={`${status ?? "Loading"}…`}
+			description={<Spinner/>}
+		/>;
+
+	}
+
 }

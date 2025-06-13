@@ -15,8 +15,13 @@
  */
 
 import api, { route } from "@forge/api";
+import { asTrace } from "../shared";
 import { Attachment, AttachmentsResponse } from "../shared/attachments";
+import { Content } from "../shared/documents";
 import { query, Request } from "./utils";
+
+
+const textuals=[".txt", ".md"];
 
 
 export async function listAttachments({ context }: Request<{}>) {
@@ -44,16 +49,16 @@ export async function listAttachments({ context }: Request<{}>) {
 
 		console.error(response);
 
-		throw {
+		throw asTrace({
 			code: response.status,
 			text: response.statusText
-		};
+		});
 
 	}
 }
 
 
-export async function retrieveAttachment({ payload: attachment }: Request<Attachment>) {
+export async function retrieveAttachment({ payload: attachment }: Request<Attachment>): Promise<Content> {
 
 	const id=attachment.id;
 	const page=attachment.pageId ?? "";
@@ -70,16 +75,21 @@ export async function retrieveAttachment({ payload: attachment }: Request<Attach
 
 	if ( response.ok ) {
 
-		return await response.text(); // !!! raw data
+		const title=attachment.title.toLowerCase();
+		const textual=textuals.some(extension => title.endsWith(extension));
+
+		return textual
+			? await response.text()
+			: await response.arrayBuffer();
 
 	} else {
 
 		console.error(response);
 
-		throw {
+		throw asTrace({
 			code: response.status,
 			text: response.statusText
-		};
+		});
 
 	}
 }
