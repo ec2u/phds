@@ -19,9 +19,9 @@ import { createContext, createElement, ReactNode, useContext, useState } from "r
 import { asTrace, immutable, Status, Update } from "../../shared";
 import { Attachment } from "../../shared/attachments";
 import { Document } from "../../shared/documents";
-import { defaultLanguage, Language } from "../../shared/languages";
-import { listAttachments, retrieveAttachment } from "../ports/attachments";
-import { translate } from "../ports/gemini";
+import { Language } from "../../shared/languages";
+import { listAttachments } from "../ports/attachments";
+import { extract, translate } from "../ports/gemini";
 import { createAsyncEmitter, Emitter } from "../shims/emitters";
 
 
@@ -101,20 +101,12 @@ export function ToolArchive({
 	async function lookup(emitter: Emitter<Status<Document>>, attachment: Attachment, language: Language) {
 		try {
 
-			const attachments=await scan(emitter);
-			const content=await fetch(emitter, attachment);
+			const document=await extracting(emitter, attachment);
 
-			// !!! await extract(emitter);
+			const xlation=document;
+			// const xlation=await xlate(emitter, document, language);
 
-			const document={
-				title: attachment.title,
-				language: defaultLanguage, // !!!
-				content
-			};
-
-			const xlation=await xlate(emitter, document, language);
-
-			emitter.emit({ title: attachment.title, language: language, content: xlation });
+			emitter.emit(document);
 
 		} catch ( error ) {
 
@@ -153,14 +145,7 @@ export function ToolArchive({
 		}
 	}
 
-	async function fetch(emitter: Emitter<Status<Document>>, attachment: Attachment): Promise<string> {
-
-		emitter.emit(Update.Fetching);
-
-		return await retrieveAttachment(attachment);
-	}
-
-	async function extract(emitter: Emitter<Status<Document>>) {
+	async function extracting(emitter: Emitter<Status<Document>>, attachment: Attachment): Promise<Document> {
 
 		emitter.emit(Update.Extracting);
 
@@ -168,7 +153,7 @@ export function ToolArchive({
 		// !!! extract full text
 		// !!! save full text and remove stale versions
 
-		await delay(800);
+		return await extract({ attachment });
 	}
 
 	async function xlate(emitter: Emitter<Status<Document>>, source: Document, target: Language): Promise<string> {

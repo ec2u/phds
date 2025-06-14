@@ -16,7 +16,7 @@
 
 import Resolver, { ResolverFunction } from "@forge/resolver";
 import { listAttachments, retrieveAttachment } from "./attachments";
-import { translate } from "./gemini";
+import { extract, translate } from "./gemini";
 import { retrievePrompt } from "./langfuse";
 
 
@@ -27,6 +27,7 @@ export const handler=new Resolver()
 
 	.define(retrievePrompt.name, retrievePrompt as ResolverFunction)
 
+	.define(extract.name, extract as any)
 	.define(translate.name, translate as ResolverFunction)
 
 	.getDefinitions();

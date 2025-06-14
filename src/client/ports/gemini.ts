@@ -15,7 +15,12 @@
  */
 
 import { invoke } from "@forge/bridge";
-import { Translation } from "../../shared/gemini";
+import { Document } from "../../shared/documents";
+import { Extraction, Translation } from "../../shared/gemini";
+
+export function extract(extraction: Extraction) {
+	return invoke<Document>("extract", extraction);
+}
 
 export function translate(translation: Translation) {
 	return invoke<string>("translate", translation);

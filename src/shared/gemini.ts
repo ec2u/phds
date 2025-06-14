@@ -14,9 +14,15 @@
  * limitations under the License.
  */
 
+import { Attachment } from "./attachments";
 import { Document } from "./documents";
-
 import { Language } from "./languages";
+
+export interface Extraction {
+
+	readonly attachment: Attachment;
+
+}
 
 export interface Translation {
 
