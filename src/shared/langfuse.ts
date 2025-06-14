@@ -14,19 +14,9 @@
  * limitations under the License.
  */
 
-import Resolver, { ResolverFunction } from "@forge/resolver";
-import { listAttachments, retrieveAttachment } from "./attachments";
-import { translate } from "./gemini";
-import { retrievePrompt } from "./langfuse";
+export interface Prompt {
 
+	readonly name: string;
+	readonly variables?: Readonly<Record<string, string>>;
 
-export const handler=new Resolver()
-
-	.define(listAttachments.name, listAttachments as ResolverFunction)
-	.define(retrieveAttachment.name, retrieveAttachment as ResolverFunction)
-
-	.define(retrievePrompt.name, retrievePrompt as ResolverFunction)
-
-	.define(translate.name, translate as ResolverFunction)
-
-	.getDefinitions();
+}

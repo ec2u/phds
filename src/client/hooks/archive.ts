@@ -133,6 +133,9 @@ export function ToolArchive({
 
 			emitter.emit(Update.Scanning);
 
+			// !!! remove stale documents
+			// !!! create index
+
 			return await listAttachments()
 				.then(immutable)
 				.then(attachments => {

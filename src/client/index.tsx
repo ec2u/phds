@@ -26,20 +26,23 @@ import { ToolLanguage } from "./views/lenses/language";
 import { ToolReference } from "./views/lenses/reference";
 import { ToolReferences } from "./views/lenses/references";
 import { ToolText } from "./views/lenses/text";
+import { ToolWork } from "./views/lenses/work";
 
 
 const enum Tab {
 	Agreement,
 	References,
 	Issues,
-	Chat
+	Chat,
+	Work
 }
 
 const tabs=[
 	{ tab: Tab.Agreement, label: "Agreement" },
 	{ tab: Tab.References, label: "References" },
 	{ tab: Tab.Issues, label: "Issues", disabled: true },
-	{ tab: Tab.Chat, label: "Chat", disabled: true }
+	{ tab: Tab.Chat, label: "Chat", disabled: true },
+	{ tab: Tab.Work, label: "Work" }
 ];
 
 
@@ -79,6 +82,7 @@ function ToolMacro() {
 				: tab === Tab.References ? <ToolReferences onClick={setTab}/>
 					: tab === Tab.Issues ? <ToolIssues/>
 						: tab === Tab.Chat ? <ToolChat/>
+							: tab === Tab.Work ? <ToolWork/>
 							: <ToolReference language={language}>{tab}</ToolReference>
 
 		}

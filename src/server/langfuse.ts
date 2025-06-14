@@ -14,19 +14,29 @@
  * limitations under the License.
  */
 
-import Resolver, { ResolverFunction } from "@forge/resolver";
-import { listAttachments, retrieveAttachment } from "./attachments";
-import { translate } from "./gemini";
-import { retrievePrompt } from "./langfuse";
+import Langfuse from "langfuse";
+import { asTrace } from "../shared";
+import { Prompt } from "../shared/langfuse";
+import { Request } from "./utils";
 
+export async function retrievePrompt({ payload: { name, variables } }: Request<Prompt>): Promise<string> {
+	try {
 
-export const handler=new Resolver()
+		const client=new Langfuse();
 
-	.define(listAttachments.name, listAttachments as ResolverFunction)
-	.define(retrieveAttachment.name, retrieveAttachment as ResolverFunction)
+		// const prompt=await client.getPrompt(name);
 
-	.define(retrievePrompt.name, retrievePrompt as ResolverFunction)
+		// !!! const prompt=await bindInvocationContext(() => client.getPrompt(name))();
 
-	.define(translate.name, translate as ResolverFunction)
+		// return prompt.compile(variables);
 
-	.getDefinitions();
+		return "!!!";
+
+	} catch ( error ) {
+
+		console.error(error);
+
+		throw asTrace(error);
+	}
+
+}

@@ -14,19 +14,20 @@
  * limitations under the License.
  */
 
-import Resolver, { ResolverFunction } from "@forge/resolver";
-import { listAttachments, retrieveAttachment } from "./attachments";
-import { translate } from "./gemini";
-import { retrievePrompt } from "./langfuse";
+import { Text } from "@forge/react";
+import React, { useEffect, useState } from "react";
+import { retrievePrompt } from "../../ports/langfuse";
 
 
-export const handler=new Resolver()
+export function ToolWork() {
 
-	.define(listAttachments.name, listAttachments as ResolverFunction)
-	.define(retrieveAttachment.name, retrieveAttachment as ResolverFunction)
+	const [prompt, setPrompt]=useState<string>();
 
-	.define(retrievePrompt.name, retrievePrompt as ResolverFunction)
+	useEffect(() => {
 
-	.define(translate.name, translate as ResolverFunction)
+		retrievePrompt({ name: "PDF_TO_MD" }).then(setPrompt);
 
-	.getDefinitions();
+	}, []);
+
+	return <Text>{prompt}</Text>;
+}

@@ -25,6 +25,7 @@ import { Request, secret } from "./utils";
 const markdown="text/markdown";
 
 const model="gemini-2.5-flash-preview-04-17";
+const timeout=10_000;
 
 const setup={
 	seed: 0,
@@ -34,6 +35,7 @@ const setup={
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 export async function translate({ payload: { source, target } }: Request<Translation>): Promise<string> {
 
@@ -74,6 +76,8 @@ export async function translate({ payload: { source, target } }: Request<Transla
 
 	} catch ( error ) {
 
+		console.error(error);
+
 		throw asTrace(error);
 
 	}
@@ -94,17 +98,19 @@ export async function translate({ payload: { source, target } }: Request<Transla
 			let f=await manager.getFile(meta.name);
 
 			while ( f.state === "PROCESSING" ) {
-				await new Promise(resolve => setTimeout(resolve, 10_000));
+				await new Promise(resolve => setTimeout(resolve, timeout));
 				f= await manager.getFile(meta.name);
 			}
 
 			if ( f.state !== "ACTIVE" ) {
-				throw new Error(`File ${meta.name} failed to process`);
+				throw new Error(`unable to process file <${meta.name}>`);
 			}
 
 			return meta;
 
 		} catch ( error ) {
+
+			console.error(error);
 
 			throw asTrace(error);
 
