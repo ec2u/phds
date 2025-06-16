@@ -82,7 +82,7 @@ function ToolMacro() {
 				: tab === Tab.References ? <ToolReferences onClick={setTab}/>
 					: tab === Tab.Issues ? <ToolIssues/>
 						: tab === Tab.Chat ? <ToolChat/>
-							: tab === Tab.Work ? <ToolWork/>
+							: tab === Tab.Work ? <ToolWork>{body}</ToolWork>
 							: <ToolReference language={language}>{tab}</ToolReference>
 
 		}

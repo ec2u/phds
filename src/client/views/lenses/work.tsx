@@ -14,20 +14,22 @@
  * limitations under the License.
  */
 
+import type { DocNode } from "@atlaskit/adf-schema";
 import { Text } from "@forge/react";
-import React, { useEffect, useState } from "react";
-import { retrievePrompt } from "../../ports/langfuse";
+import React from "react";
+import { markdown } from "../../hooks";
 
 
-export function ToolWork() {
+export function ToolWork({
 
-	const [prompt, setPrompt]=useState<string>();
+	children: text
 
-	useEffect(() => {
+}: {
 
-		retrievePrompt({ name: "PDF_TO_MD" }).then(setPrompt);
+	children: DocNode
 
-	}, []);
+}) {
 
-	return <Text>{prompt}</Text>;
+	return text && <Text>{markdown(text)}</Text>;
+
 }

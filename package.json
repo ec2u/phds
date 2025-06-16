@@ -18,7 +18,7 @@
   "scripts": {
     "clean": "rm -rf node_modules",
     "setup": "npm install --legacy-peer-deps",
-    "issue": "forge install --non-interactive --upgrade -s https://ec2u.atlassian.net/ -p confluence -e development",
+    "issue": "forge deploy && forge install --non-interactive --upgrade -s https://ec2u.atlassian.net/ -p confluence -e development",
     "start": "npx dotenv -- forge tunnel"
   },
   "dependencies": {
@@ -27,7 +27,11 @@
     "@forge/resolver": "^1.6.10",
     "@google/generative-ai": "^0.24.1",
     "langfuse": "^3.37.4",
-    "react": "^18.2.0"
+    "react": "^18.2.0",
+    "remark": "^15.0.1",
+    "remark-gfm": "^4.0.1",
+    "remark-parse": "^11.0.0",
+    "unified": "^11.0.5"
   },
   "devDependencies": {
     "@types/node": "^22.15.18",

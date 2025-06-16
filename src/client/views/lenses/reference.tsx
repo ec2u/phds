@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-import { Text } from "@forge/react";
+import { AdfRenderer } from "@forge/react";
 import React from "react";
 import { isTrace } from "../../../shared";
 import { Attachment } from "../../../shared/attachments";
 import { Language } from "../../../shared/languages";
-import { isUpdate } from "../../hooks";
+import { adf, isUpdate } from "../../hooks";
 import { useDocument } from "../../hooks/document";
 import { ToolTrace } from "./trace";
 import { ToolUpdate } from "./update";
@@ -50,7 +50,7 @@ export function ToolReference({
 
 	} else {
 
-		return <Text>{document.content}</Text>; // !!! markdown
+		return <AdfRenderer document={adf(document.content)}/>;
 
 	}
 
