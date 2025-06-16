@@ -14,20 +14,29 @@
  * limitations under the License.
  */
 
-import Resolver, { ResolverFunction } from "@forge/resolver";
-import { listAttachments, retrieveAttachment } from "./attachments";
-import { extract, translate } from "./gemini";
-import { retrievePrompt } from "./langfuse";
+import { InvokePayload } from "@forge/bridge/out/types";
+import { Request as NativeRequest } from "@forge/resolver";
+import { URLSearchParams } from "url";
 
 
-export const handler=new Resolver()
+export interface Request<T extends NativeRequest["payload"]> {
+	payload: T;
+	context: InvokePayload["context"];
+}
 
-	.define(listAttachments.name, listAttachments as ResolverFunction)
-	.define(retrieveAttachment.name, retrieveAttachment as ResolverFunction)
 
-	.define(retrievePrompt.name, retrievePrompt as ResolverFunction)
+export function secret(key: string) {
 
-	.define(extract.name, extract as any)
-	.define(translate.name, translate as any)
+	const value=process.env[key];
 
-	.getDefinitions();
+	if ( !value ) {
+		throw new Error(`undefined environment variable <${key}>`);
+	}
+
+	return value;
+}
+
+
+export function query(params: Record<string, string>) {
+	return new URLSearchParams(params).toString();
+}

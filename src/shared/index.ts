@@ -144,15 +144,10 @@ export type Status<T>=Update | T | Trace;
  * Enumeration of operation update states.
  */
 export const enum Update {
-	/** Operation is initializing */
 	Initializing,
-	/** Operation is scanning for resources */
 	Scanning,
-	/** Operation is fetching data */
 	Fetching,
-	/** Operation is extracting content */
 	Extracting,
-	/** Operation is translating content */
 	Translating
 }
 

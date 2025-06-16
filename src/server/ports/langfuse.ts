@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import { asTrace } from "../shared";
-import { Prompt } from "../shared/langfuse";
-import { Request } from "./utils";
+import { asTrace } from "../../shared";
+import { Prompt } from "../../shared/langfuse";
+import { Request } from "../index";
 
 
 const prompts: Record<string, string>={

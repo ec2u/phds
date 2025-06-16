@@ -18,7 +18,7 @@
   "scripts": {
     "clean": "rm -rf node_modules",
     "setup": "npm install --legacy-peer-deps",
-    "issue": "forge deploy",
+    "issue": "forge install --non-interactive --upgrade -s https://ec2u.atlassian.net/ -p confluence -e development",
     "start": "npx dotenv -- forge tunnel"
   },
   "dependencies": {

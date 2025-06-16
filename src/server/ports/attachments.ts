@@ -15,9 +15,9 @@
  */
 
 import api, { route } from "@forge/api";
-import { asTrace } from "../shared";
-import { Attachment, AttachmentsResponse } from "../shared/attachments";
-import { query, Request } from "./utils";
+import { asTrace } from "../../shared";
+import { Attachment, AttachmentsResponse } from "../../shared/attachments";
+import { query, Request } from "../index";
 
 export async function listAttachments({ context }: Request<{}>) {
 

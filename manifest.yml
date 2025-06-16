@@ -26,15 +26,15 @@ modules:
   function:
 
     - key: resolver
-      handler: server/index.handler
+      handler: server/ports/index.handler
 
 resources:
 
   - key: main
-    path: src/client/index.tsx
+    path: src/client/body.tsx
 
   - key: macro-config
-    path: src/client/config.tsx
+    path: src/client/tool.tsx
 
 app:
   id: ari:cloud:ecosystem::app/68e73326-bb04-4df2-a14c-382ba3abbe2b
@@ -59,4 +59,3 @@ remotes:
     baseUrl: https://generativelanguage.googleapis.com
     operations:
       - fetch
-

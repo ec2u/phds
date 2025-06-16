@@ -17,11 +17,11 @@
 import api, { route } from "@forge/api";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { FileMetadataResponse, GoogleAIFileManager } from "@google/generative-ai/server";
-import { asTrace } from "../shared";
-import { Document } from "../shared/documents";
-import { Extraction, Translation } from "../shared/gemini";
-import { defaultLanguage } from "../shared/languages";
-import { Request, secret } from "./utils";
+import { asTrace } from "../../shared";
+import { Document } from "../../shared/documents";
+import { Extraction, Translation } from "../../shared/gemini";
+import { defaultLanguage } from "../../shared/languages";
+import { Request, secret } from "../index";
 
 const markdown="text/markdown";
 
