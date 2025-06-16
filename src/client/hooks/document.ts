@@ -19,7 +19,7 @@ import { Status, Update } from "../../shared";
 import { Attachment } from "../../shared/attachments";
 import { Document } from "../../shared/documents";
 import { Language } from "../../shared/languages";
-import { useArchive } from "./archive";
+import { useArchive } from "./archives";
 
 export function useDocument(attachment: Attachment, locale: Language): Status<Document> {
 

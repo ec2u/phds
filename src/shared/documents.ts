@@ -18,6 +18,8 @@ import { Language } from "./languages";
 
 export interface Document {
 
+	readonly original: boolean;
+
 	readonly title: string;
 	readonly language: Language;
 	readonly content: string;

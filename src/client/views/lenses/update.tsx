@@ -37,4 +37,5 @@ export function ToolUpdate({
 	};
 
 	return <EmptyState header={messages[update]} description={<Spinner/>}/>;
+
 }

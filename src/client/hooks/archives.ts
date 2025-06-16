@@ -22,10 +22,10 @@ import { Document } from "../../shared/documents";
 import { Language } from "../../shared/languages";
 import { listAttachments } from "../ports/attachments";
 import { extract, translate } from "../ports/gemini";
-import { createAsyncEmitter, Emitter } from "../shims/emitters";
+import { createAsyncEmitter, Emitter } from "../tasks";
 
 
-const Context=createContext<Archive>(immutable({
+const Context=createContext<Archives>(immutable({
 
 	list(monitor: (status: Status<ReadonlyArray<Attachment>>) => void): void {
 		throw new Error("undefined archive");
@@ -40,7 +40,7 @@ const Context=createContext<Archive>(immutable({
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-export interface Archive {
+export interface Archives {
 
 	list(monitor: (status: Status<ReadonlyArray<Attachment>>) => void): void;
 
@@ -102,11 +102,9 @@ export function ToolArchive({
 		try {
 
 			const document=await extracting(emitter, attachment);
+			const xlation=await xlating(emitter, document, language);
 
-			const xlation=document;
-			// const xlation=await xlate(emitter, document, language);
-
-			emitter.emit(document);
+			emitter.emit(xlation);
 
 		} catch ( error ) {
 
@@ -156,7 +154,7 @@ export function ToolArchive({
 		return await extract({ attachment });
 	}
 
-	async function xlate(emitter: Emitter<Status<Document>>, source: Document, target: Language): Promise<string> {
+	async function xlating(emitter: Emitter<Status<Document>>, source: Document, target: Language): Promise<Document> {
 
 		emitter.emit(Update.Translating);
 
@@ -172,7 +170,7 @@ export function ToolArchive({
 
 }
 
-export function useArchive(): Archive {
+export function useArchive(): Archives {
 	return useContext(Context);
 }
 

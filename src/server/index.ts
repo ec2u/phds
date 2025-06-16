@@ -28,6 +28,6 @@ export const handler=new Resolver()
 	.define(retrievePrompt.name, retrievePrompt as ResolverFunction)
 
 	.define(extract.name, extract as any)
-	.define(translate.name, translate as ResolverFunction)
+	.define(translate.name, translate as any)
 
 	.getDefinitions();

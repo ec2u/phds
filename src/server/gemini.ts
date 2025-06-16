@@ -119,9 +119,13 @@ export async function extract({ payload: { attachment } }: Request<Extraction>):
 
 
 	return {
+
+		original: true,
+
 		title: attachment.title,
 		language: defaultLanguage, // !!!
 		content: text
+
 	};
 
 
@@ -220,7 +224,7 @@ export async function extract({ payload: { attachment } }: Request<Extraction>):
 
 }
 
-export async function translate({ payload: { source, target } }: Request<Translation>): Promise<string> {
+export async function translate({ payload: { source, target } }: Request<Translation>): Promise<Document> {
 
 	const key=secret("GEMINI_KEY");
 
@@ -228,6 +232,8 @@ export async function translate({ payload: { source, target } }: Request<Transla
 	const manager=new GoogleAIFileManager(key);
 
 	try {
+
+		// uploads are deleted after 48 hours (https://ai.google.dev/gemini-api/docs/files#delete-uploaded)
 
 		const file=await upload(source);
 
@@ -253,9 +259,15 @@ export async function translate({ payload: { source, target } }: Request<Transla
 			}
 		}]);
 
-		// uploads are deleted after 48 hours (https://ai.google.dev/gemini-api/docs/files#delete-uploaded)
+		return {
 
-		return result.response.text();
+			original: false,
+
+			title: source.title, // !!! translate
+			language: target,
+			content: result.response.text()
+
+		};
 
 	} catch ( error ) {
 

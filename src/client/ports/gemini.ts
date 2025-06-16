@@ -23,5 +23,5 @@ export function extract(extraction: Extraction) {
 }
 
 export function translate(translation: Translation) {
-	return invoke<string>("translate", translation);
+	return invoke<Document>("translate", translation);
 }
