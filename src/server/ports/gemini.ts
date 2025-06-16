@@ -121,9 +121,11 @@ export async function extract({ payload: { attachment } }: Request<Extraction>):
 	return {
 
 		original: true,
+		language: defaultLanguage, // !!!
+
+		source: attachment.id,
 
 		title: attachment.title,
-		language: defaultLanguage, // !!!
 		content: text
 
 	};
@@ -262,9 +264,11 @@ export async function translate({ payload: { source, target } }: Request<Transla
 		return {
 
 			original: false,
+			language: target,
+
+			source: source.source,
 
 			title: source.title, // !!! translate
-			language: target,
 			content: result.response.text()
 
 		};

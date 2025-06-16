@@ -22,7 +22,7 @@ import { Document } from "../../shared/documents";
 import { Language } from "../../shared/languages";
 import { listAttachments } from "../ports/attachments";
 import { extract, translate } from "../ports/gemini";
-import { createAsyncEmitter, Emitter, Status, Update } from "./index";
+import { Observer, Update } from "./index";
 
 
 const Context=createContext<Archives>(immutable({
@@ -42,9 +42,9 @@ const Context=createContext<Archives>(immutable({
 
 export interface Archives {
 
-	list(monitor: (status: Status<ReadonlyArray<Attachment>>) => void): void;
+	list(observer: Observer<ReadonlyArray<Attachment>>): void;
 
-	lookup(monitor: (status: Status<Document>) => void, attachment: Attachment, language: Language): void;
+	lookup(observer: Observer<Document>, attachment: Attachment, language: Language): void;
 
 }
 
@@ -68,12 +68,12 @@ export function ToolArchive({
 
 		value: immutable({
 
-			list(monitor: (status: Status<ReadonlyArray<Attachment>>) => void) {
-				scanning(createAsyncEmitter(monitor));
+			list(observer: Observer<ReadonlyArray<Attachment>>): void {
+				try { list(observer); } catch ( error ) { observer(asTrace(error)); }
 			},
 
-			lookup(monitor: (status: Status<Document>) => void, attachment: Attachment, language: Language) {
-				lookup(createAsyncEmitter(monitor), attachment, language);
+			lookup(observer: Observer<Document>, attachment: Attachment, language: Language): void {
+				try { lookup(observer, attachment, language); } catch ( error ) { observer(asTrace(error)); }
 			}
 
 		}),
@@ -83,65 +83,43 @@ export function ToolArchive({
 	});
 
 
-	async function scanning(emitter: Emitter<Status<ReadonlyArray<Attachment>>>) {
-		try {
+	async function list(observer: Observer<ReadonlyArray<Attachment>>) {
+		if ( attachments === undefined ) {
 
-			if ( attachments === undefined ) {
+			observer(Update.Scanning);
 
-				emitter.emit(Update.Scanning);
+			// !!! remove stale documents
+			// !!! create index
 
-				// !!! remove stale documents
-				// !!! create index
+			return await listAttachments()
+				.then(immutable)
+				.then(attachments => {
 
-				return await listAttachments()
-					.then(immutable)
-					.then(attachments => {
+					setAttachments(attachments);
+					observer(attachments);
 
-						setAttachments(attachments);
+				});
 
-						return attachments;
+		} else {
 
-					});
-
-			} else {
-
-				emitter.emit(attachments);
-
-			}
-
-		} catch ( error ) {
-
-			emitter.emit(asTrace(error));
-
-		} finally {
-
-			emitter.close();
+			observer(attachments);
 
 		}
 	}
 
-	async function lookup(emitter: Emitter<Status<Document>>, attachment: Attachment, language: Language) {
-		try {
+	async function lookup(observer: Observer<Document>, attachment: Attachment, language: Language) {
 
-			const document=await extracting(emitter, attachment);
-			const xlation=await xlating(emitter, document, language);
+		const document=await extracting(observer, attachment);
+		const xlation=await xlating(observer, document, language);
 
-			emitter.emit(xlation);
+		observer(xlation);
 
-		} catch ( error ) {
-
-			emitter.emit(asTrace(error));
-
-		} finally {
-
-			emitter.close();
-
-		}
 	}
 
-	async function extracting(emitter: Emitter<Status<Document>>, attachment: Attachment): Promise<Document> {
 
-		emitter.emit(Update.Extracting);
+	async function extracting(observer: Observer<Document>, attachment: Attachment): Promise<Document> {
+
+		observer(Update.Extracting);
 
 		// !!! check if updated full text is available
 		// !!! extract full text
@@ -150,9 +128,9 @@ export function ToolArchive({
 		return await extract({ attachment });
 	}
 
-	async function xlating(emitter: Emitter<Status<Document>>, source: Document, target: Language): Promise<Document> {
+	async function xlating(observer: Observer<Document>, source: Document, target: Language): Promise<Document> {
 
-		emitter.emit(Update.Translating);
+		observer(Update.Translating);
 
 		// !!! check if updated translation is available
 		// !!! translate from native language (which one?)
