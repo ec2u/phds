@@ -19,9 +19,11 @@ import { Language } from "./languages";
 export interface Document {
 
 	readonly original: boolean;
+	readonly language: Language;
+
+	readonly source: undefined | string; // source attachment id; undefined if generated from macro body
 
 	readonly title: string;
-	readonly language: Language;
 	readonly content: string;
 
 }

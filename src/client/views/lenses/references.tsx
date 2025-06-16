@@ -16,8 +16,9 @@
 
 import { List, ListItem, Pressable } from "@forge/react";
 import React from "react";
-import { isTrace, isUpdate } from "../../../shared";
+import { isTrace } from "../../../shared";
 import { Attachment, compareAttachments } from "../../../shared/attachments";
+import { isUpdate } from "../../hooks";
 import { useAttachments } from "../../hooks/attachments";
 import { ToolTrace } from "./trace";
 import { ToolUpdate } from "./update";

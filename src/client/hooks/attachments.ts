@@ -15,9 +15,9 @@
  */
 
 import { useEffect, useState } from "react";
-import { Status, Update } from "../../shared";
 import { Attachment } from "../../shared/attachments";
 import { useArchive } from "./archives";
+import { Status, Update } from "./index";
 
 export function useAttachments() {
 

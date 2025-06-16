@@ -16,22 +16,22 @@
 
 import { useProductContext } from "@forge/react";
 import { createContext, createElement, ReactNode, useContext, useState } from "react";
-import { asTrace, immutable, Status, Update } from "../../shared";
+import { asTrace, immutable } from "../../shared";
 import { Attachment } from "../../shared/attachments";
 import { Document } from "../../shared/documents";
 import { Language } from "../../shared/languages";
 import { listAttachments } from "../ports/attachments";
 import { extract, translate } from "../ports/gemini";
-import { createAsyncEmitter, Emitter } from "../tasks";
+import { createAsyncEmitter, Emitter, Status, Update } from "./index";
 
 
 const Context=createContext<Archives>(immutable({
 
-	list(monitor: (status: Status<ReadonlyArray<Attachment>>) => void): void {
+	list(): void {
 		throw new Error("undefined archive");
 	},
 
-	lookup(monitor: (status: Status<Document>) => void, attachment: Attachment, language: Language): void {
+	lookup(): void {
 		throw new Error("undefined archive");
 	}
 
@@ -69,7 +69,7 @@ export function ToolArchive({
 		value: immutable({
 
 			list(monitor: (status: Status<ReadonlyArray<Attachment>>) => void) {
-				list(createAsyncEmitter(monitor));
+				scanning(createAsyncEmitter(monitor));
 			},
 
 			lookup(monitor: (status: Status<Document>) => void, attachment: Attachment, language: Language) {
@@ -82,10 +82,32 @@ export function ToolArchive({
 
 	});
 
-	async function list(emitter: Emitter<Status<ReadonlyArray<Attachment>>>) {
+
+	async function scanning(emitter: Emitter<Status<ReadonlyArray<Attachment>>>) {
 		try {
 
-			emitter.emit(await scan(emitter));
+			if ( attachments === undefined ) {
+
+				emitter.emit(Update.Scanning);
+
+				// !!! remove stale documents
+				// !!! create index
+
+				return await listAttachments()
+					.then(immutable)
+					.then(attachments => {
+
+						setAttachments(attachments);
+
+						return attachments;
+
+					});
+
+			} else {
+
+				emitter.emit(attachments);
+
+			}
 
 		} catch ( error ) {
 
@@ -113,32 +135,6 @@ export function ToolArchive({
 		} finally {
 
 			emitter.close();
-
-		}
-	}
-
-
-	async function scan(emitter: Emitter<Status<any>>): Promise<ReadonlyArray<Attachment>> {
-		if ( attachments === undefined ) {
-
-			emitter.emit(Update.Scanning);
-
-			// !!! remove stale documents
-			// !!! create index
-
-			return await listAttachments()
-				.then(immutable)
-				.then(attachments => {
-
-					setAttachments(attachments);
-
-					return attachments;
-
-				});
-
-		} else {
-
-			return attachments;
 
 		}
 	}
@@ -172,11 +168,4 @@ export function ToolArchive({
 
 export function useArchive(): Archives {
 	return useContext(Context);
-}
-
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-function delay(ms: number) {
-	return new Promise((resolve) => setTimeout(resolve, ms));
 }

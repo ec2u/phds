@@ -16,7 +16,8 @@
 
 import { EmptyState, Spinner } from "@forge/react";
 import React from "react";
-import { Update } from "../../../shared";
+
+import { Update } from "../../hooks";
 
 export function ToolUpdate({
 

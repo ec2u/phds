@@ -16,9 +16,10 @@
 
 import { Text } from "@forge/react";
 import React from "react";
-import { isTrace, isUpdate } from "../../../shared";
+import { isTrace } from "../../../shared";
 import { Attachment } from "../../../shared/attachments";
 import { Language } from "../../../shared/languages";
+import { isUpdate } from "../../hooks";
 import { useDocument } from "../../hooks/document";
 import { ToolTrace } from "./trace";
 import { ToolUpdate } from "./update";
