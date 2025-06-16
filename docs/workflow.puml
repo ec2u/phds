@@ -1,0 +1,46 @@
+@startuml EC2U PhD Agreements Tool Flow
+!theme plain
+
+participant "Client" as client
+participant "Server" as server
+participant "Cloud Run" as cloud
+participant "Langfuse" as langfuse
+participant "Gemini" as gemini
+
+note over cloud #yellow : integrate code bases\ndeploy with gcloud push\nlimit code base with .gcloudignore
+
+client -> server: launch task
+activate server
+server -> cloud: delegate task
+activate cloud
+server --> client: acknowledge
+deactivate server
+
+par
+    group loop [task execution]
+        cloud -> langfuse: retrieve prompt
+        activate langfuse
+        langfuse --> cloud: prompt data
+        deactivate langfuse
+        cloud -> gemini: execute prompt
+        activate gemini
+        gemini --> cloud: response
+        deactivate gemini
+    end
+else
+    group loop [polling]
+        client -> server: check status
+        activate server
+        server --> client: status
+        deactivate server
+    end
+end
+cloud -> server: return results
+note bottom #yellow : webhook vs API call\nauthorization?
+deactivate cloud
+activate server
+server -> server: store content
+server --> client: results
+note bottom #yellow : polling vs event
+
+@enduml
