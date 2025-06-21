@@ -14,22 +14,46 @@
  * limitations under the License.
  */
 
-import type { DocNode } from "@atlaskit/adf-schema";
-import { Text } from "@forge/react";
-import React from "react";
-import { markdown } from "../../hooks";
+import { LoadingButton } from "@forge/react";
+import React, { useState } from "react";
+import { Attachment } from "../../../shared/attachments";
+import { isUpdate, Status, Update } from "../../hooks";
+import { uploadAttachment } from "../../ports/attachments";
 
 
-export function ToolWork({
+export function ToolWork({}: {}) {
 
-	children: text
+	const [attachment, setAttachment]=useState<Status<Attachment>>();
 
-}: {
+	function upload() {
 
-	children: DocNode
+		setAttachment(Update.Analyzing);
 
-}) {
 
-	return text && <Text>{markdown(text)}</Text>;
+		uploadAttachment({
+
+			original: false,
+			language: "en",
+
+			source: undefined,
+
+			title: "test",
+			content: "zzz"
+
+		})
+
+			.then(setAttachment)
+			.catch(setAttachment);
+
+	}
+
+
+	return <>
+
+		<LoadingButton isLoading={isUpdate(attachment)} onClick={upload}>!!!</LoadingButton>
+
+		{attachment && JSON.stringify(attachment, null, 2)}
+
+	</>;
 
 }

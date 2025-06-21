@@ -15,15 +15,16 @@
  */
 
 import Resolver, { ResolverFunction } from "@forge/resolver";
-import { listAttachments, retrieveAttachment } from "./attachments";
+import { listAttachments, retrieveAttachment, uploadAttachment } from "./attachments";
 import { extract, translate } from "./gemini";
 import { retrievePrompt } from "./langfuse";
 
 
 export const handler=new Resolver()
 
-	.define(listAttachments.name, listAttachments as ResolverFunction)
-	.define(retrieveAttachment.name, retrieveAttachment as ResolverFunction)
+	.define(listAttachments.name, listAttachments as any)
+	.define(retrieveAttachment.name, retrieveAttachment as any)
+	.define(uploadAttachment.name, uploadAttachment as any)
 
 	.define(retrievePrompt.name, retrievePrompt as ResolverFunction)
 

@@ -33,6 +33,10 @@ const Context=createContext<Archives>(immutable({
 
 	lookup(): void {
 		throw new Error("undefined archive");
+	},
+
+	analyze(): void {
+		throw new Error("undefined archive");
 	}
 
 }));
@@ -46,8 +50,14 @@ export interface Archives {
 
 	lookup(observer: Observer<Document>, attachment: Attachment, language: Language): void;
 
+	analyze(observer: Observer<string>, title: string): void;
+
 }
 
+
+export function useArchive(): Archives {
+	return useContext(Context);
+}
 
 export function ToolArchive({
 
@@ -74,6 +84,10 @@ export function ToolArchive({
 
 			lookup(observer: Observer<Document>, attachment: Attachment, language: Language): void {
 				try { lookup(observer, attachment, language); } catch ( error ) { observer(asTrace(error)); }
+			},
+
+			analyze(observer: Observer<string>, title: string): void {
+				try { analyze(observer, title); } catch ( error ) { observer(asTrace(error)); }
 			}
 
 		}),
@@ -116,6 +130,14 @@ export function ToolArchive({
 
 	}
 
+	async function analyze(observer: Observer<string>, title: string) {
+
+		observer(Update.Analyzing);
+
+		observer(title);
+
+	}
+
 
 	async function extracting(observer: Observer<Document>, attachment: Attachment): Promise<Document> {
 
@@ -142,8 +164,4 @@ export function ToolArchive({
 		});
 	}
 
-}
-
-export function useArchive(): Archives {
-	return useContext(Context);
 }

@@ -16,6 +16,7 @@
 
 import { invoke } from "@forge/bridge";
 import { Attachment } from "../../shared/attachments";
+import { Document } from "../../shared/documents";
 
 export function listAttachments() {
 	return invoke<Attachment[]>("listAttachments", {});
@@ -23,4 +24,8 @@ export function listAttachments() {
 
 export function retrieveAttachment(attachment: Attachment) {
 	return invoke<string>("retrieveAttachment", attachment);
+}
+
+export function uploadAttachment(document: Document) {
+	return invoke<Attachment>("uploadAttachment", document);
 }

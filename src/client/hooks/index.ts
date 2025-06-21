@@ -36,7 +36,8 @@ export const enum Update {
 	Scanning,
 	Fetching,
 	Extracting,
-	Translating
+	Translating,
+	Analyzing
 }
 
 

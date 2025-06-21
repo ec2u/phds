@@ -17,9 +17,10 @@
 import api, { route } from "@forge/api";
 import { asTrace } from "../../shared";
 import { Attachment, AttachmentsResponse } from "../../shared/attachments";
+import { Document } from "../../shared/documents";
 import { query, Request } from "../index";
 
-export async function listAttachments({ context }: Request<{}>) {
+export async function listAttachments({ context }: Request<{}>): Promise<Attachment[]> {
 
 	const id: string=context.extension.content.id;
 
@@ -79,4 +80,59 @@ export async function retrieveAttachment({ payload: attachment }: Request<Attach
 		});
 
 	}
+}
+
+export async function uploadAttachment({ context, payload: document }: Request<Document>): Promise<Attachment> {
+
+	const id: string=context.extension.content.id;
+
+	const { body, boundary }=multipart("test.json", document);
+
+	const response=await api.asApp().requestConfluence(
+		route`/rest/api/content/${id}/child/attachment`,
+		{
+			method: "POST",
+			headers: {
+				"Content-Type": `multipart/form-data; boundary=${boundary}`,
+				"X-Atlassian-Token": "no-check"
+			},
+			body
+		}
+	);
+
+	if ( response.ok ) {
+
+		return response.json();
+
+	} else {
+
+		console.error(response);
+
+		throw asTrace({
+			code: response.status,
+			text: response.statusText
+		});
+
+	}
+
+
+	function multipart(name: string, json: object) {
+
+		const boundary="----ForgeBoundary" + Math.random().toString(36).slice(2);
+
+		const parts=[
+			`--${boundary}`,
+			`Content-Disposition: form-data; name="file"; filename="${name}"`,
+			`Content-Type: application/json`,
+			``,
+			JSON.stringify(json),
+			`--${boundary}--`,
+			``
+		];
+
+		const body=parts.join("\r\n");
+
+		return { body, boundary };
+	}
+
 }

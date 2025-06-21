@@ -19,7 +19,7 @@ import { Attachment } from "../../shared/attachments";
 import { useArchive } from "./archives";
 import { Status, Update } from "./index";
 
-export function useAttachments() {
+export function useAttachments(): Status<ReadonlyArray<Attachment>> {
 
 	const { list }=useArchive();
 

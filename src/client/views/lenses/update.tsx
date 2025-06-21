@@ -34,7 +34,8 @@ export function ToolUpdate({
 		[Update.Scanning]: "Scanning Attachments...",
 		[Update.Fetching]: "Fetching Content...",
 		[Update.Extracting]: "Extracting Text...",
-		[Update.Translating]: "Translating..."
+		[Update.Translating]: "Translating...",
+		[Update.Analyzing]: "Analyzing..."
 	};
 
 	return <EmptyState header={messages[update]} description={<Spinner/>}/>;

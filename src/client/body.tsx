@@ -54,7 +54,7 @@ function ToolMacro() {
 	const body=context?.extension?.macro?.body;
 
 
-	const [tab, setTab]=useState<Tab | Attachment>(Tab.References); // !!!
+	const [tab, setTab]=useState<Tab | Attachment>(Tab.Work); // !!!
 	const [language, setLanguage]=useState<Language>(defaultLanguage);
 
 
@@ -82,7 +82,7 @@ function ToolMacro() {
 				: tab === Tab.References ? <ToolReferences onClick={setTab}/>
 					: tab === Tab.Issues ? <ToolIssues/>
 						: tab === Tab.Chat ? <ToolChat/>
-							: tab === Tab.Work ? <ToolWork>{body}</ToolWork>
+							: tab === Tab.Work ? <ToolWork/>
 							: <ToolReference language={language}>{tab}</ToolReference>
 
 		}
