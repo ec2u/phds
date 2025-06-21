@@ -14,22 +14,11 @@
  * limitations under the License.
  */
 
-import { useEffect, useState } from "react";
-import { Attachment } from "../../shared/attachments";
-import { Activity, Status } from "../../shared/tasks";
-import { useArchive } from "./archives";
+import Resolver from "@forge/resolver";
+import { execute } from "./worker";
 
-export function useAttachments(): Status<ReadonlyArray<Attachment>> {
+export const handler=new Resolver()
 
-	const { list }=useArchive();
+	.define(execute.name, execute as any)
 
-	const [attachments, setAttachments]=useState<Status<ReadonlyArray<Attachment>>>(Activity.Initializing);
-
-	useEffect(() => {
-
-		return list(setAttachments);
-
-	}, []);
-
-	return attachments;
-}
+	.getDefinitions();

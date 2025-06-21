@@ -14,19 +14,13 @@
  * limitations under the License.
  */
 
-import { Attachment } from "./attachments";
-import { Document } from "./documents";
-import { Language } from "./languages";
+import { invoke } from "@forge/bridge";
+import { Status, Task } from "../../shared/tasks";
 
-export interface Extraction {
-
-	readonly attachment: Attachment;
-
+export function submitTask(task: Task) {
+	return invoke<string>("submitTask", task);
 }
 
-export interface Translation {
-
-	readonly source: Document;
-	readonly target: Language;
-
+export function monitorTask<T>(id: string) {
+	return invoke<Status<Status<T>>>("monitorTask", { id });
 }

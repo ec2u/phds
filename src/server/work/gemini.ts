@@ -19,8 +19,8 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import { FileMetadataResponse, GoogleAIFileManager } from "@google/generative-ai/server";
 import { asTrace } from "../../shared";
 import { Document } from "../../shared/documents";
-import { Extraction, Translation } from "../../shared/gemini";
 import { defaultLanguage } from "../../shared/languages";
+import { Extraction, Translation } from "../../shared/work/gemini";
 import { Request, secret } from "../index";
 
 const markdown="text/markdown";

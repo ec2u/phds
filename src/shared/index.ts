@@ -137,10 +137,13 @@ export function isFunction(value: unknown): value is Function {
  * Error trace information.
  */
 export interface Trace {
+
 	/** Error code */
 	readonly code: number;
+
 	/** Error message or description */
 	readonly text: string;
+
 }
 
 

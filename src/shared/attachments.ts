@@ -14,14 +14,6 @@
  * limitations under the License.
  */
 
-export interface AttachmentsResponse {
-	readonly results: Attachment[];
-	readonly _links: {
-		readonly next?: string;
-		readonly base: string;
-	};
-}
-
 export interface Attachment {
 	readonly id: string;
 	readonly status: string;

@@ -14,9 +14,19 @@
  * limitations under the License.
  */
 
-import { invoke } from "@forge/bridge";
-import { Prompt } from "../../shared/langfuse";
+import { Attachment } from "../attachments";
+import { Document } from "../documents";
+import { Language } from "../languages";
 
-export function retrievePrompt(prompt: Prompt) {
-	return invoke<string>("retrievePrompt", prompt);
+export interface Extraction {
+
+	readonly attachment: Attachment;
+
+}
+
+export interface Translation {
+
+	readonly source: Document;
+	readonly target: Language;
+
 }

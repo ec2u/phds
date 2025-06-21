@@ -14,45 +14,60 @@
  * limitations under the License.
  */
 
-import { LoadingButton } from "@forge/react";
+import { LoadingButton, Text } from "@forge/react";
 import React, { useState } from "react";
-import { Attachment } from "../../../shared/attachments";
-import { isUpdate, Status, Update } from "../../hooks";
-import { uploadAttachment } from "../../ports/attachments";
+import { isActivity, Status, TestTask } from "../../../shared/tasks";
+import { monitorTask, submitTask } from "../../ports/tasks";
+import { ToolActivity } from "./update";
 
 
 export function ToolWork({}: {}) {
 
-	const [attachment, setAttachment]=useState<Status<Attachment>>();
+	const [status, setStatus]=useState<Status<any>>();
+	const [loading, setLoading]=useState(false);
 
-	function upload() {
+	async function handleSubmit() {
+		setLoading(true);
 
-		setAttachment(Update.Analyzing);
+		try {
+			// Submit test task
+			const jobId=await submitTask({
+				type: "test",
+				value: "Test task from UI"
+			} as TestTask);
 
+			// Start polling
+			const pollInterval=setInterval(async () => {
+				const result=await monitorTask(jobId);
+				setStatus(result);
 
-		uploadAttachment({
+				console.log(result);
 
-			original: false,
-			language: "en",
+				// Stop polling when complete or failed
+				if ( !isActivity(result) ) {
+					clearInterval(pollInterval); // !!! handle trace
+					setLoading(false);
+				}
+			}, 1000); // Poll every 2 seconds
 
-			source: undefined,
-
-			title: "test",
-			content: "zzz"
-
-		})
-
-			.then(setAttachment)
-			.catch(setAttachment);
-
+		} catch ( error ) {
+			console.error("Task submission failed:", error);
+			setLoading(false);
+		}
 	}
 
-
 	return <>
+		<LoadingButton
+			onClick={handleSubmit}
+			isLoading={loading}
+		>
+			Submit Test Task
+		</LoadingButton>
 
-		<LoadingButton isLoading={isUpdate(attachment)} onClick={upload}>!!!</LoadingButton>
-
-		{attachment && JSON.stringify(attachment, null, 2)}
+		{isActivity(status)
+			? <ToolActivity>{status}</ToolActivity>
+			: <Text>{JSON.stringify(status, null, 2)}</Text>
+		}
 
 	</>;
 

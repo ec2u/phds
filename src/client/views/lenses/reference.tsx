@@ -19,10 +19,11 @@ import React from "react";
 import { isTrace } from "../../../shared";
 import { Attachment } from "../../../shared/attachments";
 import { Language } from "../../../shared/languages";
-import { adf, isUpdate } from "../../hooks";
+import { isActivity } from "../../../shared/tasks";
+import { adf } from "../../hooks";
 import { useDocument } from "../../hooks/document";
 import { ToolTrace } from "./trace";
-import { ToolUpdate } from "./update";
+import { ToolActivity } from "./update";
 
 export function ToolReference({
 
@@ -40,9 +41,9 @@ export function ToolReference({
 
 	const document=useDocument(attachment, language);
 
-	if ( isUpdate(document) ) {
+	if ( isActivity(document) ) {
 
-		return <ToolUpdate>{document}</ToolUpdate>;
+		return <ToolActivity>{document}</ToolActivity>;
 
 	} else if ( isTrace(document) ) {
 

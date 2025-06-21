@@ -18,14 +18,14 @@ import { useEffect, useState } from "react";
 import { Attachment } from "../../shared/attachments";
 import { Document } from "../../shared/documents";
 import { Language } from "../../shared/languages";
+import { Activity, Status } from "../../shared/tasks";
 import { useArchive } from "./archives";
-import { Status, Update } from "./index";
 
 export function useDocument(attachment: Attachment, locale: Language): Status<Document> {
 
 	const { lookup }=useArchive();
 
-	const [document, setDocument]=useState<Status<Document>>(Update.Initializing);
+	const [document, setDocument]=useState<Status<Document>>(Activity.Initializing);
 
 	useEffect(() => {
 

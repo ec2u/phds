@@ -15,7 +15,7 @@
  */
 
 import { asTrace } from "../../shared";
-import { Prompt } from "../../shared/langfuse";
+import { Prompt } from "../../shared/work/langfuse";
 import { Request } from "../index";
 
 

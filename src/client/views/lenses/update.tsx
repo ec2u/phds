@@ -16,26 +16,26 @@
 
 import { EmptyState, Spinner } from "@forge/react";
 import React from "react";
+import { Activity } from "../../../shared/tasks";
 
-import { Update } from "../../hooks";
-
-export function ToolUpdate({
+export function ToolActivity({
 
 	children: update
 
 }: {
 
-	children: Update
+	children: Activity
 
 }) {
 
 	const messages={
-		[Update.Initializing]: "Initializing...",
-		[Update.Scanning]: "Scanning Attachments...",
-		[Update.Fetching]: "Fetching Content...",
-		[Update.Extracting]: "Extracting Text...",
-		[Update.Translating]: "Translating...",
-		[Update.Analyzing]: "Analyzing..."
+		[Activity.Waiting]: "Waiting...",
+		[Activity.Initializing]: "Initializing...",
+		[Activity.Scanning]: "Scanning Attachments...",
+		[Activity.Fetching]: "Fetching Content...",
+		[Activity.Extracting]: "Extracting Text...",
+		[Activity.Translating]: "Translating...",
+		[Activity.Analyzing]: "Analyzing..."
 	};
 
 	return <EmptyState header={messages[update]} description={<Spinner/>}/>;

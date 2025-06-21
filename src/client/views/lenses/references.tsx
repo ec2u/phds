@@ -18,10 +18,10 @@ import { List, ListItem, Pressable } from "@forge/react";
 import React from "react";
 import { isTrace } from "../../../shared";
 import { Attachment, compareAttachments } from "../../../shared/attachments";
-import { isUpdate } from "../../hooks";
+import { isActivity } from "../../../shared/tasks";
 import { useAttachments } from "../../hooks/attachments";
 import { ToolTrace } from "./trace";
-import { ToolUpdate } from "./update";
+import { ToolActivity } from "./update";
 
 export function ToolReferences({
 
@@ -35,9 +35,9 @@ export function ToolReferences({
 
 	const attachments=useAttachments();
 
-	if ( isUpdate(attachments) ) {
+	if ( isActivity(attachments) ) {
 
-		return <ToolUpdate>{attachments}</ToolUpdate>;
+		return <ToolActivity>{attachments}</ToolActivity>;
 
 	} else if ( isTrace(attachments) ) {
 

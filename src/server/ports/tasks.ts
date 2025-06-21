@@ -14,31 +14,33 @@
  * limitations under the License.
  */
 
-import { InvokePayload } from "@forge/bridge/out/types";
-import { Request as NativeRequest } from "@forge/resolver";
-import { URLSearchParams } from "url";
+import { Queue } from "@forge/events";
+import { Activity, isActivity, Status, Task } from "../../shared/tasks";
+import { getStatus, setStatus } from "../async";
+import { Request } from "../index";
 
 
-export interface Request<T extends NativeRequest["payload"]> {
-	payload: T;
-	context: InvokePayload["context"];
-}
+const queue=new Queue({ key: "executor-queue" });
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-export function secret(key: string) {
+export async function submitTask({ payload: task }: Request<Task>): Promise<string> {
 
-	const value=process.env[key];
+	const id=await queue.push(task as any); // !!! typing errors
 
-	if ( !value ) {
-		throw new Error(`undefined environment variable <${key}>`);
-	}
+	await setStatus(id, Activity.Waiting); // create storage entry
 
-	return value;
+	return id;
 }
 
+export async function monitorTask<T>({ payload: { id } }: Request<{ id: string }>): Promise<Status<T>> {
 
-export function query(params: Record<string, string>) {
-	return new URLSearchParams(params).toString();
+	const status=await getStatus<T>(id);
+
+	if ( !isActivity(status) ) {
+		await setStatus(id, undefined); // clean up storage after completion
+	}
+
+	return status;
 }

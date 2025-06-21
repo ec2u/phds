@@ -15,13 +15,8 @@
  */
 
 import { invoke } from "@forge/bridge";
-import { Document } from "../../shared/documents";
-import { Extraction, Translation } from "../../shared/gemini";
+import { Prompt } from "../../shared/work/langfuse";
 
-export function extract(extraction: Extraction) {
-	return invoke<Document>("extract", extraction);
-}
-
-export function translate(translation: Translation) {
-	return invoke<Document>("translate", translation);
+export function retrievePrompt(prompt: Prompt) {
+	return invoke<string>("retrievePrompt", prompt);
 }

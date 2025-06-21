@@ -20,9 +20,10 @@ import { asTrace, immutable } from "../../shared";
 import { Attachment } from "../../shared/attachments";
 import { Document } from "../../shared/documents";
 import { Language } from "../../shared/languages";
+import { Activity } from "../../shared/tasks";
+import { extract, translate } from "../ports/_gemini";
 import { listAttachments } from "../ports/attachments";
-import { extract, translate } from "../ports/gemini";
-import { Observer, Update } from "./index";
+import { Observer } from "./index";
 
 
 const Context=createContext<Archives>(immutable({
@@ -100,7 +101,7 @@ export function ToolArchive({
 	async function list(observer: Observer<ReadonlyArray<Attachment>>) {
 		if ( attachments === undefined ) {
 
-			observer(Update.Scanning);
+			observer(Activity.Scanning);
 
 			// !!! remove stale documents
 			// !!! create index
@@ -132,7 +133,7 @@ export function ToolArchive({
 
 	async function analyze(observer: Observer<string>, title: string) {
 
-		observer(Update.Analyzing);
+		observer(Activity.Analyzing);
 
 		observer(title);
 
@@ -141,7 +142,7 @@ export function ToolArchive({
 
 	async function extracting(observer: Observer<Document>, attachment: Attachment): Promise<Document> {
 
-		observer(Update.Extracting);
+		observer(Activity.Extracting);
 
 		// !!! check if updated full text is available
 		// !!! extract full text
@@ -152,7 +153,7 @@ export function ToolArchive({
 
 	async function xlating(observer: Observer<Document>, source: Document, target: Language): Promise<Document> {
 
-		observer(Update.Translating);
+		observer(Activity.Translating);
 
 		// !!! check if updated translation is available
 		// !!! translate from native language (which one?)

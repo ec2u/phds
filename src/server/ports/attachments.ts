@@ -16,9 +16,21 @@
 
 import api, { route } from "@forge/api";
 import { asTrace } from "../../shared";
-import { Attachment, AttachmentsResponse } from "../../shared/attachments";
+import { Attachment } from "../../shared/attachments";
 import { Document } from "../../shared/documents";
 import { query, Request } from "../index";
+
+
+interface AttachmentsResponse {
+	readonly results: Attachment[];
+	readonly _links: {
+		readonly next?: string;
+		readonly base: string;
+	};
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 export async function listAttachments({ context }: Request<{}>): Promise<Attachment[]> {
 

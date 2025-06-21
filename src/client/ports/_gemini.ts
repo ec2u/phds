@@ -14,22 +14,14 @@
  * limitations under the License.
  */
 
-import { useEffect, useState } from "react";
-import { Attachment } from "../../shared/attachments";
-import { Activity, Status } from "../../shared/tasks";
-import { useArchive } from "./archives";
+import { invoke } from "@forge/bridge";
+import { Document } from "../../shared/documents";
+import { Extraction, Translation } from "../../shared/work/gemini";
 
-export function useAttachments(): Status<ReadonlyArray<Attachment>> {
+export function extract(extraction: Extraction) {
+	return invoke<Document>("extract", extraction);
+}
 
-	const { list }=useArchive();
-
-	const [attachments, setAttachments]=useState<Status<ReadonlyArray<Attachment>>>(Activity.Initializing);
-
-	useEffect(() => {
-
-		return list(setAttachments);
-
-	}, []);
-
-	return attachments;
+export function translate(translation: Translation) {
+	return invoke<Document>("translate", translation);
 }

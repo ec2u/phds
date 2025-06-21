@@ -18,56 +18,13 @@ import type { DocNode } from "@atlaskit/adf-schema";
 import remarkGfm from "remark-gfm";
 import remarkParse from "remark-parse";
 import { unified } from "unified";
-import { isNumber, Trace } from "../../shared";
-
-
-/**
- * Status type representing operation state as either an update, result data, or error trace.
- *
- * @template T the type of result data
- */
-export type Status<T>=Update | T | Trace;
-
-/**
- * Enumeration of operation update states.
- */
-export const enum Update {
-	Initializing,
-	Scanning,
-	Fetching,
-	Extracting,
-	Translating,
-	Analyzing
-}
+import { Status } from "../../shared/tasks";
 
 
 export interface Observer<T> {
 
 	(status: Status<T>): void;
 
-}
-
-
-/**
- * Checks if a value is a valid Update enum value.
- *
- * @param value the value to check
- *
- * @return `true` if the value is a valid Update; `false` otherwise
- */
-export function isUpdate(value: unknown): value is Update {
-	return isNumber(value) && value >= Update.Initializing && value <= Update.Translating;
-}
-
-/**
- * Converts a value to an Update enum value if valid.
- *
- * @param value the value to convert
- *
- * @return the Update value if valid; `undefined` otherwise
- */
-export function asUpdate(value: unknown): undefined | Update {
-	return isUpdate(value) ? value : undefined;
 }
 
 

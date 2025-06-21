@@ -2,12 +2,12 @@ modules:
 
   macro:
 
-    - key: ec2u-phds
+    - key: ec2u-phds-macro
       title: EC2U PhD Agreements Tool
       description: EC2U AI-based Confluence macro supporting drafting of cotutelle PhD
         agreements.
 
-      resource: main
+      resource: body
       render: native
       layout: bodied
 
@@ -18,22 +18,34 @@ modules:
       config:
 
         title: EC2U PhD Agreements Tool
-        resource: macro-config
+        resource: tool
         render: native
         viewportSize: max
         openOnInsert: false
+
+  consumer:
+
+    - key: ec2u-phds-consumer
+      queue: executor-queue
+      resolver:
+        function: executor
+        method: execute
 
   function:
 
     - key: resolver
       handler: server/ports/index.handler
 
+    - key: executor
+      handler: server/tasks/index.handler
+      timeoutSeconds: 600
+
 resources:
 
-  - key: main
+  - key: body
     path: src/client/body.tsx
 
-  - key: macro-config
+  - key: tool
     path: src/client/tool.tsx
 
 app:
@@ -48,6 +60,7 @@ permissions:
     - write:confluence-file
     - read:attachment:confluence
     - delete:attachment:confluence
+    - storage:app
 
   external:
     fetch:
