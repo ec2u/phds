@@ -17,7 +17,7 @@
 import { AdfRenderer } from "@forge/react";
 import React from "react";
 import { isTrace } from "../../../shared";
-import { Attachment } from "../../../shared/attachments";
+import { Source } from "../../../shared/documents";
 import { Language } from "../../../shared/languages";
 import { isActivity } from "../../../shared/tasks";
 import { adf } from "../../hooks";
@@ -27,31 +27,29 @@ import { ToolTrace } from "./trace";
 
 export function ToolReference({
 
-	language,
-
-	children: attachment
+	source,
+	language
 
 }: {
 
+	source: Source
 	language: Language
-
-	children: Attachment
 
 }) {
 
-	const document=useDocument(attachment, language);
+	const translation=useDocument(source, language);
 
-	if ( isActivity(document) ) {
+	if ( isActivity(translation) ) {
 
-		return <ToolActivity>{document}</ToolActivity>;
+		return <ToolActivity activity={translation}/>;
 
-	} else if ( isTrace(document) ) {
+	} else if ( isTrace(translation) ) {
 
-		return <ToolTrace>{document}</ToolTrace>;
+		return <ToolTrace trace={translation}/>;
 
 	} else {
 
-		return <AdfRenderer document={adf(document.content)}/>;
+		return <AdfRenderer document={adf(translation.content)}/>;
 
 	}
 

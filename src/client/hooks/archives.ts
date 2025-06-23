@@ -14,23 +14,22 @@
  * limitations under the License.
  */
 
+import { DocNode } from "@atlaskit/adf-schema";
 import { useProductContext } from "@forge/react";
-import { createContext, createElement, ReactNode, useContext, useState } from "react";
+import { createContext, createElement, ReactNode, useContext, useEffect, useState } from "react";
 import { asTrace, immutable } from "../../shared";
-import { Attachment } from "../../shared/attachments";
-import { Document } from "../../shared/documents";
-import { Language } from "../../shared/languages";
+import { Catalog, Document, Source } from "../../shared/documents";
+import { defaultLanguage, Language } from "../../shared/languages";
 import { Activity } from "../../shared/tasks";
-import { extract, translate } from "../ports/_gemini";
 import { listAttachments } from "../ports/attachments";
-import { Observer } from "./index";
+import { markdown, Observer } from "./index";
 
 
 export interface Archives {
 
-	list(observer: Observer<ReadonlyArray<Attachment>>): void;
+	list(observer: Observer<Catalog>): void;
 
-	lookup(observer: Observer<Document>, attachment: Attachment, language: Language): void;
+	lookup(observer: Observer<Document>, source: Source, language: Language): void;
 
 	analyze(observer: Observer<string>, title: string): void;
 
@@ -57,7 +56,7 @@ const Context=createContext<Archives>(immutable({
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-export function useArchive(): Archives {
+export function useArchives(): Archives {
 	return useContext(Context);
 }
 
@@ -71,21 +70,44 @@ export function ToolArchive({
 
 }) {
 
-	const context=useProductContext(); // !!! read macro body as a virtual attachment
+	const context=useProductContext();
 
-	const [attachments, setAttachments]=useState<ReadonlyArray<Attachment>>();
+	console.log("!!! %o", context);
+
+	const [catalog, setCatalog]=useState<Catalog>();
+	const [documents, setDocuments]=useState<ReadonlyArray<Document>>();
+
+
+	useEffect(() => {
+
+		const body: DocNode=context?.extension?.macro?.body;
+
+		if ( body ) {
+			setDocuments([{
+
+				original: true,
+				language: defaultLanguage, // !!!
+				source: "",
+
+				title: "", // !!!
+				content: markdown(body)
+
+			}]);
+		}
+
+	}, [context]);
 
 
 	return createElement(Context.Provider, {
 
 		value: immutable({
 
-			list(observer: Observer<ReadonlyArray<Attachment>>): void {
+			list(observer: Observer<Catalog>): void {
 				try { list(observer); } catch ( error ) { observer(asTrace(error)); }
 			},
 
-			lookup(observer: Observer<Document>, attachment: Attachment, language: Language): void {
-				try { lookup(observer, attachment, language); } catch ( error ) { observer(asTrace(error)); }
+			lookup(observer: Observer<Document>, source: Source, language: Language): void {
+				try { lookup(observer, source, language); } catch ( error ) { observer(asTrace(error)); }
 			},
 
 			analyze(observer: Observer<string>, title: string): void {
@@ -99,37 +121,49 @@ export function ToolArchive({
 	});
 
 
-	async function list(observer: Observer<ReadonlyArray<Attachment>>) {
-		if ( attachments === undefined ) {
+	async function list(observer: Observer<Catalog>) {
+		if ( catalog === undefined ) {
 
 			observer(Activity.Scanning);
 
 			// !!! remove stale documents
 			// !!! create index
+			// !!! upload missing documents
 
 			return await listAttachments()
-				.then(immutable)
 				.then(attachments => {
 
-					setAttachments(attachments);
-					observer(attachments);
+					// !!! build index
+					// !!! remove stale documents
+					// !!! create and upload missing documents
+
+					return attachments
+						.filter(attachmment => attachmment.title.endsWith(".pdf"))
+						.reduce((catalog, attachment) => {
+
+
+							return { ...catalog, [attachment.id]: attachment.title.replace(/\.pdf$/, "") };
+
+						}, {});
+
+				})
+				.then(immutable)
+				.then(catalog => {
+
+					setCatalog(catalog);
+					observer(catalog);
 
 				});
 
 		} else {
 
-			observer(attachments);
+			observer(catalog);
 
 		}
 	}
 
-	async function lookup(observer: Observer<Document>, attachment: Attachment, language: Language) {
-
-		const document=await extracting(observer, attachment);
-		const xlation=await xlating(observer, document, language);
-
-		observer(xlation);
-
+	async function lookup(observer: Observer<Document>, source: Source, language: Language) {
+		observer(documents?.[0] ? documents[0] : Activity.Waiting); // !!!
 	}
 
 	async function analyze(observer: Observer<string>, title: string) {
@@ -138,32 +172,6 @@ export function ToolArchive({
 
 		observer(title);
 
-	}
-
-
-	async function extracting(observer: Observer<Document>, attachment: Attachment): Promise<Document> {
-
-		observer(Activity.Extracting);
-
-		// !!! check if updated full text is available
-		// !!! extract full text
-		// !!! save full text and remove stale versions
-
-		return await extract({ attachment });
-	}
-
-	async function xlating(observer: Observer<Document>, source: Document, target: Language): Promise<Document> {
-
-		observer(Activity.Translating);
-
-		// !!! check if updated translation is available
-		// !!! translate from native language (which one?)
-		// !!! save translation and remove stale versions
-
-		return await translate({
-			source,
-			target
-		});
 	}
 
 }

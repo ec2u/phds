@@ -41,8 +41,6 @@ export function ToolWork({}: {}) {
 				const result=await monitorTask(jobId);
 				setStatus(result);
 
-				console.log(result);
-
 				// Stop polling when complete or failed
 				if ( !isActivity(result) ) {
 					clearInterval(pollInterval); // !!! handle trace
@@ -65,7 +63,7 @@ export function ToolWork({}: {}) {
 		</LoadingButton>
 
 		{isActivity(status)
-			? <ToolActivity>{status}</ToolActivity>
+			? <ToolActivity activity={status}/>
 			: <Text>{JSON.stringify(status, null, 2)}</Text>
 		}
 

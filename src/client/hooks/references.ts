@@ -14,9 +14,22 @@
  * limitations under the License.
  */
 
-import { invoke } from "@forge/bridge";
-import { Prompt } from "../../shared/work/langfuse";
+import { useEffect, useState } from "react";
+import { Catalog } from "../../shared/documents";
+import { Activity, Status } from "../../shared/tasks";
+import { useArchives } from "./archives";
 
-export function retrievePrompt(prompt: Prompt) {
-	return invoke<string>("retrievePrompt", prompt);
+export function useReferences(): Status<Catalog> {
+
+	const { list }=useArchives();
+
+	const [references, setReferences]=useState<Status<Catalog>>(Activity.Initializing);
+
+	useEffect(() => {
+
+		list(setReferences);
+
+	}, []);
+
+	return references;
 }

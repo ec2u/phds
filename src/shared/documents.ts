@@ -16,12 +16,15 @@
 
 import { Language } from "./languages";
 
+
+export type Catalog=Readonly<Record<Source, string>>;
+export type Source="" | string // source attachment id; empty for macro body
+
 export interface Document {
 
 	readonly original: boolean;
 	readonly language: Language;
-
-	readonly source: undefined | string; // source attachment id; undefined if generated from macro body
+	readonly source: Source;
 
 	readonly title: string;
 	readonly content: string;

@@ -16,16 +16,16 @@
 
 import ForgeReconciler, { Button, ButtonGroup, useConfig, useProductContext } from "@forge/react";
 import React, { useState } from "react";
-import { Attachment } from "../shared/attachments";
+import { Source } from "../shared/documents";
 import { defaultLanguage, Language } from "../shared/languages";
 import { ToolArchive } from "./hooks/archives";
 import { ToolBar } from "./views/layouts/bar";
+import { ToolAgreement } from "./views/lenses/agreement";
 import { ToolChat } from "./views/lenses/chat";
 import { ToolIssues } from "./views/lenses/issues";
 import { ToolLanguage } from "./views/lenses/language";
 import { ToolReference } from "./views/lenses/reference";
 import { ToolReferences } from "./views/lenses/references";
-import { ToolText } from "./views/lenses/text";
 import { ToolWork } from "./views/lenses/work";
 
 
@@ -54,7 +54,7 @@ function ToolBody() {
 	const body=context?.extension?.macro?.body;
 
 
-	const [tab, setTab]=useState<Tab | Attachment>(Tab.Work); // !!!
+	const [tab, setTab]=useState<Tab | Source>(Tab.Agreement); // !!!
 	const [language, setLanguage]=useState<Language>(defaultLanguage);
 
 
@@ -78,12 +78,12 @@ function ToolBody() {
 
 		{
 
-			tab === Tab.Agreement ? <ToolText>{body}</ToolText>
+			tab === Tab.Agreement ? <ToolAgreement language={language}/>
 				: tab === Tab.References ? <ToolReferences onClick={setTab}/>
 					: tab === Tab.Issues ? <ToolIssues/>
 						: tab === Tab.Chat ? <ToolChat/>
 							: tab === Tab.Work ? <ToolWork/>
-							: <ToolReference language={language}>{tab}</ToolReference>
+								: <ToolReference source={tab} language={language}/>
 
 		}
 

@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
-import ForgeReconciler, { Box, Button, ButtonGroup, Inline, Stack, useConfig, useProductContext } from "@forge/react";
+import ForgeReconciler, { Box, Button, ButtonGroup, Inline, Stack, useConfig } from "@forge/react";
 import React, { useState } from "react";
-import { Attachment } from "../shared/attachments";
+import { Source } from "../shared/documents";
 import { defaultLanguage, Language } from "../shared/languages";
 import { ToolArchive } from "./hooks/archives";
 import { ToolBar } from "./views/layouts/bar";
 import ToolPanel from "./views/layouts/panel";
+import { ToolAgreement } from "./views/lenses/agreement";
 import ToolIssue from "./views/lenses/issue";
 import { ToolLanguage } from "./views/lenses/language";
 import { ToolReference } from "./views/lenses/reference";
 import { ToolReferences } from "./views/lenses/references";
-import { ToolText } from "./views/lenses/text";
 
 
 const modes={
@@ -71,12 +71,8 @@ function ToolTool() {
 
 	const config=useConfig();
 
-	const [mode, setMode]=useState<keyof typeof modes | Attachment>("agreement");
+	const [mode, setMode]=useState<keyof typeof modes | Source>("agreement");
 	const [language, setLanguage]=useState<Language>(defaultLanguage);
-
-
-	const context=useProductContext();
-	const macroBody=context?.extension?.macro?.body;
 
 
 	return <Inline shouldWrap={false} alignBlock={"stretch"} grow={"fill"} space={"space.500"}>
@@ -91,7 +87,7 @@ function ToolTool() {
 					<ButtonGroup>{Object.entries(modes).map(([selected, label]) =>
 						<Button key={selected} isSelected={mode === selected}
 
-							onClick={() => setMode(selected as keyof typeof mode)}
+							onClick={() => setMode(selected as keyof typeof modes)}
 
 						>{label}</Button>
 					)}</ButtonGroup>
@@ -102,9 +98,9 @@ function ToolTool() {
 
 			/>}>{
 
-				mode === "agreement" ? <ToolText>{macroBody}</ToolText>
+				mode === "agreement" ? <ToolAgreement language={language}/>
 					: mode === "references" ? <ToolReferences onClick={setMode}/>
-						: <ToolReference language={language}>{mode}</ToolReference>
+						: <ToolReference language={language} source={mode}/>
 
 			}</ToolPanel>
 

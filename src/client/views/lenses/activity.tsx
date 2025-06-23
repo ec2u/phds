@@ -20,11 +20,11 @@ import { Activity } from "../../../shared/tasks";
 
 export function ToolActivity({
 
-	children: update
+	activity
 
 }: {
 
-	children: Activity
+	activity: Activity
 
 }) {
 
@@ -39,6 +39,6 @@ export function ToolActivity({
 		[Activity.Analyzing]: "Analyzing..."
 	};
 
-	return <EmptyState header={messages[update]} description={<Spinner/>}/>;
+	return <EmptyState header={messages[activity]} description={<Spinner/>}/>;
 
 }

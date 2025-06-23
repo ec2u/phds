@@ -285,7 +285,7 @@ export async function translate({ payload: { source, target } }: Request<Transla
 	async function upload(document: Document) {
 		try {
 
-			const buffer=Buffer.from(document.content, "utf8");
+			const buffer=Buffer.from(document.content ?? "", "utf8"); // !!!
 
 			const response=await manager.uploadFile(buffer, {
 				mimeType: markdown,

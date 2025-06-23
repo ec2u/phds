@@ -20,11 +20,11 @@ import { Trace } from "../../../shared";
 
 export function ToolTrace({
 
-	children: trace
+	trace
 
 }: {
 
-	children: Trace
+	trace: Trace
 
 }) {
 

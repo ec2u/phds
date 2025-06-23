@@ -14,20 +14,30 @@
  * limitations under the License.
  */
 
-import type { DocNode } from "@atlaskit/adf-schema";
 import { AdfRenderer } from "@forge/react";
 import React from "react";
+import { isTrace } from "../../../shared";
+import { Language } from "../../../shared/languages";
+import { isActivity } from "../../../shared/tasks";
+import { adf } from "../../hooks";
+import { useDocument } from "../../hooks/document";
+import { ToolActivity } from "./activity";
+import { ToolTrace } from "./trace";
 
-export function ToolText({
+export function ToolAgreement({
 
-	children: text
+	language
 
 }: {
 
-	children: DocNode
+	language: Language
 
 }) {
 
-	return text && <AdfRenderer document={text}/>;
+	const document=useDocument("", language);
+
+	return isActivity(document) ? <ToolActivity activity={document}/>
+		: isTrace(document) ? <ToolTrace trace={document}/>
+			: <AdfRenderer document={adf(document.content)}/>;
 
 }

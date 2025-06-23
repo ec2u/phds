@@ -17,56 +17,59 @@
 import { List, ListItem, Pressable } from "@forge/react";
 import React from "react";
 import { isTrace } from "../../../shared";
-import { Attachment, compareAttachments } from "../../../shared/attachments";
+import { Source } from "../../../shared/documents";
 import { isActivity } from "../../../shared/tasks";
-import { useAttachments } from "../../hooks/attachments";
+import { useReferences } from "../../hooks/references";
 import { ToolActivity } from "./activity";
 import { ToolTrace } from "./trace";
 
 export function ToolReferences({
 
-	onClick,
+	onClick
 
 }: {
 
-	onClick?: (attachment: Attachment) => void
+	onClick?: (source: Source) => void
 
 }) {
 
-	const attachments=useAttachments();
+	const catalog=useReferences();
 
-	if ( isActivity(attachments) ) {
+	if ( isActivity(catalog) ) {
 
-		return <ToolActivity>{attachments}</ToolActivity>;
+		return <ToolActivity activity={catalog}/>;
 
-	} else if ( isTrace(attachments) ) {
+	} else if ( isTrace(catalog) ) {
 
-		return <ToolTrace>{attachments}</ToolTrace>;
+		return <ToolTrace trace={catalog}/>;
 
 	} else {
 
-		return <List type={"unordered"}>{[...attachments].sort(compareAttachments).map(attachment => <>
+		return <List type={"unordered"}>{Object.entries(catalog)
+			.sort(([, x], [, y]) => x.localeCompare(y))
+			.map(([source, title]) => <>
 
-			<ListItem key={attachment.id}>
+				<ListItem key={source}>
 
-				<Pressable xcss={{
+					<Pressable xcss={{
 
-					color: "color.link",
-					backgroundColor: "color.background.neutral.subtle"
+						color: "color.link",
+						backgroundColor: "color.background.neutral.subtle"
 
-				}}
+					}}
 
-					onClick={() => onClick?.(attachment)}
+						onClick={() => onClick?.(source)}
 
-				>{
+					>{
 
-					attachment.title.replace(/\.pdf$/, "")
+						title
 
-				}</Pressable>
+					}</Pressable>
 
-			</ListItem>
+				</ListItem>
 
-		</>)}</List>;
+			</>)
+		}</List>;
 
 	}
 

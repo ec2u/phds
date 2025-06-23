@@ -45,10 +45,3 @@ export interface AttachmentLinks {
 	readonly webui: string;
 	readonly download: string;
 }
-
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-export function compareAttachments(x: Attachment, y: Attachment) {
-	return x.title.localeCompare(y.title);
-}
