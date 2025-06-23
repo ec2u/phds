@@ -26,25 +26,6 @@ import { listAttachments } from "../ports/attachments";
 import { Observer } from "./index";
 
 
-const Context=createContext<Archives>(immutable({
-
-	list(): void {
-		throw new Error("undefined archive");
-	},
-
-	lookup(): void {
-		throw new Error("undefined archive");
-	},
-
-	analyze(): void {
-		throw new Error("undefined archive");
-	}
-
-}));
-
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 export interface Archives {
 
 	list(observer: Observer<ReadonlyArray<Attachment>>): void;
@@ -55,6 +36,26 @@ export interface Archives {
 
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+const Context=createContext<Archives>(immutable({
+
+	list(): void {
+		throw new Error("outside <ToolArchive/> context");
+	},
+
+	lookup(): void {
+		throw new Error("outside <ToolArchive/> context");
+	},
+
+	analyze(): void {
+		throw new Error("outside <ToolArchive/> context");
+	}
+
+}));
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 export function useArchive(): Archives {
 	return useContext(Context);

@@ -14,104 +14,69 @@
  * limitations under the License.
  */
 
-import { view } from "@forge/bridge";
-import ForgeReconciler, {
-	Box,
-	Button,
-	ButtonGroup,
-	EmptyState,
-	Inline,
-	Stack,
-	useConfig,
-	useProductContext
-} from "@forge/react";
-import React, { useEffect, useState } from "react";
+import ForgeReconciler, { Box, Button, ButtonGroup, Inline, Stack, useConfig, useProductContext } from "@forge/react";
+import React, { useState } from "react";
 import { Attachment } from "../shared/attachments";
-import { defaultLanguage } from "../shared/languages";
-import { listAttachments } from "./ports/attachments";
+import { defaultLanguage, Language } from "../shared/languages";
+import { ToolArchive } from "./hooks/archives";
 import { ToolBar } from "./views/layouts/bar";
 import ToolPanel from "./views/layouts/panel";
 import ToolIssue from "./views/lenses/issue";
 import { ToolLanguage } from "./views/lenses/language";
+import { ToolReference } from "./views/lenses/reference";
 import { ToolReferences } from "./views/lenses/references";
 import { ToolText } from "./views/lenses/text";
 
-const useSubmit=() => {
 
-	const [error, setError]=useState<boolean>();
-	const [message, setMessage]=useState("");
-
-	const submit=async (fields: any) => { // !!! fields type
-
-		const payload={ config: fields };
-
-		try {
-
-			await view.submit(payload);
-
-			setError(false);
-			setMessage(`Submitted successfully.`);
-
-		} catch ( error: any ) { // !!! error type
-
-			setError(true);
-			setMessage(`${error.code}: ${error.message}`);
-		}
-
-	};
-
-	return {
-		error,
-		message,
-		submit
-	};
-
+const modes={
+	"agreement": "Agreement",
+	"references": "References"
 };
 
 
-function ToolConfig() {
+// const useSubmit=() => {
+//
+// 	const [error, setError]=useState<boolean>();
+// 	const [message, setMessage]=useState("");
+//
+// 	const submit=async (fields: any) => { // !!! fields type
+//
+// 		const payload={ config: fields };
+//
+// 		try {
+//
+// 			await view.submit(payload);
+//
+// 			setError(false);
+// 			setMessage(`Submitted successfully.`);
+//
+// 		} catch ( error: any ) { // !!! error type
+//
+// 			setError(true);
+// 			setMessage(`${error.code}: ${error.message}`);
+// 		}
+//
+// 	};
+//
+// 	return {
+// 		error,
+// 		message,
+// 		submit
+// 	};
+//
+// };
+
+
+function ToolTool() {
 
 	const config=useConfig();
 
-	const [mode, setMode]=useState<string>("agreement");
-
-	const [value, setValue]=useState("");
-	// const [json, setJSON]=useState<any>();
+	const [mode, setMode]=useState<keyof typeof modes | Attachment>("agreement");
+	const [language, setLanguage]=useState<Language>(defaultLanguage);
 
 
 	const context=useProductContext();
 	const macroBody=context?.extension?.macro?.body;
-
-	const [attachments, setAttachments]=useState<Attachment[]>();
-
-
-	const {
-		error,
-		message,
-		submit
-	}=useSubmit();
-
-	// useEffect(() => {
-	// 	setValue(config?.myField);
-	// }, [config?.myField]);
-
-
-	useEffect(() => {
-		listAttachments().then(setAttachments);
-	}, []);
-
-
-	function doShowAgreement() {
-		setMode("agreement");
-	}
-
-	function doShowReferences() {
-		setMode("references");
-	}
-
-	function doShowReference(id: string) {
-		setMode(id);
-	}
 
 
 	return <Inline shouldWrap={false} alignBlock={"stretch"} grow={"fill"} space={"space.500"}>
@@ -120,25 +85,26 @@ function ToolConfig() {
 
 			<ToolPanel header={<ToolBar
 
-				menu={
-					<ButtonGroup>
 
-						<Button appearance={mode === "agreement" ? "primary" : "default"}
-							onClick={doShowAgreement}>Agreement</Button>
+				menu={<>
 
-						<Button appearance={mode === "references" ? "primary" : "default"}
-							onClick={doShowReferences}>References</Button>
+					<ButtonGroup>{Object.entries(modes).map(([selected, label]) =>
+						<Button key={selected} isSelected={mode === selected}
 
-					</ButtonGroup>
-				}
+							onClick={() => setMode(selected as keyof typeof mode)}
 
-				more={<ToolLanguage locale={defaultLanguage} onChange={() => {}}/>}
+						>{label}</Button>
+					)}</ButtonGroup>
+
+				</>}
+
+				more={<ToolLanguage locale={language} onChange={setLanguage}/>}
 
 			/>}>{
 
 				mode === "agreement" ? <ToolText>{macroBody}</ToolText>
-					: mode === "references" ? <ToolReferences/>
-						: null // !!! ToolReference()
+					: mode === "references" ? <ToolReferences onClick={setMode}/>
+						: <ToolReference language={language}>{mode}</ToolReference>
 
 			}</ToolPanel>
 
@@ -155,7 +121,7 @@ function ToolConfig() {
 					</ButtonGroup>
 				}
 
-				more={<Button>Reset</Button>}
+				more={<Button>Refresh</Button>}
 
 			/>}>
 
@@ -166,11 +132,7 @@ function ToolConfig() {
 					<ToolIssue/>
 					<ToolIssue/>
 
-					<EmptyState header={value}/>
-
 				</Stack>
-
-				{/* <CodeBlock language={"json"} text={JSON.stringify(json, null, 4)}/> */}
 
 			</ToolPanel>
 
@@ -185,6 +147,10 @@ function ToolConfig() {
 
 ForgeReconciler.render(
 	<React.StrictMode>
-		<ToolConfig/>
+
+		<ToolArchive>
+			<ToolTool/>
+		</ToolArchive>
+
 	</React.StrictMode>
 );

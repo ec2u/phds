@@ -46,7 +46,7 @@ const tabs=[
 ];
 
 
-function ToolMacro() {
+function ToolBody() {
 
 	const context=useProductContext();
 	const config=useConfig();
@@ -98,7 +98,7 @@ ForgeReconciler.render(
 	<React.StrictMode>
 
 		<ToolArchive>
-			<ToolMacro/>
+			<ToolBody/>
 		</ToolArchive>
 
 	</React.StrictMode>

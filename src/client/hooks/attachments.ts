@@ -23,6 +23,8 @@ export function useAttachments(): Status<ReadonlyArray<Attachment>> {
 
 	const { list }=useArchive();
 
+	console.log("list %o", list);
+
 	const [attachments, setAttachments]=useState<Status<ReadonlyArray<Attachment>>>(Activity.Initializing);
 
 	useEffect(() => {
