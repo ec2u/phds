@@ -33,6 +33,7 @@ export function ToolActivity({
 		[Activity.Initializing]: "Initializing...",
 		[Activity.Scanning]: "Scanning Attachments...",
 		[Activity.Fetching]: "Fetching Content...",
+		[Activity.Prompting]: "Fetching Prompts...",
 		[Activity.Extracting]: "Extracting Text...",
 		[Activity.Translating]: "Translating...",
 		[Activity.Analyzing]: "Analyzing..."

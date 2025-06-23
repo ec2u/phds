@@ -18,7 +18,7 @@ import { LoadingButton, Text } from "@forge/react";
 import React, { useState } from "react";
 import { isActivity, Status, TestTask } from "../../../shared/tasks";
 import { monitorTask, submitTask } from "../../ports/tasks";
-import { ToolActivity } from "./update";
+import { ToolActivity } from "./activity";
 
 
 export function ToolWork({}: {}) {

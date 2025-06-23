@@ -15,10 +15,46 @@
  */
 
 import Resolver from "@forge/resolver";
-import { execute } from "./worker";
+import { Trace } from "../../shared";
+import { Task } from "../../shared/tasks";
+import { setStatus } from "../async";
+import { test } from "./test";
+
+interface AsyncEventContext {
+	jobId: string;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 export const handler=new Resolver()
 
-	.define(execute.name, execute as any)
+	.define("execute", async function ({
+
+		payload: task,
+		context: { jobId: id }
+
+	}: {
+
+		payload: Task
+		context: AsyncEventContext
+
+	}) {
+
+		switch ( task.type ) {
+
+			case "test":
+				return await test(id, task);
+
+			default:
+				return await setStatus(id, {
+					code: 404,
+					text: `unknown task type ${task.type}`
+				} as Trace);
+
+		}
+
+
+	} as any)
 
 	.getDefinitions();

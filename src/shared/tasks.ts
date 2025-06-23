@@ -21,7 +21,9 @@ import { Language } from "./languages";
 
 
 export type Task=
-	| TestTask;
+	| TestTask
+	| ExtractTask
+	| TranslateTask;
 
 
 /**
@@ -39,6 +41,7 @@ export const enum Activity {
 	Initializing,
 	Scanning,
 	Fetching,
+	Prompting,
 	Extracting,
 	Translating,
 	Analyzing

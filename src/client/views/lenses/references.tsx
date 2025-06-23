@@ -20,8 +20,8 @@ import { isTrace } from "../../../shared";
 import { Attachment, compareAttachments } from "../../../shared/attachments";
 import { isActivity } from "../../../shared/tasks";
 import { useAttachments } from "../../hooks/attachments";
+import { ToolActivity } from "./activity";
 import { ToolTrace } from "./trace";
-import { ToolActivity } from "./update";
 
 export function ToolReferences({
 

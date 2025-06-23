@@ -22,8 +22,8 @@ import { Language } from "../../../shared/languages";
 import { isActivity } from "../../../shared/tasks";
 import { adf } from "../../hooks";
 import { useDocument } from "../../hooks/document";
+import { ToolActivity } from "./activity";
 import { ToolTrace } from "./trace";
-import { ToolActivity } from "./update";
 
 export function ToolReference({
 

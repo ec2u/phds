@@ -13,48 +13,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+import Langfuse from "langfuse";
 import { Trace } from "../../shared";
-import { Activity, Task } from "../../shared/tasks";
+import { Activity, TestTask } from "../../shared/tasks";
 import { setStatus } from "../async";
 
-
-interface AsyncEventContext {
-	jobId: string;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-export async function execute({
-
-	payload: task,
-	context: { jobId: id }
-
-}: {
-
-	payload: Task
-	context: AsyncEventContext
-
-}) {
-
+export async function test(id: string, task: TestTask) {
 	try {
+
+		const client=new Langfuse();
+
 
 		// Update job status to processing
 
-		await setStatus(id, Activity.Initializing);
+		await setStatus(id, Activity.Prompting);
 
-		// Wait 5 seconds to simulate processing
-
-		await new Promise(resolve => setTimeout(resolve, 5000));
-
-		// switch ( task.type ) {
+		// // Wait 5 seconds to simulate processing
 		//
-		// }
+		// await new Promise(resolve => setTimeout(resolve, 5000));
+
+		const prompt=await client.getPrompt("PDF_TO_MD");
+		// prompt.compile(variables);
+
 
 		// Store successful result
 
-		await setStatus(id, task.value);
+		await setStatus(id, prompt);
+
 
 	} catch ( error ) {
 

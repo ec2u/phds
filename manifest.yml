@@ -68,7 +68,13 @@ permissions:
         - remote: gemini
 
 remotes:
+
   - key: gemini
     baseUrl: https://generativelanguage.googleapis.com
+    operations:
+      - fetch
+
+  - key: langfuse
+    baseUrl: https://cloud.langfuse.com
     operations:
       - fetch
