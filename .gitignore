@@ -1,8 +1,11 @@
 /.env
 /.idea/
 /.vscode/
+/.claude/
 
 /phds.*
+
+/node_modules/
 
 *~
 ~*
