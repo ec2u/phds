@@ -16,7 +16,7 @@
 
 import { LoadingButton, Text } from "@forge/react";
 import React, { useState } from "react";
-import { isActivity, Status, TestTask } from "../../../shared/tasks";
+import { CatalogTask, isActivity, Status } from "../../../shared/tasks";
 import { monitorTask, submitTask } from "../../ports/tasks";
 import { ToolActivity } from "./activity";
 
@@ -32,9 +32,8 @@ export function ToolWork({}: {}) {
 		try {
 			// Submit test task
 			const jobId=await submitTask({
-				type: "test",
-				value: "Test task from UI"
-			} as TestTask);
+				type: "catalog"
+			} as CatalogTask);
 
 			// Start polling
 			const pollInterval=setInterval(async () => {

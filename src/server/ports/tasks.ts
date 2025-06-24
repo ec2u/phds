@@ -25,13 +25,15 @@ const queue=new Queue({ key: "executor-queue" });
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-export async function submitTask({ payload: task }: Request<Task>): Promise<string> {
+export async function submitTask({ payload: task, context }: Request<Task>): Promise<string> {
 
-	const id=await queue.push(task as any); // !!! typing errors
+	const page: string=context.extension.content.id;
 
-	await setStatus(id, Activity.Waiting); // create storage entry
+	const job=await queue.push({ page, task } as any); // !!! typing errors
 
-	return id;
+	await setStatus(job, Activity.Waiting); // create storage entry
+
+	return job;
 }
 
 export async function monitorTask<T>({ payload: { id } }: Request<{ id: string }>): Promise<Status<T>> {

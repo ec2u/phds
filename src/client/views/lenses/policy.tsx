@@ -20,12 +20,12 @@ import { isTrace } from "../../../shared";
 import { Source } from "../../../shared/documents";
 import { Language } from "../../../shared/languages";
 import { isActivity } from "../../../shared/tasks";
-import { adf } from "../../hooks";
 import { useDocument } from "../../hooks/document";
+import { adf } from "../../tools/text";
 import { ToolActivity } from "./activity";
 import { ToolTrace } from "./trace";
 
-export function ToolReference({
+export function ToolPolicy({
 
 	source,
 	language

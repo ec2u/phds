@@ -16,20 +16,20 @@
 
 import { useEffect, useState } from "react";
 import { Catalog } from "../../shared/documents";
-import { Activity, Status } from "../../shared/tasks";
-import { useArchives } from "./archives";
+import { Activity, CatalogTask, Status } from "../../shared/tasks";
+import { execute } from "./index";
 
-export function useReferences(): Status<Catalog> {
+export function usePolicies(): Status<Catalog> {
 
-	const { list }=useArchives();
-
-	const [references, setReferences]=useState<Status<Catalog>>(Activity.Initializing);
+	const [policies, setPolicies]=useState<Status<Catalog>>(Activity.Initializing);
 
 	useEffect(() => {
 
-		list(setReferences);
+		execute(setPolicies, {
+			type: "catalog"
+		} as CatalogTask);
 
 	}, []);
 
-	return references;
+	return policies;
 }

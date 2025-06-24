@@ -168,7 +168,10 @@ export function isTrace(value: unknown): value is Trace {
  * @return the Trace if valid; otherwise a Trace with code 999 and stringified value
  */
 export function asTrace(value: unknown): Trace {
-	return isTrace(value) ? value : { code: 999, text: JSON.stringify(value, null, 4) };
+	return isTrace(value) ? value : {
+		code: 500,
+		text: value instanceof Error ? value.message : JSON.stringify(value, null, 2)
+	};
 }
 
 
@@ -201,3 +204,5 @@ export function immutable<T=any>(value: T): Readonly<typeof value> {
 
 	}
 }
+
+export { Observer } from "./tasks";

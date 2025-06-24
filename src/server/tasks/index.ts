@@ -15,10 +15,9 @@
  */
 
 import Resolver from "@forge/resolver";
-import { Trace } from "../../shared";
-import { Task } from "../../shared/tasks";
-import { setStatus } from "../async";
-import { test } from "./test";
+import { asTrace, Trace } from "../../shared";
+import { setStatus, X } from "../async";
+import { catalog } from "./catalog";
 
 interface AsyncEventContext {
 	jobId: string;
@@ -31,29 +30,38 @@ export const handler=new Resolver()
 
 	.define("execute", async function ({
 
-		payload: task,
-		context: { jobId: id }
+		payload: { page, task },
+		context: { jobId: job }
 
 	}: {
 
-		payload: Task
+		payload: X
 		context: AsyncEventContext
 
 	}) {
 
-		switch ( task.type ) {
+		try {
 
-			case "test":
-				return await test(id, task);
+			switch ( task.type ) {
 
-			default:
-				return await setStatus(id, {
-					code: 404,
-					text: `unknown task type ${task.type}`
-				} as Trace);
+				case "catalog":
+
+					return await catalog(job, page, task);
+
+				default:
+
+					return await setStatus(job, {
+						code: 404,
+						text: `unknown task type ${task.type}`
+					} as Trace);
+
+			}
+
+		} catch ( error ) {
+
+			return await setStatus(job, asTrace(error));
 
 		}
-
 
 	} as any)
 

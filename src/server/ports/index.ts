@@ -17,19 +17,19 @@
 import Resolver, { ResolverFunction } from "@forge/resolver";
 import { extract, translate } from "../work/gemini";
 import { retrievePrompt } from "../work/langfuse";
-import { listAttachments, retrieveAttachment, uploadAttachment } from "./attachments";
+import { listAttachments, retrieveAttachment, uploadAttachment } from "./_attachments";
 import { monitorTask, submitTask } from "./tasks";
 
 export const handler=new Resolver()
-
-	.define(listAttachments.name, listAttachments as any)
-	.define(retrieveAttachment.name, retrieveAttachment as any)
-	.define(uploadAttachment.name, uploadAttachment as any)
 
 	.define(submitTask.name, submitTask as any)
 	.define(monitorTask.name, monitorTask as any)
 
 	// !!! remove
+
+	.define(listAttachments.name, listAttachments as any)
+	.define(retrieveAttachment.name, retrieveAttachment as any)
+	.define(uploadAttachment.name, uploadAttachment as any)
 
 	.define(retrievePrompt.name, retrievePrompt as ResolverFunction)
 

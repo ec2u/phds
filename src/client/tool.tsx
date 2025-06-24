@@ -18,14 +18,13 @@ import ForgeReconciler, { Box, Button, ButtonGroup, Inline, Stack, useConfig } f
 import React, { useState } from "react";
 import { Source } from "../shared/documents";
 import { defaultLanguage, Language } from "../shared/languages";
-import { ToolArchive } from "./hooks/archives";
 import { ToolBar } from "./views/layouts/bar";
 import ToolPanel from "./views/layouts/panel";
 import { ToolAgreement } from "./views/lenses/agreement";
 import ToolIssue from "./views/lenses/issue";
 import { ToolLanguage } from "./views/lenses/language";
-import { ToolReference } from "./views/lenses/reference";
-import { ToolReferences } from "./views/lenses/references";
+import { ToolPolicies } from "./views/lenses/policies";
+import { ToolPolicy } from "./views/lenses/policy";
 
 
 const modes={
@@ -99,8 +98,8 @@ function ToolTool() {
 			/>}>{
 
 				mode === "agreement" ? <ToolAgreement language={language}/>
-					: mode === "references" ? <ToolReferences onClick={setMode}/>
-						: <ToolReference language={language} source={mode}/>
+					: mode === "references" ? <ToolPolicies onClick={setMode}/>
+						: <ToolPolicy language={language} source={mode}/>
 
 			}</ToolPanel>
 
@@ -144,9 +143,7 @@ function ToolTool() {
 ForgeReconciler.render(
 	<React.StrictMode>
 
-		<ToolArchive>
-			<ToolTool/>
-		</ToolArchive>
+		<ToolTool/>
 
 	</React.StrictMode>
 );

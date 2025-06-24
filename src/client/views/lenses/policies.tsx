@@ -19,11 +19,11 @@ import React from "react";
 import { isTrace } from "../../../shared";
 import { Source } from "../../../shared/documents";
 import { isActivity } from "../../../shared/tasks";
-import { useReferences } from "../../hooks/references";
+import { usePolicies } from "../../hooks/policies";
 import { ToolActivity } from "./activity";
 import { ToolTrace } from "./trace";
 
-export function ToolReferences({
+export function ToolPolicies({
 
 	onClick
 
@@ -33,7 +33,7 @@ export function ToolReferences({
 
 }) {
 
-	const catalog=useReferences();
+	const catalog=usePolicies();
 
 	if ( isActivity(catalog) ) {
 

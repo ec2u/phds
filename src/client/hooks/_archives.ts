@@ -17,27 +17,25 @@
 import { DocNode } from "@atlaskit/adf-schema";
 import { useProductContext } from "@forge/react";
 import { createContext, createElement, ReactNode, useContext, useEffect, useState } from "react";
-import { asTrace, immutable } from "../../shared";
+import { asTrace, immutable, Observer } from "../../shared";
 import { Catalog, Document, Source } from "../../shared/documents";
 import { defaultLanguage, Language } from "../../shared/languages";
 import { Activity } from "../../shared/tasks";
-import { listAttachments } from "../ports/attachments";
-import { markdown, Observer } from "./index";
+import { listAttachments } from "../ports/_attachments";
+import { markdown } from "../tools/text";
 
 
-export interface Archives {
+export interface _archives {
 
 	list(observer: Observer<Catalog>): void;
 
 	lookup(observer: Observer<Document>, source: Source, language: Language): void;
 
-	analyze(observer: Observer<string>, title: string): void;
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-const Context=createContext<Archives>(immutable({
+const Context=createContext<_archives>(immutable({
 
 	list(): void {
 		throw new Error("outside <ToolArchive/> context");
@@ -47,16 +45,12 @@ const Context=createContext<Archives>(immutable({
 		throw new Error("outside <ToolArchive/> context");
 	},
 
-	analyze(): void {
-		throw new Error("outside <ToolArchive/> context");
-	}
-
 }));
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-export function useArchives(): Archives {
+export function useArchives(): _archives {
 	return useContext(Context);
 }
 
@@ -110,10 +104,6 @@ export function ToolArchive({
 				try { lookup(observer, source, language); } catch ( error ) { observer(asTrace(error)); }
 			},
 
-			analyze(observer: Observer<string>, title: string): void {
-				try { analyze(observer, title); } catch ( error ) { observer(asTrace(error)); }
-			}
-
 		}),
 
 		children
@@ -164,14 +154,6 @@ export function ToolArchive({
 
 	async function lookup(observer: Observer<Document>, source: Source, language: Language) {
 		observer(documents?.[0] ? documents[0] : Activity.Waiting); // !!!
-	}
-
-	async function analyze(observer: Observer<string>, title: string) {
-
-		observer(Activity.Analyzing);
-
-		observer(title);
-
 	}
 
 }

@@ -19,8 +19,8 @@ import React from "react";
 import { isTrace } from "../../../shared";
 import { Language } from "../../../shared/languages";
 import { isActivity } from "../../../shared/tasks";
-import { adf } from "../../hooks";
 import { useDocument } from "../../hooks/document";
+import { adf } from "../../tools/text";
 import { ToolActivity } from "./activity";
 import { ToolTrace } from "./trace";
 

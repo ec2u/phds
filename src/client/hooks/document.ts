@@ -18,7 +18,7 @@ import { useEffect, useState } from "react";
 import { Document, Source } from "../../shared/documents";
 import { Language } from "../../shared/languages";
 import { Activity, Status } from "../../shared/tasks";
-import { useArchives } from "./archives";
+import { useArchives } from "./_archives";
 
 export function useDocument(source: Source, language: Language): Status<Document> {
 

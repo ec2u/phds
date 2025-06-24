@@ -14,16 +14,12 @@
  * limitations under the License.
  */
 
-import { Attachment } from "./attachments";
-import { Document } from "./documents";
+import { Catalog } from "./documents";
 import { isNumber, Trace } from "./index";
-import { Language } from "./languages";
 
 
 export type Task=
-	| TestTask
-	| ExtractTask
-	| TranslateTask;
+	| CatalogTask;
 
 
 /**
@@ -47,6 +43,19 @@ export const enum Activity {
 	Analyzing
 }
 
+
+export interface Observer<T> {
+
+	(status: Status<T>): void;
+
+}
+
+export interface Provider<T> {
+
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
  * Checks if a value is a valid Activity enum value.
@@ -73,26 +82,8 @@ export function asActivity(value: unknown): undefined | Activity {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-export interface TestTask {
+export interface CatalogTask extends Provider<Catalog> {
 
-	readonly type: "test";
-
-	readonly value: string;
-
-}
-
-export interface ExtractTask {
-
-	readonly type: "extract";
-
-	readonly attachment: Attachment;
-}
-
-export interface TranslateTask {
-
-	readonly type: "translate";
-
-	readonly source: Document;
-	readonly target: Language;
+	readonly type: "catalog";
 
 }

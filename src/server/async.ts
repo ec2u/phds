@@ -16,8 +16,18 @@
 
 import { storage } from "@forge/api";
 import { isDefined } from "../shared";
-import { Status } from "../shared/tasks";
+import { Status, Task } from "../shared/tasks";
 
+
+export interface X {
+
+	readonly page: string;
+	readonly task: Task;
+
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 export async function getStatus<T>(id: string): Promise<Status<T>> {
 	return await storage.get(key(id));
