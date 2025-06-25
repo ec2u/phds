@@ -31,7 +31,7 @@ export async function submitTask({ payload: task, context }: Request<Task>): Pro
 
 	const job=await queue.push({ page, task } as any); // !!! typing errors
 
-	await setStatus(job, Activity.Waiting); // create storage entry
+	await setStatus(job, Activity.Scheduling); // create storage entry
 
 	return job;
 }

@@ -16,14 +16,25 @@
 
 import Langfuse from "langfuse";
 import { asTrace } from "../../shared";
-import { Prompt } from "../../shared/work/langfuse";
-import { Request } from "../index";
+
+const client=new Langfuse();
 
 
-export async function retrievePrompt({ payload: { name, variables } }: Request<Prompt>): Promise<string> {
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+export async function retrievePrompt({
+
+	name,
+	variables
+
+}: {
+
+	name: string;
+	variables?: Readonly<Record<string, string>>;
+
+}): Promise<string> {
+
 	try {
-
-		const client=new Langfuse();
 
 		const prompt=await client.getPrompt(name);
 

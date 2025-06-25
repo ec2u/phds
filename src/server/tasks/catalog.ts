@@ -13,21 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import api, { route } from "@forge/api";
-import { asTrace } from "../../shared";
-import { Attachment } from "../../shared/attachments";
 import { Activity, CatalogTask } from "../../shared/tasks";
 import { setStatus } from "../async";
-import { query } from "../index";
-
-
-interface AttachmentsResponse {
-	readonly results: Attachment[];
-	readonly _links: {
-		readonly next?: string;
-		readonly base: string;
-	};
-}
+import { listAttachments } from "../work/attachments";
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -38,44 +26,20 @@ export async function catalog(job: string, page: string, task: CatalogTask) {
 
 	const attachments=await listAttachments(page);
 
-	await setStatus(job, attachments.reduce((catalog, attachment) => {
+
+	const policies=attachments
+		.filter(attachmment => attachmment.title.endsWith(".pdf"));
+
+	const documents=attachments
+		.filter(attachment => attachment.title.endsWith(".json"));
+
+	// !!! text extraction / uploading
+	// !!! purging
+
+	await setStatus(job, policies.reduce((catalog, attachment) => {
 
 		return { ...catalog, [attachment.id]: attachment.title };
 
 	}, {}));
-
-}
-
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-async function listAttachments(page: string): Promise<Attachment[]> {
-
-	const response=await api.asApp().requestConfluence(route`/wiki/api/v2/pages/${page}/attachments?${query({
-
-		status: "current"
-
-	})}`, {
-
-		headers: { "Accept": "application/json" }
-
-	});
-
-	if ( response.ok ) {
-
-		const data: AttachmentsResponse=await response.json();
-
-		return data.results;
-
-	} else {
-
-		console.error(response);
-
-		throw asTrace({
-			code: response.status,
-			text: response.statusText
-		});
-
-	}
 
 }

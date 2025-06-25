@@ -14,23 +14,28 @@
  * limitations under the License.
  */
 
-import { useEffect, useState } from "react";
-import { Document, Source } from "../../shared/documents";
-import { Language } from "../../shared/languages";
-import { Activity, Status } from "../../shared/tasks";
-import { useArchives } from "./_archives";
+import { useProductContext } from "@forge/react";
+import { Document } from "../../shared/documents";
+import { defaultLanguage, Language } from "../../shared/languages";
+import { Status } from "../../shared/tasks";
+import { markdown } from "../tools/text";
 
-export function useDocument(source: Source, language: Language): Status<Document> {
+export function useAgreement(language: Language): Status<Document> {
 
-	const { lookup }=useArchives();
+	const context=useProductContext();
 
-	const [document, setDocument]=useState<Status<Document>>(Activity.Initializing);
 
-	useEffect(() => {
+	const content=markdown(context?.extension?.macro?.body);
 
-		return lookup(setDocument, source, language);
+	return {
 
-	}, [lookup, source, language]);
+		original: true,
+		language: defaultLanguage, // !!! translation
+		source: "",
 
-	return document;
+		title: "",
+		content
+
+	};
+
 }

@@ -15,9 +15,10 @@
  */
 
 import Resolver from "@forge/resolver";
-import { asTrace, Trace } from "../../shared";
-import { setStatus, X } from "../async";
+import { asTrace } from "../../shared";
+import { setStatus, Specs } from "../async";
 import { catalog } from "./catalog";
+import { policy } from "./policy";
 
 interface AsyncEventContext {
 	jobId: string;
@@ -35,7 +36,7 @@ export const handler=new Resolver()
 
 	}: {
 
-		payload: X
+		payload: Specs
 		context: AsyncEventContext
 
 	}) {
@@ -48,12 +49,9 @@ export const handler=new Resolver()
 
 					return await catalog(job, page, task);
 
-				default:
+				case "policy":
 
-					return await setStatus(job, {
-						code: 404,
-						text: `unknown task type ${task.type}`
-					} as Trace);
+					return await policy(job, page, task);
 
 			}
 

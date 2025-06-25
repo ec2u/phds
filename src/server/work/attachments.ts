@@ -16,9 +16,41 @@
 
 import api, { route } from "@forge/api";
 import { asTrace } from "../../shared";
-import { Attachment } from "../../shared/attachments";
 import { Document } from "../../shared/documents";
 import { query, Request } from "../index";
+
+
+export interface Attachment {
+	readonly id: string;
+	readonly status: string;
+	readonly title: string;
+	readonly createdAt: string; // ISO UTC timestamp (e.g. "2025-06-03T13:19:04.077Z")
+	readonly pageId?: string;
+	readonly blogPostId?: string;
+	readonly customContentId?: string;
+	readonly mediaType: string;
+	readonly mediaTypeDescription: string;
+	readonly comment: string;
+	readonly fileId: string;
+	readonly fileSize: number;
+	readonly webuiLink: string;
+	readonly downloadLink: string;
+	readonly version: AttachmentVersion;
+	readonly _links: AttachmentLinks;
+}
+
+export interface AttachmentVersion {
+	readonly createdAt: string;
+	readonly message: string;
+	readonly number: number;
+	readonly minorEdit: boolean;
+	readonly authorId: string;
+}
+
+export interface AttachmentLinks {
+	readonly webui: string;
+	readonly download: string;
+}
 
 
 interface AttachmentsResponse {
@@ -32,11 +64,9 @@ interface AttachmentsResponse {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-export async function listAttachments({ context }: Request<{}>): Promise<Attachment[]> {
+export async function listAttachments(page: string): Promise<Attachment[]> {
 
-	const id: string=context.extension.content.id;
-
-	const response=await api.asApp().requestConfluence(route`/wiki/api/v2/pages/${id}/attachments?${query({
+	const response=await api.asApp().requestConfluence(route`/wiki/api/v2/pages/${page}/attachments?${query({
 
 		status: "current"
 
@@ -62,13 +92,10 @@ export async function listAttachments({ context }: Request<{}>): Promise<Attachm
 		});
 
 	}
+
 }
 
-
-export async function retrieveAttachment({ payload: attachment }: Request<Attachment>): Promise<string> {
-
-	const id=attachment.id;
-	const page=attachment.pageId ?? "";
+export async function retrieveAttachment(page: string, id: string): Promise<Buffer> {
 
 	const url=route`/wiki/rest/api/content/${page}/child/attachment/${id}/download`;
 
@@ -80,7 +107,7 @@ export async function retrieveAttachment({ payload: attachment }: Request<Attach
 
 	if ( response.ok ) {
 
-		return Buffer.from(await response.arrayBuffer()).toString("base64");
+		return Buffer.from(await response.arrayBuffer());
 
 	} else {
 
@@ -96,12 +123,12 @@ export async function retrieveAttachment({ payload: attachment }: Request<Attach
 
 export async function uploadAttachment({ context, payload: document }: Request<Document>): Promise<Attachment> {
 
-	const id: string=context.extension.content.id;
+	const page: string=context.extension.content.id;
 
 	const { body, boundary }=multipart("test.json", document);
 
 	const response=await api.asApp().requestConfluence(
-		route`/rest/api/content/${id}/child/attachment`,
+		route`/rest/api/content/${page}/child/attachment`,
 		{
 			method: "POST",
 			headers: {

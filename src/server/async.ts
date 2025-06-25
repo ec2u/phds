@@ -19,7 +19,7 @@ import { isDefined } from "../shared";
 import { Status, Task } from "../shared/tasks";
 
 
-export interface X {
+export interface Specs {
 
 	readonly page: string;
 	readonly task: Task;

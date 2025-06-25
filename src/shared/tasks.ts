@@ -14,12 +14,15 @@
  * limitations under the License.
  */
 
-import { Catalog } from "./documents";
+import { Catalog, Source } from "./documents";
 import { isNumber, Trace } from "./index";
+import { Language } from "./languages";
 
 
 export type Task=
-	| CatalogTask;
+	| CatalogTask
+	| PolicyTask
+	;
 
 
 /**
@@ -33,8 +36,8 @@ export type Status<T>=Activity | T | Trace;
  * Enumeration of task activity states.
  */
 export const enum Activity {
-	Waiting,
 	Initializing,
+	Scheduling,
 	Scanning,
 	Fetching,
 	Prompting,
@@ -85,5 +88,14 @@ export function asActivity(value: unknown): undefined | Activity {
 export interface CatalogTask extends Provider<Catalog> {
 
 	readonly type: "catalog";
+
+}
+
+export interface PolicyTask extends Provider<Document> {
+
+	readonly type: "policy";
+
+	readonly source: Source;
+	readonly language: Language;
 
 }

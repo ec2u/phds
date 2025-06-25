@@ -19,8 +19,6 @@ import { isActivity, Provider, Task } from "../../shared/tasks";
 import { monitorTask, submitTask } from "../ports/tasks";
 
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 export async function execute<T>(observer: Observer<T>, task: Task & Provider<T>) {
 
 	try {

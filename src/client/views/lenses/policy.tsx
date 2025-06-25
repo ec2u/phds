@@ -20,7 +20,7 @@ import { isTrace } from "../../../shared";
 import { Source } from "../../../shared/documents";
 import { Language } from "../../../shared/languages";
 import { isActivity } from "../../../shared/tasks";
-import { useDocument } from "../../hooks/document";
+import { usePolicy } from "../../hooks/policy";
 import { adf } from "../../tools/text";
 import { ToolActivity } from "./activity";
 import { ToolTrace } from "./trace";
@@ -37,19 +37,19 @@ export function ToolPolicy({
 
 }) {
 
-	const translation=useDocument(source, language);
+	const policy=usePolicy(source, language);
 
-	if ( isActivity(translation) ) {
+	if ( isActivity(policy) ) {
 
-		return <ToolActivity activity={translation}/>;
+		return <ToolActivity activity={policy}/>;
 
-	} else if ( isTrace(translation) ) {
+	} else if ( isTrace(policy) ) {
 
-		return <ToolTrace trace={translation}/>;
+		return <ToolTrace trace={policy}/>;
 
 	} else {
 
-		return <AdfRenderer document={adf(translation.content)}/>;
+		return <AdfRenderer document={adf(policy.content)}/>;
 
 	}
 

@@ -14,19 +14,29 @@
  * limitations under the License.
  */
 
-import { Attachment } from "../attachments";
-import { Document } from "../documents";
-import { Language } from "../languages";
+import { useEffect, useState } from "react";
+import { Document, Source } from "../../shared/documents";
+import { Language } from "../../shared/languages";
+import { Activity, Status } from "../../shared/tasks";
+import { execute } from "./index";
 
-export interface Extraction {
+export function usePolicy(source: Source, language: Language): Status<Document> {
 
-	readonly attachment: Attachment;
+	const [policy, setPolicy]=useState<Status<Document>>(Activity.Initializing);
 
-}
+	useEffect(() => {
 
-export interface Translation {
+		execute<Document>(setPolicy, {
 
-	readonly source: Document;
-	readonly target: Language;
+			type: "policy",
+
+			source,
+			language
+
+		});
+
+	}, []);
+
+	return policy;
 
 }

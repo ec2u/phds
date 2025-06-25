@@ -19,7 +19,7 @@ import React from "react";
 import { isTrace } from "../../../shared";
 import { Language } from "../../../shared/languages";
 import { isActivity } from "../../../shared/tasks";
-import { useDocument } from "../../hooks/document";
+import { useAgreement } from "../../hooks/agreement";
 import { adf } from "../../tools/text";
 import { ToolActivity } from "./activity";
 import { ToolTrace } from "./trace";
@@ -34,7 +34,7 @@ export function ToolAgreement({
 
 }) {
 
-	const document=useDocument("", language);
+	const document=useAgreement(language);
 
 	return isActivity(document) ? <ToolActivity activity={document}/>
 		: isTrace(document) ? <ToolTrace trace={document}/>

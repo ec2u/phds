@@ -29,14 +29,14 @@ export function ToolActivity({
 }) {
 
 	const messages={
-		[Activity.Waiting]: "Waiting...",
-		[Activity.Initializing]: "Initializing...",
-		[Activity.Scanning]: "Scanning Attachments...",
-		[Activity.Fetching]: "Fetching Content...",
-		[Activity.Prompting]: "Fetching Prompts...",
-		[Activity.Extracting]: "Extracting Text...",
-		[Activity.Translating]: "Translating...",
-		[Activity.Analyzing]: "Analyzing..."
+		[Activity.Initializing]: "Submitting Task…",
+		[Activity.Scheduling]: "Scheduling Task…",
+		[Activity.Scanning]: "Scanning Attachments…",
+		[Activity.Fetching]: "Fetching Content…",
+		[Activity.Prompting]: "Fetching Prompts…",
+		[Activity.Extracting]: "Extracting Text…",
+		[Activity.Translating]: "Translating…",
+		[Activity.Analyzing]: "Analyzing…"
 	};
 
 	return <EmptyState header={messages[activity]} description={<Spinner/>}/>;

@@ -16,7 +16,7 @@
 
 import { useEffect, useState } from "react";
 import { Catalog } from "../../shared/documents";
-import { Activity, CatalogTask, Status } from "../../shared/tasks";
+import { Activity, Status } from "../../shared/tasks";
 import { execute } from "./index";
 
 export function usePolicies(): Status<Catalog> {
@@ -25,9 +25,11 @@ export function usePolicies(): Status<Catalog> {
 
 	useEffect(() => {
 
-		execute(setPolicies, {
+		execute<Catalog>(setPolicies, {
+
 			type: "catalog"
-		} as CatalogTask);
+
+		});
 
 	}, []);
 
