@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 import { Activity, CatalogTask } from "../../shared/tasks";
+import { listAttachments } from ".././tools/attachments";
 import { setStatus } from "../async";
-import { listAttachments } from "../work/attachments";
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

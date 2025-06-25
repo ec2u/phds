@@ -13,14 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { SchemaType } from "@google/generative-ai";
+import { Document } from "../../shared/documents";
 import { Activity, PolicyTask } from "../../shared/tasks";
 import { setStatus } from "../async";
-import { retrieveAttachment } from "../work/attachments";
-import { extract } from "../work/gemini";
-import { retrievePrompt } from "../work/langfuse";
+import { pdf, retrieveAttachment } from "../tools/attachments";
+import { process, upload } from "../tools/gemini";
+import { retrievePrompt } from "../tools/langfuse";
 
 
 export async function policy(job: string, page: string, { source, language }: PolicyTask) {
+
+	// !!! is the required translation already available? is it current?
+	// !!! is the required content already available? is it current?
 
 	await setStatus(job, Activity.Fetching);
 
@@ -36,6 +41,71 @@ export async function policy(job: string, page: string, { source, language }: Po
 
 	const document=await extract({ prompt, source, buffer });
 
+	// !!! translate
+	// !!! refine
+
+	// !!! upload translation
+
 	await setStatus(job, document);
 
 }
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+async function extract({
+
+	prompt,
+	source,
+	buffer
+
+}: {
+
+	prompt: string
+	source: string
+	buffer: Buffer
+
+}): Promise<Document> {
+
+	const file=await upload({
+
+		name: source,
+		mime: pdf,
+		data: buffer
+
+	});
+
+	const { title, language, markdownContent }=await process({
+		file, prompt, schema: {
+			type: SchemaType.OBJECT,
+			properties: {
+				title: { type: SchemaType.STRING },
+				language: { type: SchemaType.STRING },
+				markdownContent: { type: SchemaType.STRING }
+			},
+			required: [
+				"title",
+				"language",
+				"markdownContent"
+			]
+		}
+	});
+
+
+	return {
+
+		original: true,
+		language,
+
+		source,
+
+		title: title,
+		content: markdownContent
+
+	};
+
+}
+
+async function translate({}: {}) {}
+
+async function refine({}: {}) {}

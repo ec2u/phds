@@ -38,7 +38,7 @@ export default function ToolPanel({
 		<Box xcss={{
 
 			flexGrow: 1,
-			minHeight: "60em",
+			height: "60em", // !!! adapt to screen size
 			overflowY: "auto"
 
 		}}>{

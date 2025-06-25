@@ -204,5 +204,3 @@ export function immutable<T=any>(value: T): Readonly<typeof value> {
 
 	}
 }
-
-export { Observer } from "./tasks";

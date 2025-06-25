@@ -17,7 +17,7 @@
 import api, { route } from "@forge/api";
 import { asTrace } from "../../shared";
 import { Document } from "../../shared/documents";
-import { query, Request } from "../index";
+import { query } from "../index";
 
 
 export interface Attachment {
@@ -60,6 +60,13 @@ interface AttachmentsResponse {
 		readonly base: string;
 	};
 }
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+export const markdown="text/markdown";
+export const pdf="application/pdf";
+export const json="application/json";
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -121,9 +128,7 @@ export async function retrieveAttachment(page: string, id: string): Promise<Buff
 	}
 }
 
-export async function uploadAttachment({ context, payload: document }: Request<Document>): Promise<Attachment> {
-
-	const page: string=context.extension.content.id;
+export async function uploadAttachment(page: string, document: Document): Promise<Attachment> {
 
 	const { body, boundary }=multipart("test.json", document);
 

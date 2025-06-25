@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import { asTrace, Observer } from "../../shared";
-import { isActivity, Provider, Task } from "../../shared/tasks";
+import { asTrace } from "../../shared";
+import { isActivity, Observer, Provider, Task } from "../../shared/tasks";
 import { monitorTask, submitTask } from "../ports/tasks";
 
 
