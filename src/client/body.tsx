@@ -51,7 +51,7 @@ function ToolBody() {
 	const body=context?.extension?.macro?.body;
 
 
-	const [tab, setTab]=useState<Tab | Source>(Tab.Policies); // !!!
+	const [tab, setTab]=useState<Tab | Source>(Tab.Agreement); // !!!
 	const [language, setLanguage]=useState<Language>(defaultLanguage);
 
 
