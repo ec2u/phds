@@ -95,7 +95,7 @@ export async function process({
 	file?: FileMetadataResponse
 }): Promise<string>;
 
-export async function process({
+export async function process<T>({
 	prompt,
 	schema,
 	file
@@ -103,7 +103,7 @@ export async function process({
 	prompt: string
 	schema: ResponseSchema
 	file?: FileMetadataResponse
-}): Promise<Record<string, any>>;
+}): Promise<T>;
 
 export async function process({
 	prompt,
@@ -113,7 +113,7 @@ export async function process({
 	prompt: string
 	schema?: ResponseSchema
 	file?: FileMetadataResponse
-}): Promise<string | Record<string, any>> {
+}): Promise<string | any> {
 
 	try {
 

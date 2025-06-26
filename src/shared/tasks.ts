@@ -48,6 +48,7 @@ export const enum Activity {
 	Prompting,
 	Extracting,
 	Translating,
+	Refining,
 	Analyzing
 
 }

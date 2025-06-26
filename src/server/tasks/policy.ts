@@ -30,15 +30,13 @@ export async function policy(job: string, page: string, { source, language }: Po
 
 	const cached=await fetchPolicy(job, page, source, language);
 
-	// if ( cached ) {
-	//
-	// 	await setStatus(job, cached);
-	//
-	// 	return cached;
-	//
-	// } else
+	if ( cached ) {
 
-	{
+		await setStatus(job, cached);
+
+		return cached;
+
+	} else {
 
 		const original=await fetchPolicy(job, page, source);
 		const document=original || await extract(job, page, source);
@@ -79,8 +77,24 @@ async function extract(job: string, page: string, source: string): Promise<Docum
 		data: buffer
 	});
 
-	const { title, language, markdownContent }=await process({
-		file, prompt, schema: {
+	const {
+
+		title,
+		language,
+		markdownContent
+
+	}=await process<{
+
+		title: string;
+		language: Language;
+		markdownContent: string;
+
+	}>({
+
+		prompt,
+		file,
+
+		schema: {
 			type: SchemaType.OBJECT,
 			properties: {
 				title: { type: SchemaType.STRING },
@@ -93,6 +107,7 @@ async function extract(job: string, page: string, source: string): Promise<Docum
 				"markdownContent"
 			]
 		}
+
 	});
 
 	return await cachePolicy(job, source, {
@@ -109,7 +124,7 @@ async function translate(job: string, source: string, document: Document, langua
 
 	await setStatus(job, Activity.Prompting);
 
-	const prompt=await retrievePrompt({
+	const translate=await retrievePrompt({
 		name: "TRANSLATION",
 		variables: {
 
@@ -122,27 +137,67 @@ async function translate(job: string, source: string, document: Document, langua
 
 	await setStatus(job, Activity.Translating);
 
-	const content=await process({
-		prompt
+	const translated=await process({
+		prompt: translate
 	});
 
-	const translation: Document={
+
+	await setStatus(job, Activity.Prompting);
+
+	const refine=await retrievePrompt({
+		name: "TRANSLATION_IMPROVEMENT",
+		variables: {
+
+			target_language: language,
+			source_content: document.content,
+			target_content: translated
+
+		}
+	});
+
+
+	await setStatus(job, Activity.Refining);
+
+	const refined: {
+
+		target_language: string;
+		translated_content: string;
+		translated_title: string;
+
+	}=await process({
+
+		prompt: refine,
+
+		schema: {
+			type: SchemaType.OBJECT,
+			properties: {
+				target_language: { type: SchemaType.STRING },
+				translated_content: { type: SchemaType.STRING },
+				translated_title: { type: SchemaType.STRING }
+			},
+			required: [
+				"target_language",
+				"translated_content",
+				"translated_title"
+			]
+		}
+
+	});
+
+
+	await setStatus(job, Activity.Caching);
+
+	return await cachePolicy(job, source, {
 
 		original: false,
 		language: language,
 		source: document.source,
 		created: new Date().toISOString(),
 
-		title: document.title, // !!! translation
-		content
-	};
+		title: refined.translated_title,
+		content: refined.translated_content
 
-
-	await setStatus(job, Activity.Caching);
-
-	await cachePolicy(job, source, translation);
-
-	return translation;
+	});
 }
 
 

@@ -41,6 +41,7 @@ export function ToolActivity({
 		[Activity.Prompting]: "Fetching Prompts…",
 		[Activity.Extracting]: "Extracting Text…",
 		[Activity.Translating]: "Translating…",
+		[Activity.Refining]: "Refining…",
 		[Activity.Analyzing]: "Analyzing…"
 
 	};
