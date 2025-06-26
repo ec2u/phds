@@ -28,7 +28,7 @@ export function usePolicy(source: Source, language: Language): Status<Document> 
 	const key=`policy:${source}-${language}`;
 	const cached=getCache<Document>(key);
 
-	const [policy, setPolicy]=useState<Status<Document>>(cached || Activity.Initializing);
+	const [policy, setPolicy]=useState<Status<Document>>(cached || Activity.Submitting);
 
 
 	const updatePolicy=(policy: Status<Document>) => {

@@ -99,7 +99,7 @@ function ToolTool() {
 			/>}>{
 
 				mode === "agreement" ? <ToolAgreement language={language}/>
-					: mode === "references" ? <ToolPolicies onClick={setMode}/>
+					: mode === "references" ? <ToolPolicies language={language} onClick={setMode}/>
 						: <ToolPolicy language={language} source={mode}/>
 
 			}</ToolPanel>

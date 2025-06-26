@@ -17,7 +17,7 @@
 import Resolver from "@forge/resolver";
 import { asTrace } from "../../shared";
 import { setStatus, Specs } from "../async";
-import { catalog } from "./catalog";
+import { policies } from "./policies";
 import { policy } from "./policy";
 
 interface AsyncEventContext {
@@ -45,9 +45,9 @@ export const handler=new Resolver()
 
 			switch ( task.type ) {
 
-				case "catalog":
+				case "policies":
 
-					return await catalog(job, page, task);
+					return await policies(job, page, task);
 
 				case "policy":
 

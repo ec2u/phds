@@ -30,7 +30,7 @@ export function ToolActivity({
 
 	const messages={
 
-		[Activity.Initializing]: "Submitting Request…",
+		[Activity.Submitting]: "Submitting Request…",
 		[Activity.Scheduling]: "Scheduling Request…",
 
 		[Activity.Scanning]: "Scanning Attachments…",

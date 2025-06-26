@@ -16,18 +16,19 @@
 
 import { useEffect, useState } from "react";
 import { Catalog } from "../../shared/documents";
+import { Language } from "../../shared/languages";
 import { Activity, Status } from "../../shared/tasks";
 import { useCache } from "./cache";
 import { execute } from "./index";
 
-export function usePolicies(): Status<Catalog> {
+export function usePolicies(language: Language): Status<Catalog> {
 
 	const { getCache, setCache }=useCache();
 
 	const key="catalog:policies";
 	const cached=getCache<Catalog>(key);
 
-	const [policies, setPolicies]=useState<Status<Catalog>>(cached || Activity.Initializing);
+	const [policies, setPolicies]=useState<Status<Catalog>>(cached || Activity.Submitting);
 
 	const updatePolicies=(policies: Status<Catalog>) => {
 		setPolicies(policies);
@@ -39,7 +40,9 @@ export function usePolicies(): Status<Catalog> {
 		if ( !cached ) {
 			execute<Catalog>(updatePolicies, {
 
-				type: "catalog"
+				type: "policies",
+
+				language
 
 			});
 		}

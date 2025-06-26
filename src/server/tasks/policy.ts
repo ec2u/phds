@@ -21,17 +21,20 @@ import { Language } from "../../shared/languages";
 import { Activity, PolicyTask } from "../../shared/tasks";
 import { setStatus } from "../async";
 import { fetchAttachment, getAttachment, pdf } from "../tools/attachments";
+import { keyPolicy } from "../tools/cache";
 import { process, upload } from "../tools/gemini";
 import { retrievePrompt } from "../tools/langfuse";
 
 
-export async function policy(job: string, page: string, { source, language }: PolicyTask) {
+export async function policy(job: string, page: string, { source, language }: PolicyTask): Promise<Document> {
 
 	const cached=await fetchPolicy(job, page, source, language);
 
 	if ( cached ) {
 
-		return await setStatus(job, cached);
+		await setStatus(job, cached);
+
+		return cached;
 
 	} else {
 
@@ -45,6 +48,8 @@ export async function policy(job: string, page: string, { source, language }: Po
 			: await translate(job, source, document, language);
 
 		await setStatus(job, translation);
+
+		return translation;
 	}
 
 }
@@ -117,17 +122,6 @@ async function translate(job: string, source: string, document: Document, langua
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-/**
- * Cache key patterns for policy documents:
- *
- * - Original extracted text: "policy:{source}"
- * - Translated documents: "policy:{source}:{language}"
- */
-function keyPolicy(source: string, language?: string): string {
-	return language ? `policy:${source}:${language}` : `policy:${source}`;
-}
-
 
 async function fetchPolicy(job: string, page: string, source: string, language?: Language): Promise<undefined | Document> {
 

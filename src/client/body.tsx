@@ -76,7 +76,7 @@ function ToolBody() {
 		{
 
 			tab === Tab.Agreement ? <ToolAgreement language={language}/>
-				: tab === Tab.Policies ? <ToolPolicies onClick={setTab}/>
+				: tab === Tab.Policies ? <ToolPolicies language={language} onClick={setTab}/>
 					: tab === Tab.Issues ? <ToolIssues/>
 						: tab === Tab.Chat ? <ToolChat/>
 							: <ToolPolicy source={tab} language={language}/>

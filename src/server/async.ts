@@ -36,11 +36,11 @@ export async function getStatus<T>(job: string): Promise<Status<T>> {
 export async function setStatus<T>(job: string, value: undefined | Status<T>): Promise<void> {
 	if ( isDefined(value) ) {
 
-		return await storage.set(key(job), value as any); // !!! typing
+		await storage.set(key(job), value as any); // !!! typing
 
 	} else {
 
-		return await storage.delete(key(job));
+		await storage.delete(key(job));
 
 	}
 }

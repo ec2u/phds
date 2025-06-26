@@ -20,7 +20,7 @@ import { Language } from "./languages";
 
 
 export type Task=
-	| CatalogTask
+	| PoliciesTask
 	| PolicyTask
 	;
 
@@ -37,7 +37,7 @@ export type Status<T>=Activity | T | Trace;
  */
 export const enum Activity {
 
-	Initializing,
+	Submitting,
 	Scheduling,
 
 	Scanning,
@@ -74,7 +74,7 @@ export interface Provider<T> {
  * @return `true` if the value is a valid Activity; `false` otherwise
  */
 export function isActivity(value: unknown): value is Activity {
-	return isNumber(value) && value >= Activity.Initializing && value <= Activity.Analyzing;
+	return isNumber(value) && value >= Activity.Submitting && value <= Activity.Analyzing;
 }
 
 /**
@@ -91,9 +91,11 @@ export function asActivity(value: unknown): undefined | Activity {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-export interface CatalogTask extends Provider<Catalog> {
+export interface PoliciesTask extends Provider<Catalog> {
 
-	readonly type: "catalog";
+	readonly type: "policies";
+
+	readonly language: Language;
 
 }
 
