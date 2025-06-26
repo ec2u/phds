@@ -17,6 +17,7 @@
 import Resolver from "@forge/resolver";
 import { asTrace } from "../../shared";
 import { setStatus, Specs } from "../async";
+import { dirty, purge } from "../tools/cache";
 import { policies } from "./policies";
 import { policy } from "./policy";
 
@@ -42,6 +43,14 @@ export const handler=new Resolver()
 	}) {
 
 		try {
+
+			// check if global purge is needed
+
+			if ( await dirty() ) {
+				purge(job); // run purge in background (don't block task processing)
+			}
+
+			// process task
 
 			switch ( task.type ) {
 

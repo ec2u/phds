@@ -21,7 +21,7 @@ import { Language } from "../../shared/languages";
 import { Activity, PolicyTask } from "../../shared/tasks";
 import { setStatus } from "../async";
 import { fetchAttachment, getAttachment, pdf } from "../tools/attachments";
-import { keyPolicy } from "../tools/cache";
+import { policyKey } from "../tools/cache";
 import { process, upload } from "../tools/gemini";
 import { retrievePrompt } from "../tools/langfuse";
 
@@ -207,7 +207,7 @@ async function fetchPolicy(job: string, page: string, source: string, language?:
 
 	await setStatus(job, Activity.Fetching);
 
-	const key=keyPolicy(page, source, language);
+	const key=policyKey(page, source, language);
 	const cached=await storage.get(key) as Document | undefined;
 
 	if ( isUndefined(cached) ) {
@@ -247,7 +247,7 @@ async function cachePolicy(job: string, page: string, source: string, document: 
 
 	await setStatus(job, Activity.Caching);
 
-	const key=keyPolicy(page, source, document.original ? undefined : document.language);
+	const key=policyKey(page, source, document.original ? undefined : document.language);
 
 	await storage.set(key, document);
 

@@ -19,7 +19,7 @@ import { Document } from "../../shared/documents";
 import { Activity, PoliciesTask } from "../../shared/tasks";
 import { setStatus } from "../async";
 import { listAttachments, pdf } from "../tools/attachments";
-import { checkPage } from "../tools/pages";
+import { policyKeySource } from "../tools/cache";
 
 export async function policies(job: string, page: string, {}: PoliciesTask) {
 
@@ -31,7 +31,7 @@ export async function policies(job: string, page: string, {}: PoliciesTask) {
 		.filter(attachment => attachment.mediaType === pdf);
 
 
-	// get cached policy documents for this page
+	// get cached policy documents for this page (limit 100 should be sufficient for single page, no pagination needed)
 
 	await setStatus(job, Activity.Fetching);
 
@@ -48,9 +48,9 @@ export async function policies(job: string, page: string, {}: PoliciesTask) {
 	await Promise.all(cached.results
 		.filter(result => {
 
-			// extract source id from cache key (policy:{pageId}:{source}[:{language}])
+			// extract source id from cache key
 
-			const source=(result.key.split(":"))[2];
+			const source=policyKeySource(result.key);
 
 			// find matching attachment
 
@@ -80,56 +80,4 @@ export async function policies(job: string, page: string, {}: PoliciesTask) {
 		[attachment.id]: attachment.title.replace(/\.pdf$/, "")
 	}), {} as Record<string, string>));
 
-}
-
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-export async function purgeDeletedPageDocuments(job: string): Promise<void> {
-
-	await setStatus(job, Activity.Scanning);
-
-	// Get all cached policy documents
-	const cached=await storage.query()
-		.where("key", { condition: "STARTS_WITH", value: "policy:" })
-		.limit(1000)
-		.getMany();
-
-	await setStatus(job, Activity.Purging);
-
-	// Extract unique page IDs from cached documents  
-	const pageIds=new Set<string>();
-
-	for (const result of cached.results) {
-		const pageId=extractPageIdFromCacheKey(result.key);
-		if ( pageId ) {
-			pageIds.add(pageId);
-		}
-	}
-
-	// Check which pages still exist
-	const deletedPages=new Set<string>();
-
-	await Promise.all(Array.from(pageIds).map(async pageId => {
-		const exists=await checkPage(pageId);
-		if ( !exists ) {
-			deletedPages.add(pageId);
-		}
-	}));
-
-	// Delete cache entries for deleted pages
-	if ( deletedPages.size > 0 ) {
-		const entriesToDelete=cached.results.filter(result => {
-			const pageId=extractPageIdFromCacheKey(result.key);
-			return pageId && deletedPages.has(pageId);
-		});
-
-		await Promise.all(entriesToDelete.map(result => storage.delete(result.key)));
-	}
-}
-
-function extractPageIdFromCacheKey(cacheKey: string): string | null {
-	// Extract page ID from cache key: policy:{pageId}:{source}[:{language}]
-	const keyParts=cacheKey.split(":");
-	return keyParts.length >= 3 ? keyParts[1] : null;
 }
