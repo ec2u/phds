@@ -102,7 +102,33 @@ export async function listAttachments(page: string): Promise<Attachment[]> {
 
 }
 
-export async function retrieveAttachment(page: string, id: string): Promise<Buffer> {
+export async function getAttachment(page: string, id: string): Promise<Attachment> {
+
+	const url=route`/wiki/api/v2/attachments/${id}`;
+
+	const response=await api.asApp().requestConfluence(url, {
+
+		headers: { "Accept": "application/json" }
+
+	});
+
+	if ( response.ok ) {
+
+		return await response.json();
+
+	} else {
+
+		console.error(response);
+
+		throw asTrace({
+			code: response.status,
+			text: response.statusText
+		});
+
+	}
+}
+
+export async function fetchAttachment(page: string, id: string): Promise<Buffer> {
 
 	const url=route`/wiki/rest/api/content/${page}/child/attachment/${id}/download`;
 

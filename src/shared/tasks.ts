@@ -36,14 +36,20 @@ export type Status<T>=Activity | T | Trace;
  * Enumeration of task activity states.
  */
 export const enum Activity {
+
 	Initializing,
 	Scheduling,
+
 	Scanning,
 	Fetching,
+	Caching,
+	Purging,
+
 	Prompting,
 	Extracting,
 	Translating,
 	Analyzing
+
 }
 
 

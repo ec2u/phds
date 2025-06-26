@@ -31,6 +31,7 @@ export function useAgreement(language: Language): Status<Document> {
 		original: true,
 		language: defaultLanguage, // !!! translation
 		source: "",
+		created: new Date().toISOString(),
 
 		title: "",
 		content

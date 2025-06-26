@@ -13,23 +13,50 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { storage } from "@forge/api";
 import { SchemaType } from "@google/generative-ai";
+import { isUndefined } from "../../shared";
 import { Document } from "../../shared/documents";
+import { Language } from "../../shared/languages";
 import { Activity, PolicyTask } from "../../shared/tasks";
 import { setStatus } from "../async";
-import { pdf, retrieveAttachment } from "../tools/attachments";
+import { fetchAttachment, getAttachment, pdf } from "../tools/attachments";
 import { process, upload } from "../tools/gemini";
 import { retrievePrompt } from "../tools/langfuse";
 
 
 export async function policy(job: string, page: string, { source, language }: PolicyTask) {
 
-	// !!! is the required translation already available? is it current?
-	// !!! is the required content already available? is it current?
+	const cached=await fetchPolicy(job, page, source, language);
+
+	if ( cached ) {
+
+		return await setStatus(job, cached);
+
+	} else {
+
+		const original=await fetchPolicy(job, page, source);
+		const document=original || await extract(job, page, source);
+
+		// translate the document if needed
+
+		const translation=(document.language === language)
+			? document
+			: await translate(job, source, document, language);
+
+		await setStatus(job, translation);
+	}
+
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+async function extract(job: string, page: string, source: string): Promise<Document> {
 
 	await setStatus(job, Activity.Fetching);
 
-	const buffer=await retrieveAttachment(page, source);
+	const buffer=await fetchAttachment(page, source);
 
 
 	await setStatus(job, Activity.Prompting);
@@ -39,40 +66,10 @@ export async function policy(job: string, page: string, { source, language }: Po
 
 	await setStatus(job, Activity.Extracting);
 
-	const document=await extract({ prompt, source, buffer });
-
-	// !!! translate
-	// !!! refine
-
-	// !!! upload translation
-
-	await setStatus(job, document);
-
-}
-
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-async function extract({
-
-	prompt,
-	source,
-	buffer
-
-}: {
-
-	prompt: string
-	source: string
-	buffer: Buffer
-
-}): Promise<Document> {
-
 	const file=await upload({
-
 		name: source,
 		mime: pdf,
 		data: buffer
-
 	});
 
 	const { title, language, markdownContent }=await process({
@@ -91,21 +88,94 @@ async function extract({
 		}
 	});
 
-
-	return {
-
+	return await cachePolicy(job, source, {
 		original: true,
 		language,
-
 		source,
-
+		created: new Date().toISOString(),
 		title: title,
 		content: markdownContent.replace(/\\+n/g, "\n") // !!! remove patch
-
-	};
-
+	});
 }
 
-async function translate({}: {}) {}
+async function translate(job: string, source: string, document: Document, language: Language): Promise<Document> {
 
-async function refine({}: {}) {}
+	await setStatus(job, Activity.Prompting);
+
+	const translatedDocument={
+		...document,
+		original: false,
+		language: language,
+		created: new Date().toISOString()
+	};
+
+	// Cache the translation
+	await cachePolicy(job, source, translatedDocument);
+
+	return translatedDocument;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * Cache key patterns for policy documents:
+ *
+ * - Original extracted text: "policy:{source}"
+ * - Translated documents: "policy:{source}:{language}"
+ */
+function keyPolicy(source: string, language?: string): string {
+	return language ? `policy:${source}:${language}` : `policy:${source}`;
+}
+
+
+async function fetchPolicy(job: string, page: string, source: string, language?: Language): Promise<undefined | Document> {
+
+	await setStatus(job, Activity.Fetching);
+
+	const key=keyPolicy(source, language);
+	const cached=await storage.get(key) as Document | undefined;
+
+	if ( isUndefined(cached) ) {
+
+		return undefined;
+
+	} else {
+
+		// get attachment metadata to check if cache is current
+
+		await setStatus(job, Activity.Scanning);
+
+		const attachment=await getAttachment(page, source);
+		const attachmentCreated=new Date(attachment.createdAt).getTime();
+		const cachedCreated=new Date(cached.created).getTime();
+
+		// check if cached document is current (cached before attachment was modified)
+
+		if ( cachedCreated < attachmentCreated ) {
+
+			await setStatus(job, Activity.Purging);
+
+			await storage.delete(key); // stale entry, purge it
+
+			return undefined;
+
+		} else {
+
+			return cached;
+
+		}
+
+	}
+}
+
+async function cachePolicy(job: string, source: string, document: Document): Promise<Document> {
+
+	await setStatus(job, Activity.Caching);
+
+	const key=keyPolicy(source, document.original ? undefined : document.language);
+
+	await storage.set(key, document);
+
+	return document;
+}
