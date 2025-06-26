@@ -18,6 +18,7 @@ import ForgeReconciler, { Box, Button, ButtonGroup, Inline, Stack, useConfig } f
 import React, { useState } from "react";
 import { Source } from "../shared/documents";
 import { defaultLanguage, Language } from "../shared/languages";
+import { ToolCache } from "./hooks/cache";
 import { ToolBar } from "./views/layouts/bar";
 import ToolPanel from "./views/layouts/panel";
 import { ToolAgreement } from "./views/lenses/agreement";
@@ -143,7 +144,9 @@ function ToolTool() {
 ForgeReconciler.render(
 	<React.StrictMode>
 
-		<ToolTool/>
+		<ToolCache>
+			<ToolTool/>
+		</ToolCache>
 
 	</React.StrictMode>
 );

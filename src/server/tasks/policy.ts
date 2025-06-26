@@ -100,7 +100,7 @@ async function extract({
 		source,
 
 		title: title,
-		content: markdownContent
+		content: markdownContent.replace(/\\+n/g, "\n") // !!! remove patch
 
 	};
 

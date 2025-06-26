@@ -29,18 +29,18 @@ export interface Specs {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-export async function getStatus<T>(id: string): Promise<Status<T>> {
-	return await storage.get(key(id));
+export async function getStatus<T>(job: string): Promise<Status<T>> {
+	return await storage.get(key(job));
 }
 
-export async function setStatus<T>(id: string, value: undefined | Status<T>): Promise<void> {
+export async function setStatus<T>(job: string, value: undefined | Status<T>): Promise<void> {
 	if ( isDefined(value) ) {
 
-		return await storage.set(key(id), value as any); // !!! typing
+		return await storage.set(key(job), value as any); // !!! typing
 
 	} else {
 
-		return await storage.delete(key(id));
+		return await storage.delete(key(job));
 
 	}
 }
@@ -48,6 +48,6 @@ export async function setStatus<T>(id: string, value: undefined | Status<T>): Pr
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-function key(id: string) {
-	return `task:${id}`;
+function key(job: string) {
+	return `job:${job}`;
 }

@@ -13,12 +13,3 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-interface Issue {
-
-	readonly title: string;
-	readonly description: string;
-
-	readonly quotes: ReadonlyArray<Quote>;
-
-}

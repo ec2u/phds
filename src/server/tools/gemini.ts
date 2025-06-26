@@ -41,6 +41,9 @@ const manager=new GoogleAIFileManager(key);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * uploads are deleted after 48 hours (https://ai.google.dev/gemini-api/docs/files#delete-uploaded)
+ */
 export async function upload({
 
 	name,
@@ -129,14 +132,7 @@ export async function process({
 			}
 		}]);
 
-
-		// uploads are deleted after 48 hours (https://ai.google.dev/gemini-api/docs/files#delete-uploaded)
-
-		const text=result.response.text();
-
-		console.log(text);
-
-		return JSON.parse(text);
+		return JSON.parse(result.response.text());
 
 	} catch ( error ) {
 

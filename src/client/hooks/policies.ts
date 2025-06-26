@@ -17,19 +17,32 @@
 import { useEffect, useState } from "react";
 import { Catalog } from "../../shared/documents";
 import { Activity, Status } from "../../shared/tasks";
+import { useCache } from "./cache";
 import { execute } from "./index";
 
 export function usePolicies(): Status<Catalog> {
 
-	const [policies, setPolicies]=useState<Status<Catalog>>(Activity.Initializing);
+	const { getCache, setCache }=useCache();
+
+	const key="catalog:policies";
+	const cached=getCache<Catalog>(key);
+
+	const [policies, setPolicies]=useState<Status<Catalog>>(cached || Activity.Initializing);
+
+	const updatePolicies=(policies: Status<Catalog>) => {
+		setPolicies(policies);
+		setCache(key, policies);
+	};
 
 	useEffect(() => {
 
-		execute<Catalog>(setPolicies, {
+		if ( !cached ) {
+			execute<Catalog>(updatePolicies, {
 
-			type: "catalog"
+				type: "catalog"
 
-		});
+			});
+		}
 
 	}, []);
 

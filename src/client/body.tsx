@@ -18,6 +18,7 @@ import ForgeReconciler, { Button, ButtonGroup, useConfig, useProductContext } fr
 import React, { useState } from "react";
 import { Source } from "../shared/documents";
 import { defaultLanguage, Language } from "../shared/languages";
+import { ToolCache } from "./hooks/cache";
 import { ToolBar } from "./views/layouts/bar";
 import { ToolAgreement } from "./views/lenses/agreement";
 import { ToolChat } from "./views/lenses/chat";
@@ -25,7 +26,6 @@ import { ToolIssues } from "./views/lenses/issues";
 import { ToolLanguage } from "./views/lenses/language";
 import { ToolPolicies } from "./views/lenses/policies";
 import { ToolPolicy } from "./views/lenses/policy";
-import { ToolWork } from "./views/lenses/work";
 
 
 const enum Tab {
@@ -33,15 +33,13 @@ const enum Tab {
 	Policies,
 	Issues,
 	Chat,
-	Work
 }
 
 const tabs=[
 	{ tab: Tab.Agreement, label: "Agreement" },
 	{ tab: Tab.Policies, label: "Policies" },
 	{ tab: Tab.Issues, label: "Issues", disabled: true },
-	{ tab: Tab.Chat, label: "Chat", disabled: true },
-	{ tab: Tab.Work, label: "Work" }
+	{ tab: Tab.Chat, label: "Chat", disabled: true }
 ];
 
 
@@ -81,8 +79,7 @@ function ToolBody() {
 				: tab === Tab.Policies ? <ToolPolicies onClick={setTab}/>
 					: tab === Tab.Issues ? <ToolIssues/>
 						: tab === Tab.Chat ? <ToolChat/>
-							: tab === Tab.Work ? <ToolWork/>
-								: <ToolPolicy source={tab} language={language}/>
+							: <ToolPolicy source={tab} language={language}/>
 
 		}
 
@@ -96,7 +93,9 @@ function ToolBody() {
 ForgeReconciler.render(
 	<React.StrictMode>
 
-		<ToolBody/>
+		<ToolCache>
+			<ToolBody/>
+		</ToolCache>
 
 	</React.StrictMode>
 );

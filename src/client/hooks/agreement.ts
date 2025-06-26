@@ -24,7 +24,6 @@ export function useAgreement(language: Language): Status<Document> {
 
 	const context=useProductContext();
 
-
 	const content=markdown(context?.extension?.macro?.body);
 
 	return {

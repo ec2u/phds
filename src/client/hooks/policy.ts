@@ -18,22 +18,36 @@ import { useEffect, useState } from "react";
 import { Document, Source } from "../../shared/documents";
 import { Language } from "../../shared/languages";
 import { Activity, Status } from "../../shared/tasks";
+import { useCache } from "./cache";
 import { execute } from "./index";
 
 export function usePolicy(source: Source, language: Language): Status<Document> {
 
-	const [policy, setPolicy]=useState<Status<Document>>(Activity.Initializing);
+	const { getCache, setCache }=useCache();
+
+	const key=`policy:${source}-${language}`;
+	const cached=getCache<Document>(key);
+
+	const [policy, setPolicy]=useState<Status<Document>>(cached || Activity.Initializing);
+
+
+	const updatePolicy=(policy: Status<Document>) => {
+		setPolicy(policy);
+		setCache(key, policy);
+	};
 
 	useEffect(() => {
 
-		execute<Document>(setPolicy, {
+		if ( !cached ) {
+			execute<Document>(updatePolicy, {
 
-			type: "policy",
+				type: "policy",
 
-			source,
-			language
+				source,
+				language
 
-		});
+			});
+		}
 
 	}, []);
 

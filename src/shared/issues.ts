@@ -14,19 +14,24 @@
  * limitations under the License.
  */
 
-interface Issues {
+import { Source } from "./documents";
+
+interface Issue {
 
 	readonly title: string;
 	readonly description: string;
 
-	readonly citations: Citation[];
+	readonly quotes: ReadonlyArray<Reference>;
 
 }
 
-interface Citation {
+export interface Reference {
 
-	readonly source: string;
+	readonly source: Source;
+
 	readonly offset: number;
 	readonly length: number;
+
+	readonly excerpt: string;
 
 }
