@@ -96,8 +96,6 @@ export interface PoliciesTask extends Provider<Catalog> {
 
 	readonly type: "policies";
 
-	readonly language: Language;
-
 }
 
 export interface PolicyTask extends Provider<Document> {

@@ -14,11 +14,17 @@
  * limitations under the License.
  */
 
-/**
- * Cache key patterns for policy documents:
- * - Original extracted text: "policy:{pageId}:{source}"
- * - Translated documents: "policy:{pageId}:{source}:{language}"
- */
-export function keyPolicy(page: string, source: string, language?: string): string {
-	return language ? `policy:${page}:${source}:${language}` : `policy:${page}:${source}`;
+import api, { route } from "@forge/api";
+
+export async function checkPage(page: string): Promise<boolean> {
+
+	const url=route`/wiki/api/v2/pages/${page}`;
+
+	const response=await api.asApp().requestConfluence(url, {
+
+		headers: { "Accept": "application/json" }
+
+	});
+
+	return response.ok;
 }

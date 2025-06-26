@@ -207,3 +207,26 @@ export async function uploadAttachment(page: string, document: Document): Promis
 	}
 
 }
+
+export async function deleteAttachment(page: string, id: string): Promise<void> {
+
+	const url=route`/wiki/rest/api/content/${page}/child/attachment/${id}`;
+
+	const response=await api.asApp().requestConfluence(url, {
+
+		method: "DELETE",
+		headers: { "Accept": "application/json" }
+
+	});
+
+	if ( !response.ok ) {
+
+		console.error(response);
+
+		throw asTrace({
+			code: response.status,
+			text: response.statusText
+		});
+
+	}
+}

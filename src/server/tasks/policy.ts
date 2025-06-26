@@ -45,7 +45,7 @@ export async function policy(job: string, page: string, { source, language }: Po
 
 		const translation=(document.language === language)
 			? document
-			: await translate(job, source, document, language);
+			: await translate(job, page, source, document, language);
 
 		await setStatus(job, translation);
 
@@ -110,7 +110,7 @@ async function extract(job: string, page: string, source: string): Promise<Docum
 
 	});
 
-	return await cachePolicy(job, source, {
+	return await cachePolicy(job, page, source, {
 		original: true,
 		language,
 		source,
@@ -120,7 +120,7 @@ async function extract(job: string, page: string, source: string): Promise<Docum
 	});
 }
 
-async function translate(job: string, source: string, document: Document, language: Language): Promise<Document> {
+async function translate(job: string, page: string, source: string, document: Document, language: Language): Promise<Document> {
 
 	await setStatus(job, Activity.Prompting);
 
@@ -187,7 +187,7 @@ async function translate(job: string, source: string, document: Document, langua
 
 	await setStatus(job, Activity.Caching);
 
-	return await cachePolicy(job, source, {
+	return await cachePolicy(job, page, source, {
 
 		original: false,
 		language: language,
@@ -207,7 +207,7 @@ async function fetchPolicy(job: string, page: string, source: string, language?:
 
 	await setStatus(job, Activity.Fetching);
 
-	const key=keyPolicy(source, language);
+	const key=keyPolicy(page, source, language);
 	const cached=await storage.get(key) as Document | undefined;
 
 	if ( isUndefined(cached) ) {
@@ -243,11 +243,11 @@ async function fetchPolicy(job: string, page: string, source: string, language?:
 	}
 }
 
-async function cachePolicy(job: string, source: string, document: Document): Promise<Document> {
+async function cachePolicy(job: string, page: string, source: string, document: Document): Promise<Document> {
 
 	await setStatus(job, Activity.Caching);
 
-	const key=keyPolicy(source, document.original ? undefined : document.language);
+	const key=keyPolicy(page, source, document.original ? undefined : document.language);
 
 	await storage.set(key, document);
 

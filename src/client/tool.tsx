@@ -84,10 +84,10 @@ function ToolTool() {
 
 				menu={<>
 
-					<ButtonGroup>{Object.entries(modes).map(([selected, label]) =>
-						<Button key={selected} isSelected={mode === selected}
+					<ButtonGroup>{Object.entries(modes).map(([name, label]) =>
+						<Button key={name} isSelected={mode === name}
 
-							onClick={() => setMode(selected as keyof typeof modes)}
+							onClick={() => setMode(name as keyof typeof modes)}
 
 						>{label}</Button>
 					)}</ButtonGroup>
@@ -99,7 +99,7 @@ function ToolTool() {
 			/>}>{
 
 				mode === "agreement" ? <ToolAgreement language={language}/>
-					: mode === "references" ? <ToolPolicies language={language} onClick={setMode}/>
+					: mode === "references" ? <ToolPolicies onClick={setMode}/>
 						: <ToolPolicy language={language} source={mode}/>
 
 			}</ToolPanel>

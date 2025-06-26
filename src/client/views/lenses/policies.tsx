@@ -18,7 +18,6 @@ import { List, ListItem, Pressable } from "@forge/react";
 import React from "react";
 import { isTrace } from "../../../shared";
 import { Source } from "../../../shared/documents";
-import { Language } from "../../../shared/languages";
 import { isActivity } from "../../../shared/tasks";
 import { usePolicies } from "../../hooks/policies";
 import { ToolActivity } from "./activity";
@@ -26,19 +25,15 @@ import { ToolTrace } from "./trace";
 
 export function ToolPolicies({
 
-	language,
-
 	onClick
 
 }: {
-
-	language: Language
 
 	onClick?: (source: Source) => void
 
 }) {
 
-	const catalog=usePolicies(language);
+	const catalog=usePolicies();
 
 	if ( isActivity(catalog) ) {
 

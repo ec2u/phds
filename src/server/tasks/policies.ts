@@ -19,8 +19,9 @@ import { Document } from "../../shared/documents";
 import { Activity, PoliciesTask } from "../../shared/tasks";
 import { setStatus } from "../async";
 import { listAttachments, pdf } from "../tools/attachments";
+import { checkPage } from "../tools/pages";
 
-export async function policies(job: string, page: string, { language }: PoliciesTask) {
+export async function policies(job: string, page: string, {}: PoliciesTask) {
 
 	// get all attachments metadata
 
@@ -30,12 +31,12 @@ export async function policies(job: string, page: string, { language }: Policies
 		.filter(attachment => attachment.mediaType === pdf);
 
 
-	// get all cached documents
+	// get cached policy documents for this page
 
 	await setStatus(job, Activity.Fetching);
 
 	const cached=await storage.query()
-		.where("key", { condition: "STARTS_WITH", value: "policy:" })
+		.where("key", { condition: "STARTS_WITH", value: `policy:${page}:` })
 		.limit(100)
 		.getMany();
 
@@ -47,13 +48,13 @@ export async function policies(job: string, page: string, { language }: Policies
 	await Promise.all(cached.results
 		.filter(result => {
 
-			// extract source id from cache key (policy:{source} or policy:{source}:{language})
+			// extract source id from cache key (policy:{pageId}:{source}[:{language}])
 
-			const source=(result.key.split(":"))[1]; // policy:{source}:{language?}
+			const source=(result.key.split(":"))[2];
 
 			// find matching attachment
 
-			const attachment=attachments.find(attachment => attachment.id === source);
+			const attachment=attachments.find(attachment => source === attachment.id);
 
 			if ( isUndefined(attachment) ) { // attachment no longer exists, purge this cache entry
 
@@ -72,12 +73,63 @@ export async function policies(job: string, page: string, { language }: Policies
 		})
 		.map(result => storage.delete(result.key)));
 
-
-	// create catalog (using attachment title, as document title is quite expensive to get upfront))
+	// create catalog (using attachment title, as document title is quite expensive to get upfront)
 
 	await setStatus(job, attachments.reduce((catalog, attachment) => ({
 		...catalog,
 		[attachment.id]: attachment.title.replace(/\.pdf$/, "")
 	}), {} as Record<string, string>));
 
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+export async function purgeDeletedPageDocuments(job: string): Promise<void> {
+
+	await setStatus(job, Activity.Scanning);
+
+	// Get all cached policy documents
+	const cached=await storage.query()
+		.where("key", { condition: "STARTS_WITH", value: "policy:" })
+		.limit(1000)
+		.getMany();
+
+	await setStatus(job, Activity.Purging);
+
+	// Extract unique page IDs from cached documents  
+	const pageIds=new Set<string>();
+
+	for (const result of cached.results) {
+		const pageId=extractPageIdFromCacheKey(result.key);
+		if ( pageId ) {
+			pageIds.add(pageId);
+		}
+	}
+
+	// Check which pages still exist
+	const deletedPages=new Set<string>();
+
+	await Promise.all(Array.from(pageIds).map(async pageId => {
+		const exists=await checkPage(pageId);
+		if ( !exists ) {
+			deletedPages.add(pageId);
+		}
+	}));
+
+	// Delete cache entries for deleted pages
+	if ( deletedPages.size > 0 ) {
+		const entriesToDelete=cached.results.filter(result => {
+			const pageId=extractPageIdFromCacheKey(result.key);
+			return pageId && deletedPages.has(pageId);
+		});
+
+		await Promise.all(entriesToDelete.map(result => storage.delete(result.key)));
+	}
+}
+
+function extractPageIdFromCacheKey(cacheKey: string): string | null {
+	// Extract page ID from cache key: policy:{pageId}:{source}[:{language}]
+	const keyParts=cacheKey.split(":");
+	return keyParts.length >= 3 ? keyParts[1] : null;
 }
