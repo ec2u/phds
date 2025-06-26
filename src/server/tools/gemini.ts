@@ -16,10 +16,9 @@
 
 import { GoogleGenerativeAI, ResponseSchema } from "@google/generative-ai";
 import { FileMetadataResponse, GoogleAIFileManager } from "@google/generative-ai/server";
-import { asTrace } from "../../shared";
-import { Language } from "../../shared/languages";
+import { asTrace, isUndefined } from "../../shared";
 import { secret } from "../index";
-import { json } from "./attachments";
+import { json, text } from "./attachments";
 
 
 const model="gemini-2.5-flash-preview-04-17";
@@ -27,7 +26,7 @@ const timeout=10_000;
 
 const setup={
 	seed: 0,
-	temperature: 0,
+	temperature: 0
 };
 
 
@@ -89,22 +88,32 @@ export async function upload({
 }
 
 export async function process({
-
-	file,
 	prompt,
-	schema
-
+	file
 }: {
+	prompt: string
+	file?: FileMetadataResponse
+}): Promise<string>;
 
-	file: FileMetadataResponse
+export async function process({
+	prompt,
+	schema,
+	file
+}: {
 	prompt: string
 	schema: ResponseSchema
+	file?: FileMetadataResponse
+}): Promise<Record<string, any>>;
 
-}): Promise<{
-	title: string
-	language: Language
-	markdownContent: string
-}> {
+export async function process({
+	prompt,
+	schema,
+	file
+}: {
+	prompt: string
+	schema?: ResponseSchema
+	file?: FileMetadataResponse
+}): Promise<string | Record<string, any>> {
 
 	try {
 
@@ -119,20 +128,22 @@ export async function process({
 
 				...setup,
 
-				responseMimeType: json,
+				responseMimeType: schema ? json : text,
 				responseSchema: schema
 			}
 
 		});
 
-		const result=await session.sendMessage([{
+		const result=await (isUndefined(file) ? session.sendMessage("") : session.sendMessage([{
+
 			fileData: {
 				mimeType: file.mimeType,
 				fileUri: file.uri
 			}
-		}]);
 
-		return JSON.parse(result.response.text());
+		}]));
+
+		return schema ? JSON.parse(result.response.text()) : result.response.text();
 
 	} catch ( error ) {
 

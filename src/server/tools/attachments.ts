@@ -64,6 +64,7 @@ interface AttachmentsResponse {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+export const text="text/plain";
 export const markdown="text/markdown";
 export const pdf="application/pdf";
 export const json="application/json";

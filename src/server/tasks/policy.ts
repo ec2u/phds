@@ -30,13 +30,15 @@ export async function policy(job: string, page: string, { source, language }: Po
 
 	const cached=await fetchPolicy(job, page, source, language);
 
-	if ( cached ) {
+	// if ( cached ) {
+	//
+	// 	await setStatus(job, cached);
+	//
+	// 	return cached;
+	//
+	// } else
 
-		await setStatus(job, cached);
-
-		return cached;
-
-	} else {
+	{
 
 		const original=await fetchPolicy(job, page, source);
 		const document=original || await extract(job, page, source);
@@ -107,17 +109,40 @@ async function translate(job: string, source: string, document: Document, langua
 
 	await setStatus(job, Activity.Prompting);
 
-	const translatedDocument={
-		...document,
+	const prompt=await retrievePrompt({
+		name: "TRANSLATION",
+		variables: {
+
+			target_language: language,
+			source_content: document.content
+
+		}
+	});
+
+
+	await setStatus(job, Activity.Translating);
+
+	const content=await process({
+		prompt
+	});
+
+	const translation: Document={
+
 		original: false,
 		language: language,
-		created: new Date().toISOString()
+		source: document.source,
+		created: new Date().toISOString(),
+
+		title: document.title, // !!! translation
+		content
 	};
 
-	// Cache the translation
-	await cachePolicy(job, source, translatedDocument);
 
-	return translatedDocument;
+	await setStatus(job, Activity.Caching);
+
+	await cachePolicy(job, source, translation);
+
+	return translation;
 }
 
 
