@@ -111,7 +111,7 @@ export interface PolicyTask extends Provider<Document> {
 
 }
 
-export interface IssuesTask extends Provider<Issue[]> {
+export interface IssuesTask extends Provider<ReadonlyArray<Issue>> {
 
 	readonly type: "issues";
 

@@ -51,6 +51,7 @@ export async function issues(job: string, page: string, { refresh=false }: Issue
 	const dummyIssues: Issue[]=[
 		{
 			id: "issue-001-supervisor-qualifications",
+			created: "2025-01-15T10:30:00Z",
 			priority: 0.9,
 			title: "Missing supervisor qualification requirements",
 			description: [
@@ -67,6 +68,7 @@ export async function issues(job: string, page: string, { refresh=false }: Issue
 		},
 		{
 			id: "issue-002-duration-inconsistency",
+			created: "2025-01-15T11:45:00Z",
 			priority: 0.8,
 			title: "Inconsistent duration specifications",
 			description: [
@@ -94,6 +96,7 @@ export async function issues(job: string, page: string, { refresh=false }: Issue
 		},
 		{
 			id: "issue-003-language-requirements",
+			created: "2025-01-15T14:20:00Z",
 			priority: 0.6,
 			title: "Language proficiency requirements unclear",
 			description: [
@@ -115,6 +118,7 @@ export async function issues(job: string, page: string, { refresh=false }: Issue
 		},
 		{
 			id: "issue-004-examination-procedures",
+			created: "2025-01-15T16:10:00Z",
 			priority: 0.7,
 			title: "Conflicting examination and defense procedures",
 			description: [
@@ -142,6 +146,7 @@ export async function issues(job: string, page: string, { refresh=false }: Issue
 		},
 		{
 			id: "issue-005-residence-mobility",
+			created: "2025-01-15T09:15:00Z",
 			priority: 0.4,
 			title: "Residence and mobility requirements inconsistent",
 			description: [

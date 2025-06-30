@@ -14,27 +14,30 @@
  * limitations under the License.
  */
 
-import { Instant, Source } from "./documents";
+import { Button } from "@forge/react";
+import React, { useState } from "react";
+import { Activity, isActivity, Status } from "../../../shared/tasks";
+import { execute } from "../../hooks";
 
-export interface Issue {
+export function ToolClear() {
 
-	readonly id: string;
-	readonly created: Instant;
-	readonly priority: number; // 0..1
+	const [clearing, setClearing]=useState<Status<void>>();
 
-	readonly title: string;
-	readonly description: ReadonlyArray<string | Reference>;
 
-}
+	function reset() {
+		setClearing(Activity.Submitting);
+		execute(setClearing, { type: "clear" });
+	}
 
-export interface Reference {
 
-	readonly source: Source;
+	return <Button
 
-	readonly title: string;
-	readonly excerpt: string;
+		isDisabled={isActivity(clearing)}
 
-	readonly offset: number;
-	readonly length: number;
+		appearance={"default"}
+		iconBefore={"refresh"}
 
+		onClick={reset}
+
+	>{""}</Button>;
 }

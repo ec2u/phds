@@ -18,8 +18,6 @@ import { createContext, createElement, ReactNode, useCallback, useContext, useSt
 
 interface Cache {
 
-	readonly cache: Map<string, any>;
-
 	setCache<V>(key: string, value: V): void;
 
 	getCache<V>(key: string): undefined | V;
@@ -66,7 +64,7 @@ export function ToolCache({ children }: { children: ReactNode }) {
 
 	return createElement(CacheContext.Provider, {
 
-		value: { cache, setCache, getCache, clearCache },
+		value: { setCache, getCache, clearCache },
 		children
 
 	});
