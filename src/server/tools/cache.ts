@@ -83,11 +83,11 @@ export async function dirty(): Promise<boolean> {
 	}
 }
 
-export async function purge(job: string): Promise<void> {
+export async function purge(job: string, page?: string): Promise<void> {
 
 	await setStatus(job, Activity.Scanning);
 
-	// get all cached documents with pagination (excluding system keys)
+	// get cached documents with pagination
 
 	let allResults: Array<{ key: string; value: any }>=[];
 	let cursor: string | undefined;
@@ -97,64 +97,57 @@ export async function purge(job: string): Promise<void> {
 		const query=storage.query()
 			.limit(100);
 
+		// if targeting specific page, query only that page's entries
+
+		if ( page ) {
+			query.where("key", { condition: "STARTS_WITH", value: `${page}:` });
+		}
+
 		if ( cursor ) {
 			query.cursor(cursor);
 		}
 
 		const batch=await query.getMany();
 
-		// Filter out system keys
-		const userEntries=batch.results.filter(result => !result.key.startsWith("system:"));
+		// filter out system keys (only needed for global purge)
+
+		const userEntries=page
+			? batch.results
+			: batch.results.filter(result => !result.key.startsWith("system:"));
+
 		allResults.push(...userEntries);
 		cursor=batch.nextCursor;
 
 	} while ( cursor );
 
-	const cached={ results: allResults };
-
-
 	await setStatus(job, Activity.Purging);
 
-	// group cache entries by page id
+	if ( page ) { // clear all entries for the target page
 
-	const entriesByPage=new Map<string, Array<{ key: string; value: any }>>();
+		await Promise.all(allResults.map(result => storage.delete(result.key)));
 
-	for (const result of cached.results) {
+	} else { // group cache entries by page id and purge deleted pages
 
-		const page=keyPage(result.key);
+		const entriesByPage=new Map<string, Array<{ key: string; value: any }>>();
 
-		if ( !entriesByPage.has(page) ) {
-			entriesByPage.set(page, []);
+		for (const result of allResults) {
+
+			const page=keyPage(result.key);
+
+			if ( !entriesByPage.has(page) ) {
+				entriesByPage.set(page, []);
+			}
+
+			entriesByPage.get(page)!.push(result);
 		}
 
-		entriesByPage.get(page)!.push(result);
+		// check which pages still exist and delete entries for deleted pages
+
+		await Promise.all(Array.from(entriesByPage.entries()).map(async ([pageId, entries]) => {
+			if ( !await checkPage(pageId) ) {
+				await Promise.all(entries.map(result => storage.delete(result.key)));
+			}
+		}));
+
 	}
-
-	// check which pages still exist and delete entries for deleted pages
-
-	await Promise.all(Array.from(entriesByPage.entries()).map(async ([pageId, entries]) => {
-		if ( !await checkPage(pageId) ) {
-			await Promise.all(entries.map(result => storage.delete(result.key)));
-		}
-	}));
-}
-
-export async function clearPageCache(page: string) {
-	// get all cached entries for the target page
-	const query=storage.query()
-		.where("key", { condition: "STARTS_WITH", value: `${page}:` })
-		.limit(100);
-
-	let allResults: Array<{ key: string; value: any }>=[];
-	let cursor: string | undefined;
-
-	do {
-		const batchQuery=cursor ? query.cursor(cursor) : query;
-		const batch=await batchQuery.getMany();
-		allResults.push(...batch.results);
-		cursor=batch.nextCursor;
-	} while ( cursor );
-
-	// delete all cache entries for this page
-	await Promise.all(allResults.map(result => storage.delete(result.key)));
 }

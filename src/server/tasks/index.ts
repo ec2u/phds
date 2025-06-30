@@ -45,11 +45,13 @@ export const handler=new Resolver()
 
 		try {
 
-			// check if global purge is needed
+			// check if global purge is needed (run completely in background)
 
-			if ( await dirty() ) {
-				purge(job); // run purge in background (don't block task processing)
-			}
+			dirty().then(isDirty => {
+
+				if ( isDirty ) { purge(job); }
+
+			});
 
 			// process task
 
