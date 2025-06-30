@@ -28,25 +28,25 @@ const purgePeriod=24 * 60 * 60 * 1000; // 1d in ms
 
 /**
  * Cache key patterns for policy documents:
- * - Original extracted text: "policy:{page}:{source}"
- * - Translated documents: "policy:{page}:{source}:{language}"
+ * - Original extracted text: "{page}:policy:{source}"
+ * - Translated documents: "{page}:policy:{source}:{language}"
  */
 export function policyKey(page: string, source: string, language?: string): string {
-	return language ? `policy:${page}:${source}:${language}` : `policy:${page}:${source}`;
+	return language ? `${page}:policy:${source}:${language}` : `${page}:policy:${source}`;
 }
 
 /**
- * Extract page id from policy cache key
- * @param key - Cache key in format "policy:{page}:{source}[:{language}]"
+ * Extract page id from cache key
+ * @param key - Cache key in format "{page}:type:..."
  * @returns Page id
  */
-export function policyKeyPage(key: string): string {
-	return key.split(":")[1];
+export function keyPage(key: string): string {
+	return key.split(":")[0];
 }
 
 /**
  * Extract source id from policy cache key
- * @param key - Cache key in format "policy:{page}:{source}[:{language}]"
+ * @param key - Cache key in format "{page}:policy:{source}[:{language}]"
  * @returns Source (attachment) id
  */
 export function policyKeySource(key: string): string {
@@ -55,7 +55,7 @@ export function policyKeySource(key: string): string {
 
 /**
  * Extract language from policy cache key (if present)
- * @param key - Cache key in format "policy:{page}:{source}[:{language}]"
+ * @param key - Cache key in format "{page}:policy:{source}[:{language}]"
  * @returns Language code or undefined if not present
  */
 export function policyKeyLanguage(key: string): string | undefined {
@@ -87,7 +87,7 @@ export async function purge(job: string): Promise<void> {
 
 	await setStatus(job, Activity.Scanning);
 
-	// get all cached policy documents with pagination
+	// get all cached documents with pagination (excluding system keys)
 
 	let allResults: Array<{ key: string; value: any }>=[];
 	let cursor: string | undefined;
@@ -95,7 +95,6 @@ export async function purge(job: string): Promise<void> {
 	do {
 
 		const query=storage.query()
-			.where("key", { condition: "STARTS_WITH", value: "policy:" })
 			.limit(100);
 
 		if ( cursor ) {
@@ -104,7 +103,9 @@ export async function purge(job: string): Promise<void> {
 
 		const batch=await query.getMany();
 
-		allResults.push(...batch.results);
+		// Filter out system keys
+		const userEntries=batch.results.filter(result => !result.key.startsWith("system:"));
+		allResults.push(...userEntries);
 		cursor=batch.nextCursor;
 
 	} while ( cursor );
@@ -120,7 +121,7 @@ export async function purge(job: string): Promise<void> {
 
 	for (const result of cached.results) {
 
-		const page=policyKeyPage(result.key);
+		const page=keyPage(result.key);
 
 		if ( !entriesByPage.has(page) ) {
 			entriesByPage.set(page, []);
@@ -139,9 +140,9 @@ export async function purge(job: string): Promise<void> {
 }
 
 export async function clearPageCache(page: string) {
-	// get all cached policy documents for the target page
+	// get all cached entries for the target page
 	const query=storage.query()
-		.where("key", { condition: "STARTS_WITH", value: "policy:" })
+		.where("key", { condition: "STARTS_WITH", value: `${page}:` })
 		.limit(100);
 
 	let allResults: Array<{ key: string; value: any }>=[];
@@ -154,9 +155,6 @@ export async function clearPageCache(page: string) {
 		cursor=batch.nextCursor;
 	} while ( cursor );
 
-	// filter entries that belong to the target page
-	const pageEntries=allResults.filter(result => policyKeyPage(result.key) === page);
-
 	// delete all cache entries for this page
-	await Promise.all(pageEntries.map(result => storage.delete(result.key)));
+	await Promise.all(allResults.map(result => storage.delete(result.key)));
 }
