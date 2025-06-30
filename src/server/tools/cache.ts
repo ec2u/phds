@@ -36,6 +36,17 @@ export function policyKey(page: string, source: string, language?: string): stri
 }
 
 /**
+ * Cache key for issue
+ * @param page - Page id
+ * @param issueId - Issue id
+ * @returns Issue cache key
+ */
+export function issueKey(page: string, issueId: string): string {
+	return `${page}:issue:${issueId}`;
+}
+
+
+/**
  * Extract page id from cache key
  * @param key - Cache key in format "{page}:type:..."
  * @returns Page id

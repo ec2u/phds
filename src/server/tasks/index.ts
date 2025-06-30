@@ -19,8 +19,10 @@ import { asTrace } from "../../shared";
 import { setStatus, Specs } from "../async";
 import { dirty, purge } from "../tools/cache";
 import { clear } from "./clear";
+import { issues } from "./issues";
 import { policies } from "./policies";
 import { policy } from "./policy";
+import { resolve } from "./resolve";
 
 interface AsyncEventContext {
 	jobId: string;
@@ -64,6 +66,14 @@ export const handler=new Resolver()
 				case "policy":
 
 					return await policy(job, page, task);
+
+				case "issues":
+
+					return await issues(job, page, task);
+
+				case "resolve":
+
+					return await resolve(job, page, task);
 
 				case "clear":
 

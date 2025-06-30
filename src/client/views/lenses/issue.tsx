@@ -14,42 +14,69 @@
  * limitations under the License.
  */
 
-import { Badge, Box, Button, Heading, Inline, Stack, Text, xcss } from "@forge/react";
-import React from "react";
+import { Box, Button, Heading, Inline, Stack, Text, xcss } from "@forge/react";
+import React, { useState } from "react";
+import { isArray, isString } from "../../../shared";
+import { Issue } from "../../../shared/issues";
+import { isActivity, Status } from "../../../shared/tasks";
+import { execute } from "../../hooks";
+import { useCache } from "../../hooks/cache";
+import { ToolReference } from "./reference";
 
 
-export default function ToolIssue() {
+export default function ToolIssue({
+
+	issue
+
+}: {
+
+	issue: Issue
+
+}) {
+
+	const { getCache, setCache }=useCache();
+	const [resolving, setResolving]=useState<Status<void>>();
+
+	const active=isActivity(resolving);
+
+	function resolve() { // !!! factor
+		execute(setResolving, { type: "resolve", issues: [issue.id] }).then(() => {
+			// Remove resolved issue from cache using the same key as useIssues
+			const cached=getCache<ReadonlyArray<Issue>>("issues");
+			if ( isArray(cached) ) {
+				const updatedIssues=cached.filter(cachedIssue => cachedIssue.id !== issue.id);
+				setCache("issues", updatedIssues);
+			}
+		});
+	}
 
 	return <Box xcss={xcss({
 
-		padding: "space.100",
+		padding: "space.200",
 
 		borderStyle: "solid",
 		borderWidth: "border.width",
 		borderRadius: "border.radius",
 		borderColor: "color.border.accent.gray",
 
-		backgroundColor: "color.background.accent.blue.subtlest"
+		backgroundColor: "color.background.accent.blue.subtlest",
+
+		opacity: active ? "opacity.disabled" : undefined
 
 	})}>
 
-		<Stack>
+		<Stack space={"space.100"}>
 
 			<Inline>
-				<Box xcss={{ flexGrow: 1 }}><Heading size={"small"}>lapsus, fraticinida, et genetrix</Heading></Box>
-				<Button appearance={"subtle"}>Resolve</Button>
+				<Box xcss={{ flexGrow: 1 }}><Heading size={"small"}>{issue.title}</Heading></Box>
+				<Button isDisabled={active} appearance={"default"} iconBefore={"check"}
+					onClick={resolve}>Resolve</Button>
 			</Inline>
 
-			<Text>Nunquam experientia domus. lapsus, fraticinida, et genetrix. cum fiscina cantare, omnes gemnaes
-				contactus pius, albus elogiumes. est flavum hydra, cesaris. cum zelus ridetis, omnes messores
-				attrahendam audax, secundus cedriumes. apolloniates tolerares, tanquam alter frondator. regius
-				luna.
-
-				<Badge appearance={"primary"}>1</Badge>
-				<Badge appearance={"primary"}>2</Badge>
-				<Badge appearance={"primary"}>3</Badge>
-
-			</Text>
+			<Text>{issue.description.map((item, index) => isString(item)
+				? <React.Fragment key={index}>{item} </React.Fragment>
+				: <ToolReference key={`${item.source}:${item.offset}`} reference={item}/>
+			)}</Text>
 
 		</Stack>
 

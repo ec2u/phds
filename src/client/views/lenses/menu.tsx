@@ -69,7 +69,7 @@ export function ToolMenu({
 		>{""}</Button>}
 
 		content={() => <Stack>{Object.entries(actions).map(([name, handler]) =>
-			<Button key={name} appearance={"subtle"}
+			<Button key={name} appearance={"subtle"} shouldFitContainer={true}
 				onClick={() => call(handler)}>{name}</Button>
 		)}</Stack>}
 

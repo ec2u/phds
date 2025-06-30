@@ -62,6 +62,7 @@ The application follows Atlassian Forge architecture:
 - Prefer using type checking utilities from `shared/index.ts` (e.g., `isString()`, `isDefined()`) instead of native
   `typeof` checks for consistency
 - DO NOT reformat existing code formatting/spacing - preserve the author's original style
+- Inline comments (`//`) must be lowercase and followed by an empty line for readability
 
 ## Adding New Task Types
 
@@ -73,12 +74,14 @@ To add a new task type to the system, follow these steps:
     - Add any task-specific parameters as readonly properties
     - Update the `Task` union type to include the new task
 
-2. **Create Task Implementation** (`src/server/tasks/taskname.ts`):
+2. **Create Task Implementation** (`src/server/tasks/{name}.ts`):
     - Include Apache 2.0 license header
     - Import required types and utilities
     - Export async function with signature: `taskname(job: string, page: string, params: TaskType)`
     - Use `setStatus(job, Activity.X)` for progress updates
     - Use `setStatus(job, result)` for completion
+   - Add stub functions for any new functionality requiring future implementation
+   - Use descriptive names ending with "Stub" suffix and proper TypeScript return types
 
 3. **Update Task Dispatcher** (`src/server/tasks/index.ts`):
     - Import the new task function

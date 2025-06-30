@@ -15,14 +15,48 @@
  */
 
 
-import { EmptyState, Icon } from "@forge/react";
+import { Button, EmptyState, Stack } from "@forge/react";
 import React from "react";
+import { isTrace } from "../../../shared";
+import { isActivity } from "../../../shared/tasks";
+import { useIssues } from "../../hooks/issues";
+import { ToolActivity } from "./activity";
+import ToolIssue from "./issue";
+import { ToolTrace } from "./trace";
 
 export function ToolIssues() {
 
-	return <EmptyState
-		header={"Work in Progress…"}
-		primaryAction={<Icon label={""} glyph={"warning"} size={"large"} primaryColor={"color.icon.warning"}/>}
-	/>;
+	const issues=useIssues();
+
+
+	function analyze() {
+
+	}
+
+
+	if ( isActivity(issues) ) {
+
+		return <ToolActivity activity={issues}/>;
+
+	} else if ( isTrace(issues) ) {
+
+		return <ToolTrace trace={issues}/>;
+
+	} else if ( !issues.length ) {
+
+		return <EmptyState
+			header={"No Open Issues"}
+			primaryAction={<Button appearance={"discovery"} iconBefore={"lightbulb"}
+				onClick={analyze}
+			>Analyse Agreement</Button>}
+		/>;
+
+	} else {
+
+		return <Stack space="space.200">{[...issues]
+			.sort((a, b) => b.priority - a.priority || a.title.localeCompare(b.title))
+			.map(issue => <ToolIssue key={issue.id} issue={issue}/>)}</Stack>;
+
+	}
 
 }

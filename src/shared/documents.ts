@@ -20,14 +20,14 @@ import { Language } from "./languages";
 export type Catalog=Readonly<Record<Source, string>>;
 
 export type Source="" | string // source attachment id; empty for macro body
-export type Timestamp=string // UTC ISO dateTime with ms precision
+export type Instant=string // UTC ISO dateTime with ms precision
 
 export interface Document {
 
 	readonly original: boolean;
 	readonly language: Language;
 	readonly source: Source;
-	readonly created: Timestamp;
+	readonly created: Instant;
 
 	readonly title: string;
 	readonly content: string;

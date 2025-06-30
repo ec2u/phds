@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { List, ListItem, Pressable } from "@forge/react";
+import { List, ListItem, Pressable, xcss } from "@forge/react";
 import React from "react";
 import { isTrace } from "../../../shared";
 import { Source } from "../../../shared/documents";
@@ -33,30 +33,30 @@ export function ToolPolicies({
 
 }) {
 
-	const catalog=usePolicies();
+	const policies=usePolicies();
 
-	if ( isActivity(catalog) ) {
+	if ( isActivity(policies) ) {
 
-		return <ToolActivity activity={catalog}/>;
+		return <ToolActivity activity={policies}/>;
 
-	} else if ( isTrace(catalog) ) {
+	} else if ( isTrace(policies) ) {
 
-		return <ToolTrace trace={catalog}/>;
+		return <ToolTrace trace={policies}/>;
 
 	} else {
 
-		return <List type={"unordered"}>{Object.entries(catalog)
+		return <List type={"unordered"}>{Object.entries(policies)
 			.sort(([, x], [, y]) => x.localeCompare(y))
 			.map(([source, title]) => <>
 
 				<ListItem key={source}>
 
-					<Pressable xcss={{
+					<Pressable xcss={xcss({
 
 						color: "color.link",
 						backgroundColor: "color.background.neutral.subtle"
 
-					}}
+					})}
 
 						onClick={() => onClick?.(source)}
 

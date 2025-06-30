@@ -16,12 +16,15 @@
 
 import { Catalog, Source } from "./documents";
 import { isNumber, Trace } from "./index";
+import { Issue } from "./issues";
 import { Language } from "./languages";
 
 
 export type Task=
 	| PoliciesTask
 	| PolicyTask
+	| IssuesTask
+	| ResolveTask
 	| ClearTask
 	;
 
@@ -105,6 +108,22 @@ export interface PolicyTask extends Provider<Document> {
 
 	readonly source: Source;
 	readonly language: Language;
+
+}
+
+export interface IssuesTask extends Provider<Issue[]> {
+
+	readonly type: "issues";
+
+	readonly refresh?: boolean;
+
+}
+
+export interface ResolveTask extends Provider<void> {
+
+	readonly type: "resolve";
+
+	readonly issues: ReadonlyArray<string>; // issue ids
 
 }
 

@@ -30,19 +30,12 @@ import { ToolPolicies } from "./views/lenses/policies";
 import { ToolPolicy } from "./views/lenses/policy";
 
 
-const enum Tab {
-	Agreement,
-	Policies,
-	Issues,
-	Chat,
-}
-
-const tabs=[
-	{ tab: Tab.Agreement, label: "Agreement" },
-	{ tab: Tab.Policies, label: "Policies" },
-	{ tab: Tab.Issues, label: "Issues", disabled: true },
-	{ tab: Tab.Chat, label: "Chat", disabled: true }
-];
+const modes={
+	"Agreement": false,
+	"Policies": false,
+	"Issues": false,
+	"Chat": true
+} as const;
 
 
 function ToolBody() {
@@ -55,7 +48,7 @@ function ToolBody() {
 	const { clearCache }=useCache();
 
 
-	const [tab, setTab]=useState<Tab | Source>(Tab.Agreement); // !!!
+	const [tab, setTab]=useState<keyof typeof modes | Source>("Issues");
 	const [language, setLanguage]=useState<Language>(defaultLanguage);
 
 
@@ -63,12 +56,12 @@ function ToolBody() {
 
 		<ToolBar
 
-			menu={<ButtonGroup>{tabs.map(({ tab: selected, label, disabled }) =>
-				<Button key={selected} isSelected={tab === selected} isDisabled={disabled}
+			menu={<ButtonGroup>{Object.entries(modes).map(([name, disabled]) =>
+				<Button key={name} isSelected={tab === name} isDisabled={disabled}
 
-					onClick={() => setTab(selected)}
+					onClick={() => setTab(name)}
 
-				>{label}</Button>
+				>{name}</Button>
 			)}</ButtonGroup>}
 
 
@@ -77,7 +70,8 @@ function ToolBody() {
 				<ToolLanguage locale={language} onChange={setLanguage}/>
 
 				<ToolMenu actions={{
-					"Clear Cache": observer => execute(observer, { type: "clear" }).then(clearCache)
+					"Analyse Agreement": observer => {},
+					"Clear All": observer => execute(observer, { type: "clear" }).then(clearCache)
 				}}/>
 
 			</ButtonGroup>}
@@ -87,10 +81,10 @@ function ToolBody() {
 
 		{
 
-			tab === Tab.Agreement ? <ToolAgreement language={language}/>
-				: tab === Tab.Policies ? <ToolPolicies onClick={setTab}/>
-					: tab === Tab.Issues ? <ToolIssues/>
-						: tab === Tab.Chat ? <ToolChat/>
+			tab === "Agreement" ? <ToolAgreement language={language}/>
+				: tab === "Policies" ? <ToolPolicies onClick={setTab}/>
+					: tab === "Issues" ? <ToolIssues/>
+						: tab === "Chat" ? <ToolChat/>
 							: <ToolPolicy source={tab} language={language}/>
 
 		}

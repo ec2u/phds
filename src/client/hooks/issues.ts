@@ -15,32 +15,33 @@
  */
 
 import { useEffect, useState } from "react";
-import { Catalog } from "../../shared/documents";
+import { Issue } from "../../shared/issues";
 import { Activity, Status } from "../../shared/tasks";
 import { useCache } from "./cache";
 import { execute } from "./index";
 
-export function usePolicies(): Status<Catalog> {
+
+export function useIssues(): Status<ReadonlyArray<Issue>> {
 
 	const { getCache, setCache }=useCache();
 
-	const key="policies";
-	const cached=getCache<Catalog>(key);
+	const key="issues";
+	const cached=getCache<ReadonlyArray<Issue>>(key);
 
-	const [policies, setPolicies]=useState<Status<Catalog>>(cached || Activity.Submitting);
+	const [issues, setIssues]=useState<Status<ReadonlyArray<Issue>>>(cached || Activity.Submitting);
 
-	const updatePolicies=(policies: Status<Catalog>) => {
-		setPolicies(policies);
-		setCache(key, policies);
+	const updateIssues=(issues: Status<ReadonlyArray<Issue>>) => {
+		setIssues(issues);
+		setCache(key, issues);
 	};
 
 	useEffect(() => {
 
-		if ( cached ) { setPolicies(cached); } else {
+		if ( cached ) { setIssues(cached); } else {
 
-			execute<Catalog>(updatePolicies, {
+			execute<ReadonlyArray<Issue>>(updateIssues, {
 
-				type: "policies"
+				type: "issues"
 
 			});
 
@@ -48,5 +49,5 @@ export function usePolicies(): Status<Catalog> {
 
 	}, [cached]);
 
-	return policies;
+	return issues;
 }

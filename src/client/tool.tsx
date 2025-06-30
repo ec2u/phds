@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import ForgeReconciler, { Box, Button, ButtonGroup, Inline, Stack, useConfig } from "@forge/react";
+import ForgeReconciler, { Box, Button, ButtonGroup, Inline, useConfig } from "@forge/react";
 import React, { useState } from "react";
 import { Source } from "../shared/documents";
 import { defaultLanguage, Language } from "../shared/languages";
@@ -22,7 +22,7 @@ import { ToolCache } from "./hooks/cache";
 import { ToolBar } from "./views/layouts/bar";
 import ToolPanel from "./views/layouts/panel";
 import { ToolAgreement } from "./views/lenses/agreement";
-import ToolIssue from "./views/lenses/issue";
+import { ToolIssues } from "./views/lenses/issues";
 import { ToolLanguage } from "./views/lenses/language";
 import { ToolPolicies } from "./views/lenses/policies";
 import { ToolPolicy } from "./views/lenses/policy";
@@ -31,7 +31,7 @@ import { ToolPolicy } from "./views/lenses/policy";
 const modes={
 	"agreement": "Agreement",
 	"references": "References"
-};
+} as const;
 
 
 // const useSubmit=() => {
@@ -121,14 +121,7 @@ function ToolTool() {
 
 			/>}>
 
-				<Stack space={"space.200"}>
-
-					<ToolIssue/>
-					<ToolIssue/>
-					<ToolIssue/>
-					<ToolIssue/>
-
-				</Stack>
+				<ToolIssues/>
 
 			</ToolPanel>
 

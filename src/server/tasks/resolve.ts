@@ -14,26 +14,21 @@
  * limitations under the License.
  */
 
-import { Source } from "./documents";
+import { storage } from "@forge/api";
+import { Activity, ResolveTask } from "../../shared/tasks";
+import { setStatus } from "../async";
+import { issueKey } from "../tools/cache";
 
-export interface Issue {
+export async function resolve(job: string, page: string, { issues: ids }: ResolveTask): Promise<void> {
 
-	readonly id: string;
+	await setStatus(job, Activity.Purging);
 
-	readonly priority: number; // 0..1
-	readonly title: string;
-	readonly description: ReadonlyArray<string | Reference>;
+	// remove individual issue entries
 
-}
+	for (const issueId of ids) {
+		await storage.delete(issueKey(page, issueId));
+	}
 
-export interface Reference {
-
-	readonly source: Source;
-
-	readonly offset: number;
-	readonly length: number;
-
-	readonly title: string;
-	readonly excerpt: string;
+	await setStatus(job, undefined);
 
 }
