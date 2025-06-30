@@ -15,13 +15,21 @@
  */
 
 import { useEffect, useState } from "react";
+import { isArray } from "../../shared";
 import { Issue } from "../../shared/issues";
 import { Activity, Status } from "../../shared/tasks";
 import { useCache } from "./cache";
 import { execute } from "./index";
 
+export interface IssuesActions {
+	refresh: () => void;
+	resolve: (issues: ReadonlyArray<string>) => Promise<void>;
+}
 
-export function useIssues(): Status<ReadonlyArray<Issue>> {
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+export function useIssues(): [Status<ReadonlyArray<Issue>>, IssuesActions] {
 
 	const { getCache, setCache }=useCache();
 
@@ -32,7 +40,29 @@ export function useIssues(): Status<ReadonlyArray<Issue>> {
 
 	const updateIssues=(issues: Status<ReadonlyArray<Issue>>) => {
 		setIssues(issues);
-		setCache(key, issues);
+		if ( isArray<Issue>(issues) ) {
+			setCache(key, issues);
+		}
+	};
+
+	const refresh=() => {
+		execute<ReadonlyArray<Issue>>(updateIssues, {
+			type: "issues",
+			refresh: true
+		});
+	};
+
+	const resolve=(ids: ReadonlyArray<string>): Promise<void> => {
+		return execute<void>(() => {}, {
+			type: "resolve",
+			issues: ids
+		}).then(() => { // remove resolved issues from local cache
+
+			if ( isArray<Issue>(issues) ) {
+				updateIssues((issues.filter(issue => !ids.includes(issue.id))));
+			}
+
+		});
 	};
 
 	useEffect(() => {
@@ -49,5 +79,5 @@ export function useIssues(): Status<ReadonlyArray<Issue>> {
 
 	}, [cached]);
 
-	return issues;
+	return [issues, { refresh, resolve }];
 }

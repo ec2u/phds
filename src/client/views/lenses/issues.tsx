@@ -15,7 +15,7 @@
  */
 
 
-import { Button, EmptyState, Stack } from "@forge/react";
+import { Box, Button, EmptyState, Inline, Stack, Text, xcss } from "@forge/react";
 import React from "react";
 import { isTrace } from "../../../shared";
 import { isActivity } from "../../../shared/tasks";
@@ -26,12 +26,7 @@ import { ToolTrace } from "./trace";
 
 export function ToolIssues() {
 
-	const issues=useIssues();
-
-
-	function analyze() {
-
-	}
+	const [issues, { refresh, resolve }]=useIssues();
 
 
 	if ( isActivity(issues) ) {
@@ -44,18 +39,27 @@ export function ToolIssues() {
 
 	} else if ( !issues.length ) {
 
-		return <EmptyState
-			header={"No Open Issues"}
-			primaryAction={<Button appearance={"discovery"} iconBefore={"lightbulb"}
-				onClick={analyze}
-			>Analyse Agreement</Button>}
-		/>;
+		return <EmptyState header={"No Open Issues"} primaryAction={
+			<Button appearance={"discovery"} iconBefore={"lightbulb"} onClick={refresh}>Analyse Agreement</Button>
+		}/>;
 
 	} else {
 
-		return <Stack space="space.200">{[...issues]
-			.sort((a, b) => b.priority - a.priority || a.title.localeCompare(b.title))
-			.map(issue => <ToolIssue key={issue.id} issue={issue}/>)}</Stack>;
+		return <Stack space="space.200">
+
+			<Inline>
+				<Box xcss={xcss({ flexGrow: 1 })}>
+					<Text as={"strong"}>{`${issues.length} open issue${issues.length === 1 ? "" : "s"}`}</Text>
+				</Box>
+				<Button appearance={"discovery"} iconBefore={"lightbulb"} onClick={refresh}>Refresh Analysis</Button>
+			</Inline>
+
+			{[...issues]
+				.sort((a, b) => b.priority - a.priority || a.title.localeCompare(b.title))
+				.map(issue => <ToolIssue key={issue.id} issue={issue} resolve={resolve}/>)
+			}
+
+		</Stack>;
 
 	}
 

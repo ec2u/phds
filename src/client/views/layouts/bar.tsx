@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { Box, Inline } from "@forge/react";
+import { Box, Inline, xcss } from "@forge/react";
 import React, { ReactNode } from "react";
 
 export function ToolBar({
@@ -29,7 +29,7 @@ export function ToolBar({
 
 }) {
 
-	return <Box xcss={{
+	return <Box xcss={xcss({
 
 		paddingBottom: "space.200",
 		marginBottom: "space.300",
@@ -38,7 +38,7 @@ export function ToolBar({
 		borderColor: "color.border.accent.gray",
 		borderBottomStyle: "solid"
 
-	}}>
+	})}>
 
 		<Inline>
 

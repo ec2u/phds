@@ -18,7 +18,7 @@ import ForgeReconciler, { Button, ButtonGroup, useConfig, useProductContext } fr
 import React, { useState } from "react";
 import { Source } from "../shared/documents";
 import { defaultLanguage, Language } from "../shared/languages";
-import { ToolCache, useCache } from "./hooks/cache";
+import { ToolCache } from "./hooks/cache";
 import { ToolBar } from "./views/layouts/bar";
 import { ToolAgreement } from "./views/lenses/agreement";
 import { ToolChat } from "./views/lenses/chat";
@@ -43,10 +43,8 @@ function ToolBody() {
 
 	const body=context?.extension?.macro?.body;
 
-	const { clearCache }=useCache();
 
-
-	const [mode, setMode]=useState<keyof typeof modes | Source>("Issues");
+	const [mode, setMode]=useState<keyof typeof modes | Source>("Agreement");
 	const [language, setLanguage]=useState<Language>(defaultLanguage);
 
 

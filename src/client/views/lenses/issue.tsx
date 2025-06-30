@@ -16,39 +16,35 @@
 
 import { Box, Button, Heading, Inline, Stack, Text, xcss } from "@forge/react";
 import React, { useState } from "react";
-import { isArray, isString } from "../../../shared";
+import { isString, isTrace } from "../../../shared";
 import { Issue } from "../../../shared/issues";
-import { isActivity, Status } from "../../../shared/tasks";
-import { execute } from "../../hooks";
-import { useCache } from "../../hooks/cache";
+import { Activity, isActivity, Status } from "../../../shared/tasks";
 import { ToolReference } from "./reference";
+import { ToolTrace } from "./trace";
 
 
 export default function ToolIssue({
 
-	issue
+	issue,
+	resolve
 
 }: {
 
-	issue: Issue
+	issue: Issue;
+	resolve: (issueIds: ReadonlyArray<string>) => Promise<void>
 
 }) {
 
-	const { getCache, setCache }=useCache();
 	const [resolving, setResolving]=useState<Status<void>>();
 
 	const active=isActivity(resolving);
 
-	function resolve() { // !!! factor
-		execute(setResolving, { type: "resolve", issues: [issue.id] }).then(() => {
-			// Remove resolved issue from cache using the same key as useIssues
-			const cached=getCache<ReadonlyArray<Issue>>("issues");
-			if ( isArray(cached) ) {
-				const updatedIssues=cached.filter(cachedIssue => cachedIssue.id !== issue.id);
-				setCache("issues", updatedIssues);
-			}
-		});
+
+	function doResolve() {
+		setResolving(Activity.Submitting);
+		resolve([issue.id]).then(setResolving).catch(setResolving);
 	}
+
 
 	return <Box xcss={xcss({
 
@@ -63,14 +59,14 @@ export default function ToolIssue({
 
 		opacity: active ? "opacity.disabled" : undefined
 
-	})}>
+	})}>{
 
-		<Stack space={"space.100"}>
+		isTrace(resolving) ? <ToolTrace trace={resolving}/> : <Stack space={"space.100"}>
 
 			<Inline>
 				<Box xcss={{ flexGrow: 1 }}><Heading size={"small"}>{issue.title}</Heading></Box>
 				<Button isDisabled={active} appearance={"default"} iconBefore={"check"}
-					onClick={resolve}>Resolve</Button>
+					onClick={doResolve}>Resolve</Button>
 			</Inline>
 
 			<Text>{issue.description.map((item, index) => isString(item)
@@ -80,5 +76,5 @@ export default function ToolIssue({
 
 		</Stack>
 
-	</Box>;
+	}</Box>;
 }

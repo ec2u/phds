@@ -21,6 +21,7 @@ import { defaultLanguage, Language } from "../shared/languages";
 import { ToolCache } from "./hooks/cache";
 import { ToolBar } from "./views/layouts/bar";
 import ToolPanel from "./views/layouts/panel";
+import { ToolClear } from "./views/lenses/_clear";
 import { ToolAgreement } from "./views/lenses/agreement";
 import { ToolIssues } from "./views/lenses/issues";
 import { ToolLanguage } from "./views/lenses/language";
@@ -117,7 +118,7 @@ function ToolTool() {
 					</ButtonGroup>
 				}
 
-				more={<Button>Refresh</Button>}
+				more={<ToolClear/>}
 
 			/>}>
 
