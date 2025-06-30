@@ -22,6 +22,7 @@ import { Language } from "./languages";
 export type Task=
 	| PoliciesTask
 	| PolicyTask
+	| ClearTask
 	;
 
 
@@ -104,5 +105,11 @@ export interface PolicyTask extends Provider<Document> {
 
 	readonly source: Source;
 	readonly language: Language;
+
+}
+
+export interface ClearTask extends Provider<void> {
+
+	readonly type: "clear";
 
 }

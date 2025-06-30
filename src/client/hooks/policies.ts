@@ -36,15 +36,17 @@ export function usePolicies(): Status<Catalog> {
 
 	useEffect(() => {
 
-		if ( !cached ) {
+		if ( cached ) { setPolicies(cached); } else {
+
 			execute<Catalog>(updatePolicies, {
 
 				type: "policies"
 
 			});
+
 		}
 
-	}, []);
+	}, [cached]);
 
 	return policies;
 }

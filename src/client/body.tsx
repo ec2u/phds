@@ -18,12 +18,14 @@ import ForgeReconciler, { Button, ButtonGroup, useConfig, useProductContext } fr
 import React, { useState } from "react";
 import { Source } from "../shared/documents";
 import { defaultLanguage, Language } from "../shared/languages";
-import { ToolCache } from "./hooks/cache";
+import { execute } from "./hooks";
+import { ToolCache, useCache } from "./hooks/cache";
 import { ToolBar } from "./views/layouts/bar";
 import { ToolAgreement } from "./views/lenses/agreement";
 import { ToolChat } from "./views/lenses/chat";
 import { ToolIssues } from "./views/lenses/issues";
 import { ToolLanguage } from "./views/lenses/language";
+import { ToolMenu } from "./views/lenses/menu";
 import { ToolPolicies } from "./views/lenses/policies";
 import { ToolPolicy } from "./views/lenses/policy";
 
@@ -50,6 +52,8 @@ function ToolBody() {
 
 	const body=context?.extension?.macro?.body;
 
+	const { clearCache }=useCache();
+
 
 	const [tab, setTab]=useState<Tab | Source>(Tab.Agreement); // !!!
 	const [language, setLanguage]=useState<Language>(defaultLanguage);
@@ -68,7 +72,15 @@ function ToolBody() {
 			)}</ButtonGroup>}
 
 
-			more={<ToolLanguage locale={language} onChange={setLanguage}/>}
+			more={<ButtonGroup>
+
+				<ToolLanguage locale={language} onChange={setLanguage}/>
+
+				<ToolMenu actions={{
+					"Clear Cache": observer => execute(observer, { type: "clear" }).then(clearCache)
+				}}/>
+
+			</ButtonGroup>}
 
 		/>
 

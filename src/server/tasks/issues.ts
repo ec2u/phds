@@ -13,3 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+import { PoliciesTask } from "../../shared/tasks";
+
+export async function issues(job: string, page: string, {}: PoliciesTask) {}

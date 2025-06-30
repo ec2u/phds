@@ -14,35 +14,16 @@
  * limitations under the License.
  */
 
-import { asTrace } from "../../shared";
-import { Activity, isActivity, Observer, Provider, Task } from "../../shared/tasks";
-import { monitorTask, submitTask } from "../ports/tasks";
+import { Activity, ClearTask } from "../../shared/tasks";
+import { setStatus } from "../async";
+import { clearPageCache } from "../tools/cache";
 
+export async function clear(job: string, page: string, {}: ClearTask) {
 
-export async function execute<T>(observer: Observer<T>, task: Task & Provider<T>) {
+	await setStatus(job, Activity.Purging);
 
-	try {
+	await clearPageCache(page);
 
-		observer(Activity.Submitting);
-
-		const job=await submitTask(task);
-
-		const poll=setInterval(async () => {
-
-			const status=await monitorTask<T>(job);
-
-			if ( !isActivity(status) ) {
-				clearInterval(poll);
-			}
-
-			observer(status);
-
-		}, 1000);
-
-	} catch ( error ) {
-
-		observer(asTrace(error));
-
-	}
+	await setStatus(job, undefined);
 
 }

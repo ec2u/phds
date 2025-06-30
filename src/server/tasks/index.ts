@@ -18,6 +18,7 @@ import Resolver from "@forge/resolver";
 import { asTrace } from "../../shared";
 import { setStatus, Specs } from "../async";
 import { dirty, purge } from "../tools/cache";
+import { clear } from "./clear";
 import { policies } from "./policies";
 import { policy } from "./policy";
 
@@ -61,6 +62,10 @@ export const handler=new Resolver()
 				case "policy":
 
 					return await policy(job, page, task);
+
+				case "clear":
+
+					return await clear(job, page, task);
 
 			}
 

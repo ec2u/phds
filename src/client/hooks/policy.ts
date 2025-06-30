@@ -38,7 +38,8 @@ export function usePolicy(source: Source, language: Language): Status<Document> 
 
 	useEffect(() => {
 
-		if ( !cached ) {
+		if ( cached ) { setPolicy(cached); } else {
+
 			execute<Document>(updatePolicy, {
 
 				type: "policy",
@@ -47,9 +48,10 @@ export function usePolicy(source: Source, language: Language): Status<Document> 
 				language
 
 			});
+
 		}
 
-	}, []);
+	}, [cached, source, language]);
 
 	return policy;
 

@@ -96,7 +96,7 @@ export async function purge(job: string): Promise<void> {
 
 		const query=storage.query()
 			.where("key", { condition: "STARTS_WITH", value: "policy:" })
-			.limit(1000);
+			.limit(100);
 
 		if ( cursor ) {
 			query.cursor(cursor);
@@ -136,4 +136,27 @@ export async function purge(job: string): Promise<void> {
 			await Promise.all(entries.map(result => storage.delete(result.key)));
 		}
 	}));
+}
+
+export async function clearPageCache(page: string) {
+	// get all cached policy documents for the target page
+	const query=storage.query()
+		.where("key", { condition: "STARTS_WITH", value: "policy:" })
+		.limit(100);
+
+	let allResults: Array<{ key: string; value: any }>=[];
+	let cursor: string | undefined;
+
+	do {
+		const batchQuery=cursor ? query.cursor(cursor) : query;
+		const batch=await batchQuery.getMany();
+		allResults.push(...batch.results);
+		cursor=batch.nextCursor;
+	} while ( cursor );
+
+	// filter entries that belong to the target page
+	const pageEntries=allResults.filter(result => policyKeyPage(result.key) === page);
+
+	// delete all cache entries for this page
+	await Promise.all(pageEntries.map(result => storage.delete(result.key)));
 }
