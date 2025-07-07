@@ -22,15 +22,7 @@ const client=new Langfuse();
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-export async function retrievePrompt({
-
-	name,
-
-}: {
-
-	name: string;
-
-}): Promise<TextPromptClient> {
+export async function retrievePrompt(name: string): Promise<TextPromptClient> {
 
 	try {
 

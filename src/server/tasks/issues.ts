@@ -49,7 +49,7 @@ export async function issues(job: string, page: string, { refresh=false, agreeme
 
 	await setStatus(job, Activity.Analyzing);
 
-	const prompt=await retrievePrompt({ name: "INCONSISTENCY_DETECTION" });
+	const prompt=await retrievePrompt("INCONSISTENCY_DETECTION");
 
 
 	// upload the agreement text

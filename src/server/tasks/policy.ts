@@ -66,7 +66,7 @@ async function extract(job: string, page: string, source: string): Promise<Docum
 
 	await setStatus(job, Activity.Prompting);
 
-	const prompt=await retrievePrompt({ name: "PDF_TO_MD" });
+	const prompt=await retrievePrompt("PDF_TO_MD");
 
 
 	await setStatus(job, Activity.Extracting);
@@ -124,9 +124,7 @@ async function translate(job: string, page: string, source: string, document: Do
 
 	await setStatus(job, Activity.Prompting);
 
-	const translate=await retrievePrompt({
-		name: "TRANSLATION"
-	});
+	const translate=await retrievePrompt("TRANSLATION");
 
 	await setStatus(job, Activity.Translating);
 
@@ -142,9 +140,7 @@ async function translate(job: string, page: string, source: string, document: Do
 
 	await setStatus(job, Activity.Prompting);
 
-	const refine=await retrievePrompt({
-		name: "TRANSLATION_IMPROVEMENT"
-	});
+	const refine=await retrievePrompt("TRANSLATION_IMPROVEMENT");
 
 
 	await setStatus(job, Activity.Refining);
