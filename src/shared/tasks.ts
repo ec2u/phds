@@ -136,6 +136,7 @@ export interface ResolveTask extends Provider<void> {
 
 	readonly type: "resolve";
 
+	readonly reopen?: boolean;
 	readonly issues: ReadonlyArray<string>; // issue ids
 
 }

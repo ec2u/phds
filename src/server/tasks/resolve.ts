@@ -19,11 +19,11 @@ import { Activity, ResolveTask } from "../../shared/tasks";
 import { setStatus } from "../async";
 import { issueKey } from "../tools/cache";
 
-export async function resolve(job: string, page: string, { issues: ids }: ResolveTask): Promise<void> {
+export async function resolve(job: string, page: string, { issues: ids, reopen=false }: ResolveTask): Promise<void> {
 
 	await setStatus(job, Activity.Purging);
 
-	// mark individual issues as resolved
+	// mark individual issues as resolved or reopen them
 
 	for (const issueId of ids) {
 
@@ -31,7 +31,12 @@ export async function resolve(job: string, page: string, { issues: ids }: Resolv
 		const issue=await storage.get(key);
 
 		if ( issue ) {
-			await storage.set(key, { ...issue, resolved: new Date().toISOString() });
+
+			await storage.set(key, {
+				...issue,
+				resolved: reopen ? undefined : new Date().toISOString()
+			});
+
 		}
 
 	}

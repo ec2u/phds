@@ -52,12 +52,11 @@ export default function ToolIssue({
 
 	const active=mode === "updating";
 	const resolved=issue.resolved !== undefined;
-	const disabled=active || resolved;
 
 
 	function resolve() {
 		setMode("updating");
-		actions.resolve([issue.id]).then(() => setMode("reading"));
+		actions.resolve([issue.id], resolved).then(() => setMode("reading"));
 	}
 
 	function annotate() {
@@ -104,14 +103,24 @@ export default function ToolIssue({
 
 				<Box xcss={{ flexGrow: 1 }}><Heading size={"small"}>{issue.title}</Heading></Box>
 
+				{resolved && <Text size="small" color="color.text.subtlest">
+                    Resolved on {new Date(issue.resolved).toLocaleString(undefined, {
+					year: "numeric",
+					month: "numeric",
+					day: "numeric",
+					hour: "2-digit",
+					minute: "2-digit"
+				})}
+                </Text>}
+
 				<ButtonGroup>
 
 					{mode === "annotating" ? <>
 						<Button onClick={save}>Save</Button>
 						<Button appearance="subtle" onClick={cancel}>Cancel</Button>
 					</> : <>
-						<Button isDisabled={disabled} onClick={resolve}>Resolve</Button>
-						<Button onClick={annotate}>Annotate</Button>
+						<Button isDisabled={active} onClick={resolve}>{resolved ? "Reopen" : "Resolve"}</Button>
+						<Button isDisabled={active} onClick={annotate}>Annotate</Button>
 					</>}
 
 				</ButtonGroup>

@@ -88,7 +88,7 @@ export async function issues(job: string, page: string, { refresh=false, agreeme
 
 	const allIssues=results.map(result => result.value as Issue);
 
-	console.log("Issues Report:\n", report(allIssues));
+	console.log("Issues Report:\n", report(allIssues)); // !!! include report into prompt
 
 
 

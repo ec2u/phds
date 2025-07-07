@@ -23,7 +23,7 @@ import { execute } from "./index";
 
 export interface IssuesActions {
 	refresh: () => void;
-	resolve: (issues: ReadonlyArray<string>) => Promise<void>;
+	resolve: (issues: ReadonlyArray<string>, reopen?: boolean) => Promise<void>;
 	annotate: (issue: string, notes: string) => Promise<void>;
 }
 
@@ -77,18 +77,20 @@ export function useIssues(agreement: string): [Status<ReadonlyArray<Issue>>, Iss
 		});
 	};
 
-	const resolve=(ids: ReadonlyArray<string>): Promise<void> => {
+	const resolve=(ids: ReadonlyArray<string>, reopen?: boolean): Promise<void> => {
 		return execute<void>(() => {}, {
 
 			type: "resolve",
-			issues: ids
 
-		}).then(() => { // mark resolved issues in local cache
+			issues: ids,
+			reopen
+
+		}).then(() => { // mark resolved/reopened issues in local cache
 
 			if ( isArray<Issue>(issues) ) {
 				update(issues.map(issue =>
 					ids.includes(issue.id)
-						? { ...issue, resolved: new Date().toISOString() }
+						? { ...issue, resolved: reopen ? undefined : new Date().toISOString() }
 						: issue
 				));
 			}

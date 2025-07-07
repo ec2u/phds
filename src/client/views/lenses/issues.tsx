@@ -69,12 +69,29 @@ export function ToolIssues({
 
 		const open=issues.filter(issue => !issue.resolved);
 		const resolved=issues.filter(issue => issue.resolved);
-		const total=issues.length;
 
 		const options={
-			open: { label: `${open.length} open ${issue(open.length)}`, value: "open" as const },
-			resolved: { label: `${resolved.length} resolved ${issue(resolved.length)}`, value: "resolved" as const },
-			all: { label: `${total} total ${issue(total)}`, value: "all" as const }
+			open: {
+
+				label: `${open.length === 0 ? "No" : open.length} open ${issue(open.length)}`,
+				value: "open" as const,
+				isDisabled: open.length === 0
+
+			},
+			resolved: {
+
+				label: `${resolved.length === 0 ? "No" : resolved.length} resolved ${issue(resolved.length)}`,
+				value: "resolved" as const,
+				isDisabled: resolved.length === 0
+
+			},
+			all: {
+
+				label: `${issues.length === 0 ? "No" : issues.length} total ${issue(issues.length)}`,
+				value: "all" as const,
+				isDisabled: issues.length === 0
+
+			}
 		};
 
 
@@ -104,7 +121,35 @@ export function ToolIssues({
 			</Inline>
 
 			{[...(filter === "open" ? open : filter === "resolved" ? resolved : issues)]
-				.sort((x, y) => y.priority - x.priority || x.title.localeCompare(y.title))
+				.sort((x, y) => {
+
+					// first: open issues before resolved issues
+
+					const xIsOpen=!x.resolved;
+					const yIsOpen=!y.resolved;
+
+					if ( xIsOpen !== yIsOpen ) { return xIsOpen ? -1 : 1; }
+
+					// second: for resolved issues, sort by resolution timestamp (desc)
+
+					if ( x.resolved && y.resolved ) {
+
+						const xResolved=new Date(x.resolved).getTime();
+						const yResolved=new Date(y.resolved).getTime();
+
+						if ( xResolved !== yResolved ) { return yResolved - xResolved; }
+
+					}
+
+					// third: priority (desc)
+
+					if ( x.priority !== y.priority ) { return y.priority - x.priority; }
+
+					// fourth: title (asc)
+
+					return x.title.localeCompare(y.title);
+
+				})
 				.map(issue => <ToolIssue key={issue.id} issue={issue} actions={actions}/>)
 			}
 
