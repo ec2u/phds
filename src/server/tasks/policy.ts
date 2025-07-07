@@ -91,7 +91,7 @@ async function extract(job: string, page: string, source: string): Promise<Docum
 
 	}>({
 
-		prompt: prompt.compile(),
+		prompt: prompt,
 		files: [file],
 
 		schema: {
@@ -129,12 +129,16 @@ async function translate(job: string, page: string, source: string, document: Do
 	await setStatus(job, Activity.Translating);
 
 	const translated=await process({
-		prompt: translate.compile({
+
+		prompt: translate,
+
+		variables: {
 
 			target_language: language,
 			source_content: document.content
 
-		})
+		}
+
 	});
 
 
@@ -153,14 +157,13 @@ async function translate(job: string, page: string, source: string, document: Do
 
 	}=await process({
 
-		prompt: refine.compile({
+		prompt: refine,
 
-				target_language: language,
-				source_content: document.content,
-				target_content: translated
-
-			}
-		),
+		variables: {
+			target_language: language,
+			source_content: document.content,
+			target_content: translated
+		},
 
 		schema: {
 			type: SchemaType.OBJECT,

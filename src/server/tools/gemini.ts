@@ -16,7 +16,8 @@
 
 import { GoogleGenerativeAI, ResponseSchema } from "@google/generative-ai";
 import { FileMetadataResponse, GoogleAIFileManager } from "@google/generative-ai/server";
-import { asTrace, isUndefined } from "../../shared";
+import { TextPromptClient } from "langfuse";
+import { asTrace, isObject, isString, isUndefined } from "../../shared";
 import { secret } from "../index";
 import { json, text } from "./attachments";
 
@@ -89,44 +90,71 @@ export async function upload({
 
 export async function process({
 	prompt,
+	variables,
 	files
 }: {
-	prompt: string
+	prompt: string | TextPromptClient
+	variables?: Record<string, string>
 	files?: ReadonlyArray<FileMetadataResponse>
 }): Promise<string>;
 
 export async function process<T>({
 	prompt,
-	schema,
-	files
+	variables,
+	files,
+	schema
 }: {
-	prompt: string
-	schema: ResponseSchema
+	prompt: string | TextPromptClient
+	variables?: Record<string, string>
 	files?: ReadonlyArray<FileMetadataResponse>
+	schema: ResponseSchema
 }): Promise<T>;
 
 export async function process({
 	prompt,
-	schema,
-	files
+	variables,
+	files,
+	schema
 }: {
-	prompt: string
+	prompt: string | TextPromptClient
 	schema?: ResponseSchema
 	files?: ReadonlyArray<FileMetadataResponse>
+	variables?: Record<string, string>
 }): Promise<string | any> {
 
 	try {
 
+
+		function compile(prompt: string, variables: Record<string, string>) {
+			return prompt.replace(/{{(\w+)}}/g, (_, variable) => {
+
+				const value=variables[variable];
+
+				if ( value === undefined ) {
+					throw new Error(`undefined variable <${variable}>`);
+				}
+
+				return value;
+
+			});
+		}
+
+
 		const session=client.getGenerativeModel({
 
 			model: model,
-			systemInstruction: prompt
+			systemInstruction: isString(prompt)
+				? compile(prompt, variables ?? {})
+				: prompt.compile(variables)
 
 		}).startChat({
 
 			generationConfig: {
 
 				...setup,
+				...(!isString(prompt) && isObject(prompt.config) ? Object.fromEntries(
+					Object.entries(prompt.config).filter(([, value]) => isString(value))
+				) : {}),
 
 				responseMimeType: schema ? json : text,
 				responseSchema: schema

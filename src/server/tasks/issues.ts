@@ -104,10 +104,12 @@ export async function issues(job: string, page: string, { refresh=false, agreeme
 
 	}>({
 
-		prompt: prompt.compile({
+		prompt: prompt,
+
+		variables: {
 			document_name: "agreement",
 			policy_name: policyFile.displayName!
-		}),
+		},
 
 		files: [
 
