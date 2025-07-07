@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { List, ListItem, Pressable, xcss } from "@forge/react";
+import { EmptyState, List, ListItem, Pressable, xcss } from "@forge/react";
 import React from "react";
 import { isTrace } from "../../../shared";
 import { Source } from "../../../shared/documents";
@@ -42,6 +42,12 @@ export function ToolPolicies({
 	} else if ( isTrace(policies) ) {
 
 		return <ToolTrace trace={policies}/>;
+
+	} else if ( !policies.length ) {
+
+		return <EmptyState header={"No Policy Documents"}
+			description={"Upload PDF policy documents to the attachments area."}
+		/>;
 
 	} else {
 

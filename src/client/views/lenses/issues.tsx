@@ -60,10 +60,9 @@ export function ToolIssues({
 
 	} else if ( !issues.length ) {
 
-		return <EmptyState header={"No Open Issues"} primaryAction={
-			<Button appearance={"discovery"} iconBefore={"lightbulb"} onClick={actions.refresh}>Analyse
-				Agreement</Button>
-		}/>;
+		return <EmptyState header={"No Open Issues"}
+			primaryAction={<Button appearance={"discovery"} onClick={actions.refresh}>Analyse Agreement</Button>}
+		/>;
 
 	} else {
 

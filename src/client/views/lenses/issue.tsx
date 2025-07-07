@@ -116,7 +116,7 @@ export default function ToolIssue({
 				<ButtonGroup>
 
 					{mode === "annotating" ? <>
-						<Button onClick={save}>Save</Button>
+						<Button appearance={"primary"} onClick={save}>Save</Button>
 						<Button appearance="subtle" onClick={cancel}>Cancel</Button>
 					</> : <>
 						<Button isDisabled={active} onClick={resolve}>{resolved ? "Reopen" : "Resolve"}</Button>

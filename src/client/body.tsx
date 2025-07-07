@@ -45,7 +45,7 @@ function ToolBody() {
 	const body=context?.extension?.macro?.body;
 
 
-	const [mode, setMode]=useState<keyof typeof modes | Source>("Issues");
+	const [mode, setMode]=useState<keyof typeof modes | Source>("Agreement");
 	const [language, setLanguage]=useState<Language>(defaultLanguage);
 
 
