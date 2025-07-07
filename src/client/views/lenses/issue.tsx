@@ -14,36 +14,64 @@
  * limitations under the License.
  */
 
-import { Box, Button, Heading, Icon, Inline, Stack, Text, xcss } from "@forge/react";
+import {
+	AdfRenderer,
+	Box,
+	Button,
+	ButtonGroup,
+	Heading,
+	Icon,
+	Inline,
+	Stack,
+	Text,
+	TextArea,
+	xcss
+} from "@forge/react";
 import React, { useState } from "react";
-import { isString, isTrace } from "../../../shared";
+import { isString } from "../../../shared";
 import { Issue } from "../../../shared/issues";
-import { Activity, isActivity, Status } from "../../../shared/tasks";
+import { IssuesActions } from "../../hooks/issues";
+import { adf } from "../../tools/text";
 import { ToolReference } from "./reference";
-import { ToolTrace } from "./trace";
 
 
 export default function ToolIssue({
 
 	issue,
-	resolve
+	actions
 
 }: {
 
 	issue: Issue;
-	resolve: (issueIds: ReadonlyArray<string>) => Promise<void>
+	actions: IssuesActions
 
 }) {
 
-	const [resolving, setResolving]=useState<Status<void>>();
+	const [mode, setMode]=useState<"reading" | "annotating" | "updating">("reading");
+	const [notes, setNotes]=useState<string>(issue.annotations || "");
 
-	const active=isActivity(resolving);
+	const active=mode === "updating";
 	const resolved=issue.resolved !== undefined;
+	const disabled=active || resolved;
 
 
-	function doResolve() {
-		setResolving(Activity.Submitting);
-		resolve([issue.id]).then(setResolving).catch(setResolving);
+	function resolve() {
+		setMode("updating");
+		actions.resolve([issue.id]).then(() => setMode("reading"));
+	}
+
+	function annotate() {
+		setMode("annotating");
+	}
+
+	function cancel() {
+		setNotes(issue.annotations || "");
+		setMode("reading");
+	}
+
+	function save() {
+		setMode("updating");
+		actions.annotate(issue.id, notes).then(() => setMode("reading"));
 	}
 
 
@@ -64,21 +92,29 @@ export default function ToolIssue({
 
 	})}>{
 
-		isTrace(resolving) ? <ToolTrace trace={resolving}/> : <Stack space={"space.100"}>
+		<Stack space={"space.100"}>
 
 			<Inline alignBlock={"center"} space={"space.100"}>
 
-				<Inline>{Array.from({ length: 3 }, (_, i) => (
-					<Icon key={i}
-						glyph={i < issue.priority ? "star-filled" : "star"}
-						label={`Priority ${issue.priority}/3`}
-						size={"small"}
-					/>
-				))}</Inline>
+				<Inline>{Array.from({ length: 3 }, (_, i) => <Icon key={i}
+					glyph={i < issue.priority ? "star-filled" : "star"}
+					label={`Priority ${issue.priority}/3`}
+					size={"small"}
+				/>)}</Inline>
 
 				<Box xcss={{ flexGrow: 1 }}><Heading size={"small"}>{issue.title}</Heading></Box>
 
-				<Button isDisabled={active || resolved} appearance={"default"} onClick={doResolve}>Resolve</Button>
+				<ButtonGroup>
+
+					{mode === "annotating" ? <>
+						<Button onClick={save}>Save</Button>
+						<Button appearance="subtle" onClick={cancel}>Cancel</Button>
+					</> : <>
+						<Button isDisabled={disabled} onClick={resolve}>Resolve</Button>
+						<Button onClick={annotate}>Annotate</Button>
+					</>}
+
+				</ButtonGroup>
 
 			</Inline>
 
@@ -86,6 +122,33 @@ export default function ToolIssue({
 				? <React.Fragment key={index}>{item} </React.Fragment>
 				: <ToolReference key={`${item.source}:${item.offset}`} reference={item}/>
 			)}</Text>
+
+			{mode === "annotating" ?
+
+				<TextArea
+					minimumRows={3}
+					resize="vertical"
+					value={notes}
+					onChange={(event) => setNotes(event.target.value)}
+				/>
+
+				: issue.annotations ?
+
+					<Box xcss={xcss({
+						borderWidth: "border.width",
+						borderColor: "color.border.accent.gray",
+						borderTopStyle: "solid",
+						marginTop: "space.100",
+						paddingTop: "space.100"
+					})}>
+
+						<AdfRenderer document={adf(issue.annotations)}/>
+
+					</Box>
+
+					: null
+
+			}
 
 		</Stack>
 

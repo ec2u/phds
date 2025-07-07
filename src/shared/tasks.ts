@@ -24,6 +24,7 @@ export type Task=
 	| PoliciesTask
 	| PolicyTask
 	| IssuesTask
+	| AnnotateTask
 	| ResolveTask
 	| ClearTask
 	;
@@ -119,6 +120,15 @@ export interface IssuesTask extends Provider<ReadonlyArray<Issue>> {
 	readonly refresh?: boolean;
 
 	readonly agreement: string;
+
+}
+
+export interface AnnotateTask extends Provider<void> {
+
+	readonly type: "annotate";
+
+	readonly issue: string; // issue id
+	readonly notes: string; // markdown annotations
 
 }
 

@@ -24,6 +24,7 @@ import { execute } from "./index";
 export interface IssuesActions {
 	refresh: () => void;
 	resolve: (issues: ReadonlyArray<string>) => Promise<void>;
+	annotate: (issue: string, notes: string) => Promise<void>;
 }
 
 
@@ -38,7 +39,7 @@ export function useIssues(agreement: string): [Status<ReadonlyArray<Issue>>, Iss
 
 	const [issues, setIssues]=useState<Status<ReadonlyArray<Issue>>>(cached || Activity.Submitting);
 
-	const updateIssues=(issues: Status<ReadonlyArray<Issue>>) => {
+	const update=(issues: Status<ReadonlyArray<Issue>>) => {
 
 		setIssues(issues);
 
@@ -49,10 +50,30 @@ export function useIssues(agreement: string): [Status<ReadonlyArray<Issue>>, Iss
 	};
 
 	const refresh=() => {
-		execute<ReadonlyArray<Issue>>(updateIssues, {
+		execute<ReadonlyArray<Issue>>(update, {
 			type: "issues",
 			refresh: true,
 			agreement
+		});
+	};
+
+	const annotate=(issue: string, notes: string): Promise<void> => {
+		return execute<void>(() => {}, {
+
+			type: "annotate",
+			issue,
+			notes
+
+		}).then(() => { // update issue with annotations in local cache
+
+			if ( isArray<Issue>(issues) ) {
+				update(issues.map(item =>
+					item.id === issue
+						? { ...item, annotations: notes }
+						: item
+				));
+			}
+
 		});
 	};
 
@@ -65,7 +86,7 @@ export function useIssues(agreement: string): [Status<ReadonlyArray<Issue>>, Iss
 		}).then(() => { // mark resolved issues in local cache
 
 			if ( isArray<Issue>(issues) ) {
-				updateIssues(issues.map(issue =>
+				update(issues.map(issue =>
 					ids.includes(issue.id)
 						? { ...issue, resolved: new Date().toISOString() }
 						: issue
@@ -75,11 +96,12 @@ export function useIssues(agreement: string): [Status<ReadonlyArray<Issue>>, Iss
 		});
 	};
 
+
 	useEffect(() => {
 
 		if ( cached ) { setIssues(cached); } else if ( agreement.trim() !== "" ) {
 
-			execute<ReadonlyArray<Issue>>(updateIssues, {
+			execute<ReadonlyArray<Issue>>(update, {
 
 				type: "issues",
 
@@ -91,5 +113,6 @@ export function useIssues(agreement: string): [Status<ReadonlyArray<Issue>>, Iss
 
 	}, [cached, agreement]);
 
-	return [issues, { refresh, resolve }];
+	return [issues, { refresh, annotate, resolve }];
+
 }

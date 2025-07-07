@@ -46,7 +46,7 @@ export function ToolIssues({
 }) {
 
 	const agreement=useAgreement(language);
-	const [issues, { refresh, resolve }]=useIssues(isContent(agreement) ? agreement.content : "");
+	const [issues, actions]=useIssues(isContent(agreement) ? agreement.content : "");
 	const [filter, setFilter]=useState<"open" | "resolved" | "all">("open");
 
 
@@ -61,7 +61,8 @@ export function ToolIssues({
 	} else if ( !issues.length ) {
 
 		return <EmptyState header={"No Open Issues"} primaryAction={
-			<Button appearance={"discovery"} iconBefore={"lightbulb"} onClick={refresh}>Analyse Agreement</Button>
+			<Button appearance={"discovery"} iconBefore={"lightbulb"} onClick={actions.refresh}>Analyse
+				Agreement</Button>
 		}/>;
 
 	} else {
@@ -98,13 +99,13 @@ export function ToolIssues({
 
 				/>
 
-				<Button appearance={"discovery"} onClick={refresh}>Refresh Analysis</Button>
+				<Button appearance={"discovery"} onClick={actions.refresh}>Refresh Analysis</Button>
 
 			</Inline>
 
 			{[...(filter === "open" ? open : filter === "resolved" ? resolved : issues)]
 				.sort((x, y) => y.priority - x.priority || x.title.localeCompare(y.title))
-				.map(issue => <ToolIssue key={issue.id} issue={issue} resolve={resolve}/>)
+				.map(issue => <ToolIssue key={issue.id} issue={issue} actions={actions}/>)
 			}
 
 		</Stack>;

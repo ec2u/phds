@@ -14,31 +14,24 @@
  * limitations under the License.
  */
 
-import { Instant, Source } from "./documents";
+import { storage } from "@forge/api";
+import { Activity, AnnotateTask } from "../../shared/tasks";
+import { setStatus } from "../async";
+import { issueKey } from "../tools/cache";
 
-export interface Issue {
+export async function annotate(job: string, page: string, { issue: id, notes }: AnnotateTask): Promise<void> {
 
-	readonly id: string;
+	await setStatus(job, Activity.Caching);
 
-	readonly created: Instant;
-	readonly resolved?: Instant;
+	// add annotations to the specific issue
 
-	readonly priority: number; // 1..3 integer
-	readonly title: string;
-	readonly description: ReadonlyArray<string | Reference>;
+	const key=issueKey(page, id);
+	const issue=await storage.get(key);
 
-	readonly annotations?: string; // markdown annotations
+	if ( issue ) {
+		await storage.set(key, { ...issue, annotations: notes });
+	}
 
-}
-
-export interface Reference {
-
-	readonly source: Source;
-
-	readonly title: string;
-	readonly excerpt: string;
-
-	readonly offset: number;
-	readonly length: number;
+	await setStatus(job, undefined);
 
 }
