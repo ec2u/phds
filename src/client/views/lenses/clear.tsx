@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { Button, Modal, ModalBody, ModalFooter, ModalHeader, ModalTitle } from "@forge/react";
+import { Button, LoadingButton, Modal, ModalBody, ModalFooter, ModalHeader, ModalTitle } from "@forge/react";
 import React, { useState } from "react";
 import { isActivity, Status } from "../../../shared/tasks";
 import { execute } from "../../hooks";
@@ -37,13 +37,13 @@ export function ToolClear() {
 
 	return <>
 
-		<Button
-			isDisabled={isActivity(clearing)}
+		<LoadingButton
+			isLoading={isActivity(clearing)}
 			appearance={"default"}
 			onClick={() => setConfirming(true)}
 		>
 			{"Clear"}
-		</Button>
+		</LoadingButton>
 
 		{confirming && <Modal onClose={() => setConfirming(false)}>
 
