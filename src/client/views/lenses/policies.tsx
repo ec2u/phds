@@ -43,10 +43,10 @@ export function ToolPolicies({
 
 		return <ToolTrace trace={policies}/>;
 
-	} else if ( !policies.length ) {
+	} else if ( !Object.keys(policies).length ) {
 
 		return <EmptyState header={"No Policy Documents"}
-			description={"Upload PDF policy documents to the attachments area."}
+			description={"Upload PDF policy documents to the \"Attachments\" area."}
 		/>;
 
 	} else {

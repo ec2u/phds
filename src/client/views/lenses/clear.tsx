@@ -52,7 +52,8 @@ export function ToolClear() {
             </ModalHeader>
 
             <ModalBody>
-                Are you sure you want to clear all cached data? This action cannot be undone.
+                Are you sure you want to clear all cached data? This action will clear the processing
+                history of this page, including translations and issues, and cannot be undone.
             </ModalBody>
 
             <ModalFooter>

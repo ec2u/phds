@@ -75,6 +75,8 @@ export async function policies(job: string, page: string, {}: PoliciesTask) {
 
 	// create catalog (using attachment title, as document title is quite expensive to get upfront)
 
+	console.log(attachments);
+
 	await setStatus(job, attachments.reduce((catalog, attachment) => ({
 		...catalog,
 		[attachment.id]: attachment.title.replace(/\.pdf$/, "")

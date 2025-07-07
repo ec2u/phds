@@ -47,16 +47,31 @@ export function ToolIssues({
 
 	const agreement=useAgreement(language);
 	const [issues, actions]=useIssues(isContent(agreement) ? agreement.content : "");
+
 	const [filter, setFilter]=useState<"open" | "resolved" | "all">("open");
 
 
-	if ( isActivity(issues) ) {
+	if ( isActivity(agreement) ) {
+
+		return <ToolActivity activity={agreement}/>;
+
+	} else if ( isTrace(agreement) ) {
+
+		return <ToolTrace trace={agreement}/>;
+
+	} else if ( isActivity(issues) ) {
 
 		return <ToolActivity activity={issues}/>;
 
 	} else if ( isTrace(issues) ) {
 
 		return <ToolTrace trace={issues}/>;
+
+	} else if ( !agreement.content.trim() ) {
+
+		return <EmptyState header={"No Agreement Text"}
+			description={"Activate \"Edit (E)\" mode to modify."}
+		/>;
 
 	} else if ( !issues.length ) {
 

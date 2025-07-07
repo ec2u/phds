@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { AdfRenderer } from "@forge/react";
+import { AdfRenderer, EmptyState } from "@forge/react";
 import React from "react";
 import { isTrace } from "../../../shared";
 import { Language } from "../../../shared/languages";
@@ -36,8 +36,24 @@ export function ToolAgreement({
 
 	const document=useAgreement(language);
 
-	return isActivity(document) ? <ToolActivity activity={document}/>
-		: isTrace(document) ? <ToolTrace trace={document}/>
-			: <AdfRenderer document={adf(document.content)}/>;
+	if ( isActivity(document) ) {
+
+		return <ToolActivity activity={document}/>;
+
+	} else if ( isTrace(document) ) {
+
+		return <ToolTrace trace={document}/>;
+
+	} else if ( !document.content.trim() ) {
+
+		return <EmptyState header={"No Agreement Text"}
+			description={"Activate \"Edit (E)\" mode to modify."}
+		/>;
+
+	} else {
+
+		return <AdfRenderer document={adf(document.content)}/>;
+
+	}
 
 }

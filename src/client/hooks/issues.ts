@@ -17,7 +17,7 @@
 import { useEffect, useState } from "react";
 import { isArray } from "../../shared";
 import { Issue } from "../../shared/issues";
-import { Activity, Status } from "../../shared/tasks";
+import { Status } from "../../shared/tasks";
 import { useCache } from "./cache";
 import { execute } from "./index";
 
@@ -37,7 +37,7 @@ export function useIssues(agreement: string): [Status<ReadonlyArray<Issue>>, Iss
 	const key="issues";
 	const cached=getCache<ReadonlyArray<Issue>>(key);
 
-	const [issues, setIssues]=useState<Status<ReadonlyArray<Issue>>>(cached || Activity.Submitting);
+	const [issues, setIssues]=useState<Status<ReadonlyArray<Issue>>>(cached ?? []);
 
 	const update=(issues: Status<ReadonlyArray<Issue>>) => {
 
@@ -57,51 +57,53 @@ export function useIssues(agreement: string): [Status<ReadonlyArray<Issue>>, Iss
 		});
 	};
 
-	const annotate=(issue: string, notes: string): Promise<void> => {
-		return execute<void>(() => {}, {
+	const annotate=async (issue: string, notes: string): Promise<void> => {
 
+		await execute<void>(() => { }, {
 			type: "annotate",
 			issue,
 			notes
-
-		}).then(() => { // update issue with annotations in local cache
-
-			if ( isArray<Issue>(issues) ) {
-				update(issues.map(item =>
-					item.id === issue
-						? { ...item, annotations: notes }
-						: item
-				));
-			}
-
 		});
+
+		if ( isArray<Issue>(issues) ) {
+			update(issues.map(item => item.id === issue
+				? { ...item, annotations: notes }
+				: item
+			));
+		}
+
 	};
 
-	const resolve=(ids: ReadonlyArray<string>, reopen?: boolean): Promise<void> => {
-		return execute<void>(() => {}, {
+	const resolve=async (ids: ReadonlyArray<string>, reopen?: boolean): Promise<void> => {
 
+		await execute<void>(() => { }, {
 			type: "resolve",
 
 			issues: ids,
 			reopen
-
-		}).then(() => { // mark resolved/reopened issues in local cache
-
-			if ( isArray<Issue>(issues) ) {
-				update(issues.map(issue =>
-					ids.includes(issue.id)
-						? { ...issue, resolved: reopen ? undefined : new Date().toISOString() }
-						: issue
-				));
-			}
-
 		});
+
+		if ( isArray<Issue>(issues) ) {
+			update(issues.map(issue => ids.includes(issue.id)
+				? { ...issue, resolved: reopen ? undefined : new Date().toISOString() }
+				: issue
+			));
+		}
+
 	};
 
 
 	useEffect(() => {
 
-		if ( cached ) { setIssues(cached); } else if ( agreement.trim() !== "" ) {
+		if ( cached ) {
+
+			setIssues(cached);
+
+		} else if ( agreement.trim() === "" ) {
+
+			setIssues([]);
+
+		} else {
 
 			execute<ReadonlyArray<Issue>>(update, {
 
