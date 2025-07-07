@@ -1,3 +1,4 @@
+from enum import Enum
 from pathlib import Path
 
 from langfuse import observe
@@ -7,10 +8,18 @@ from llm.ports.llm_port import LLMPort
 from prompt.ports.prompt_port import PromptPort
 
 
+class InconsistencySeverity(Enum):
+    HIGH = "High"
+    MEDIUM = "Medium"
+    LOW = "Low"
+
+
 class Inconsistency(BaseModel):
     agreement_content: str
     policy_content: str
-    inconsistency_reason: str
+    inconsistency_title: str
+    inconsistency_description: str
+    severity: InconsistencySeverity
 
 
 class InconsistencyDetectionResult(BaseModel):
@@ -23,10 +32,17 @@ class InconsistencyDetectionService:
         self.prompt_port = prompt_port
 
     @observe
-    async def detect_inconsistencies(self, agreement_path: Path, policy_path: Path) -> list[Inconsistency]:
+    async def detect_inconsistencies(
+        self, agreement_path: Path, policy_path: Path, known_issues: str = None, target_language: str = "EN"
+    ) -> list[Inconsistency]:
         prompt = self.prompt_port.get_prompt(
             prompt_name="INCONSISTENCY_DETECTION",
-            placeholder_values={"document_name": agreement_path.name, "policy_name": policy_path.name},
+            placeholder_values={
+                "document_name": agreement_path.name,
+                "policy_name": policy_path.name,
+                "target_language": target_language,
+                "known_issues": known_issues or "",
+            },
         )
         response = await self.llm_port.generate(
             [agreement_path, policy_path, prompt], response_schema=InconsistencyDetectionResult

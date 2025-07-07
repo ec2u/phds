@@ -23,15 +23,21 @@ async def main():
     logging.info("Beginning file processing...")
     agreement_path = input_dir / "Agreement EN - 250204 Cotutelle Agreement UJ-UTU.pdf"
     policy_path = (
-        input_dir / "Area Policy Turku  EN - Attachment III UTU-Doctoral_training_in_the_Faculty_of_Science.pdf"
+        input_dir / "Area Policy Jena DE - Attachment II Provisions for Doctoral Candidates of the Faculty UJ.pdf"
     )
 
     logging.info("Detecting inconsistencies...")
-    res = await inconsistency_detection_service.detect_inconsistencies(agreement_path, policy_path)
+    known_issues = """
+    Direct Contradiction in Doctoral Thesis Grading at UTU
+    The agreement explicitly states that the Faculty of Science at UTU accepts doctoral theses 'without any grading'. This directly contradicts the policy, which mandates that doctoral theses are graded as 'accepted with honours', 'accepted', or 'rejected' by the Faculty Council at UTU.
+    Document content: The Faculty of Science accepts doctoral theses without any grading.
+    Policy content: The Faculty Council decides on accepting doctoral and licentiate theses. Doctoral theses are graded as "accepted with honours”, “accepted” or “rejected”. The grading is based on the statements from the official examiners. If all examiners estimate in their statements that the doctoral thesis is on the same level as the top 10% of theses in its field internationally, the thesis can be accepted with honours.
+    """
+    res = await inconsistency_detection_service.detect_inconsistencies(agreement_path, policy_path, known_issues)
     logging.info(f"Found {len(res)} inconsistencies")
     for i, inconsistency in enumerate(res):
         logging.info(
-            f"Inconsistency ({i + 1}): {inconsistency.inconsistency_reason}\nDocument content: {inconsistency.agreement_content}\nPolicy content: {inconsistency.policy_content}\n\n\n"
+            f"Inconsistency ({i + 1}): {inconsistency.inconsistency_title} ({inconsistency.severity.value})\n{inconsistency.inconsistency_description}\nDocument content: {inconsistency.agreement_content}\nPolicy content: {inconsistency.policy_content}\n\n\n"
         )
 
 

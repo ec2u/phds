@@ -2,7 +2,7 @@ from pathlib import Path
 
 import langfuse
 from google.genai import Client
-from google.genai.types import GenerateContentConfig, File
+from google.genai.types import GenerateContentConfig, File, UploadFileConfig
 
 from llm.ports.llm_port import LLMPort, T
 
@@ -45,5 +45,9 @@ class GeminiPort(LLMPort):
         return prompt_contents
 
     async def _upload_all_files(self, contents: list[str | Path] | str) -> list[File]:
-        uploaded_files = [await self.client.aio.files.upload(file=c) for c in contents if isinstance(c, Path)]
+        uploaded_files = [
+            await self.client.aio.files.upload(file=c, config=UploadFileConfig(display_name=c.name))
+            for c in contents
+            if isinstance(c, Path)
+        ]
         return uploaded_files
