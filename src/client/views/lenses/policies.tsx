@@ -46,7 +46,7 @@ export function ToolPolicies({
 	} else if ( !Object.keys(policies).length ) {
 
 		return <EmptyState header={"No Policy Documents"}
-			description={"Upload PDF policy documents to the \"Attachments\" area."}
+			description={"Upload PDF documents to the page \"Attachments\" area."}
 		/>;
 
 	} else {

@@ -70,7 +70,7 @@ export function ToolIssues({
 	} else if ( !agreement.content.trim() ) {
 
 		return <EmptyState header={"No Agreement Text"}
-			description={"Activate \"Edit (E)\" mode to modify."}
+			description={"Enter Confluence \"Edit\" mode to modify."}
 		/>;
 
 	} else if ( !issues.length ) {

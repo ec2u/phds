@@ -47,7 +47,7 @@ export function ToolAgreement({
 	} else if ( !document.content.trim() ) {
 
 		return <EmptyState header={"No Agreement Text"}
-			description={"Activate \"Edit (E)\" mode to modify."}
+			description={"Enter Confluence \"Edit\" mode to modify."}
 		/>;
 
 	} else {
