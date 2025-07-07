@@ -78,8 +78,8 @@ export default function ToolIssue({
 
 				<Box xcss={{ flexGrow: 1 }}><Heading size={"small"}>{issue.title}</Heading></Box>
 
-				<Button isDisabled={active || resolved} appearance={"default"} iconBefore={"check"}
-					onClick={doResolve}>Resolve</Button>
+				<Button isDisabled={active || resolved} appearance={"default"} onClick={doResolve}>Resolve</Button>
+
 			</Inline>
 
 			<Text>{issue.description.map((item, index) => isString(item)

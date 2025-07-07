@@ -22,6 +22,7 @@ import { ToolCache } from "./hooks/cache";
 import { ToolBar } from "./views/layouts/bar";
 import { ToolAgreement } from "./views/lenses/agreement";
 import { ToolChat } from "./views/lenses/chat";
+import { ToolClear } from "./views/lenses/clear";
 import { ToolIssues } from "./views/lenses/issues";
 import { ToolLanguage } from "./views/lenses/language";
 import { ToolPolicies } from "./views/lenses/policies";
@@ -64,7 +65,7 @@ function ToolBody() {
 			more={<ButtonGroup>
 
 				<ToolLanguage locale={language} onChange={setLanguage}/>
-				{/* <ToolClear/> */}
+				<ToolClear/>
 
 			</ButtonGroup>}
 

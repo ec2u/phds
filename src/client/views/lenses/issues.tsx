@@ -98,7 +98,7 @@ export function ToolIssues({
 
 				/>
 
-				<Button appearance={"discovery"} iconBefore={"lightbulb"} onClick={refresh}>Refresh Analysis</Button>
+				<Button appearance={"discovery"} onClick={refresh}>Refresh Analysis</Button>
 
 			</Inline>
 
