@@ -24,11 +24,12 @@ import { issueKey } from "../tools/cache";
 import { process, upload } from "../tools/gemini";
 import { retrievePrompt } from "../tools/langfuse";
 
+
 export async function issues(job: string, page: string, { refresh=false, agreement }: IssuesTask) {
 
-	await setStatus(job, Activity.Fetching);
-
 	// query for existing issues for this page
+
+	await setStatus(job, Activity.Fetching);
 
 	const { results }=await storage
 		.query().where("key", { condition: "STARTS_WITH", value: `${page}:issue:` })
@@ -42,6 +43,7 @@ export async function issues(job: string, page: string, { refresh=false, agreeme
 		await setStatus(job, results.map(result => result.value as Issue));
 
 		return;
+
 	}
 
 
@@ -80,6 +82,14 @@ export async function issues(job: string, page: string, { refresh=false, agreeme
 		});
 
 	}));
+
+
+	// generate report for all existing issues
+
+	const allIssues=results.map(result => result.value as Issue);
+
+	console.log("Issues Report:\n", report(allIssues));
+
 
 
 	// process agreement/policy pairs
@@ -180,6 +190,85 @@ export async function issues(job: string, page: string, { refresh=false, agreeme
 		await storage.set(issueKey(page, issue.id), issue);
 	}
 
+	console.log("Issues Report:\n", report(issues));
 	await setStatus(job, issues);
 
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+function report(issues: ReadonlyArray<Issue>): string {
+
+	const openIssues=issues.filter(issue => !issue.resolved);
+	const resolvedIssues=issues.filter(issue => issue.resolved);
+
+	let markdown="# Issues Report\n\n";
+
+	// summary
+	markdown+="## Summary\n\n";
+	markdown+=`- **Total Issues**: ${issues.length}\n`;
+	markdown+=`- **Open Issues**: ${openIssues.length}\n`;
+	markdown+=`- **Resolved Issues**: ${resolvedIssues.length}\n\n`;
+
+	// open issues
+	if ( openIssues.length > 0 ) {
+		markdown+="## Open Issues\n\n";
+		openIssues.forEach((issue, index) => {
+			const priority="⭐".repeat(issue.priority);
+			markdown+=`### ${index + 1}. ${issue.title} ${priority}\n\n`;
+			markdown+=`**Status**: Open\n`;
+			markdown+=`**Created**: ${new Date(issue.created).toLocaleDateString()}\n`;
+			markdown+=`**Priority**: ${issue.priority}/3\n\n`;
+
+			// description
+			markdown+="**Description**:\n";
+			issue.description.forEach(item => {
+				if ( typeof item === "string" ) {
+					markdown+=`${item}\n\n`;
+				} else {
+					markdown+=`> **${item.title}**: ${item.excerpt}\n\n`;
+				}
+			});
+
+			// annotations if present
+			if ( issue.annotations ) {
+				markdown+=`**Annotations**:\n${issue.annotations}\n\n`;
+			}
+
+			markdown+="---\n\n";
+		});
+	}
+
+	// resolved issues
+	if ( resolvedIssues.length > 0 ) {
+		markdown+="## Resolved Issues\n\n";
+		resolvedIssues.forEach((issue, index) => {
+			const priority="⭐".repeat(issue.priority);
+			markdown+=`### ${index + 1}. ${issue.title} ${priority}\n\n`;
+			markdown+=`**Status**: ✅ Resolved\n`;
+			markdown+=`**Created**: ${new Date(issue.created).toLocaleDateString()}\n`;
+			markdown+=`**Resolved**: ${new Date(issue.resolved!).toLocaleDateString()}\n`;
+			markdown+=`**Priority**: ${issue.priority}/3\n\n`;
+
+			// description
+			markdown+="**Description**:\n";
+			issue.description.forEach(item => {
+				if ( typeof item === "string" ) {
+					markdown+=`${item}\n\n`;
+				} else {
+					markdown+=`> **${item.title}**: ${item.excerpt}\n\n`;
+				}
+			});
+
+			// annotations if present
+			if ( issue.annotations ) {
+				markdown+=`**Annotations**:\n${issue.annotations}\n\n`;
+			}
+
+			markdown+="---\n\n";
+		});
+	}
+
+	return markdown;
 }
