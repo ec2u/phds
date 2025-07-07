@@ -23,10 +23,17 @@ export async function resolve(job: string, page: string, { issues: ids }: Resolv
 
 	await setStatus(job, Activity.Purging);
 
-	// remove individual issue entries
+	// mark individual issues as resolved
 
 	for (const issueId of ids) {
-		await storage.delete(issueKey(page, issueId));
+
+		const key=issueKey(page, issueId);
+		const issue=await storage.get(key);
+
+		if ( issue ) {
+			await storage.set(key, { ...issue, resolved: true });
+		}
+
 	}
 
 	await setStatus(job, undefined);
