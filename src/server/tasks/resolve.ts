@@ -31,7 +31,7 @@ export async function resolve(job: string, page: string, { issues: ids }: Resolv
 		const issue=await storage.get(key);
 
 		if ( issue ) {
-			await storage.set(key, { ...issue, resolved: true });
+			await storage.set(key, { ...issue, resolved: new Date().toISOString() });
 		}
 
 	}

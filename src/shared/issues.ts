@@ -18,12 +18,12 @@ import { Instant, Source } from "./documents";
 
 export interface Issue {
 
-	readonly resolved?: boolean;
-
 	readonly id: string;
-	readonly created: Instant;
-	readonly priority: number; // 1..3 integer
 
+	readonly created: Instant;
+	readonly resolved?: Instant;
+
+	readonly priority: number; // 1..3 integer
 	readonly title: string;
 	readonly description: ReadonlyArray<string | Reference>;
 
