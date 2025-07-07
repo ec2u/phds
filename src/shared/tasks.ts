@@ -50,6 +50,7 @@ export const enum Activity {
 	Purging,
 
 	Prompting,
+	Uploading,
 	Extracting,
 	Translating,
 	Refining,
@@ -116,6 +117,8 @@ export interface IssuesTask extends Provider<ReadonlyArray<Issue>> {
 	readonly type: "issues";
 
 	readonly refresh?: boolean;
+
+	readonly agreement: string;
 
 }
 

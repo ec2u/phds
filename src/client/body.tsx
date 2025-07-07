@@ -44,7 +44,7 @@ function ToolBody() {
 	const body=context?.extension?.macro?.body;
 
 
-	const [mode, setMode]=useState<keyof typeof modes | Source>("Agreement");
+	const [mode, setMode]=useState<keyof typeof modes | Source>("Issues");
 	const [language, setLanguage]=useState<Language>(defaultLanguage);
 
 
@@ -75,7 +75,7 @@ function ToolBody() {
 
 			mode === "Agreement" ? <ToolAgreement language={language}/>
 				: mode === "Policies" ? <ToolPolicies onClick={setMode}/>
-					: mode === "Issues" ? <ToolIssues/>
+					: mode === "Issues" ? <ToolIssues language={language}/>
 						: mode === "Chat" ? <ToolChat/>
 							: <ToolPolicy source={mode} language={language}/>
 

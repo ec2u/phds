@@ -20,7 +20,7 @@ export interface Issue {
 
 	readonly id: string;
 	readonly created: Instant;
-	readonly priority: number; // 0..1
+	readonly priority: number; // 1..3 integer
 
 	readonly title: string;
 	readonly description: ReadonlyArray<string | Reference>;

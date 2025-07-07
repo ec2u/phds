@@ -91,8 +91,8 @@ async function extract(job: string, page: string, source: string): Promise<Docum
 
 	}>({
 
-		prompt,
-		file,
+		prompt: prompt.compile(),
+		files: [file],
 
 		schema: {
 			type: SchemaType.OBJECT,
@@ -125,34 +125,25 @@ async function translate(job: string, page: string, source: string, document: Do
 	await setStatus(job, Activity.Prompting);
 
 	const translate=await retrievePrompt({
-		name: "TRANSLATION",
-		variables: {
-
-			target_language: language,
-			source_content: document.content
-
-		}
+		name: "TRANSLATION"
 	});
-
 
 	await setStatus(job, Activity.Translating);
 
 	const translated=await process({
-		prompt: translate
+		prompt: translate.compile({
+
+			target_language: language,
+			source_content: document.content
+
+		})
 	});
 
 
 	await setStatus(job, Activity.Prompting);
 
 	const refine=await retrievePrompt({
-		name: "TRANSLATION_IMPROVEMENT",
-		variables: {
-
-			target_language: language,
-			source_content: document.content,
-			target_content: translated
-
-		}
+		name: "TRANSLATION_IMPROVEMENT"
 	});
 
 
@@ -166,7 +157,14 @@ async function translate(job: string, page: string, source: string, document: Do
 
 	}=await process({
 
-		prompt: refine,
+		prompt: refine.compile({
+
+				target_language: language,
+				source_content: document.content,
+				target_content: translated
+
+			}
+		),
 
 		schema: {
 			type: SchemaType.OBJECT,

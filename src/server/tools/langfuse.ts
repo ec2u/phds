@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import Langfuse from "langfuse";
+import Langfuse, { TextPromptClient } from "langfuse";
 import { asTrace } from "../../shared";
 
 const client=new Langfuse();
@@ -25,20 +25,16 @@ const client=new Langfuse();
 export async function retrievePrompt({
 
 	name,
-	variables
 
 }: {
 
 	name: string;
-	variables?: Readonly<Record<string, string>>;
 
-}): Promise<string> {
+}): Promise<TextPromptClient> {
 
 	try {
 
-		const prompt=await client.getPrompt(name);
-
-		return prompt.compile(variables);
+		return await client.getPrompt(name);
 
 	} catch ( error ) {
 

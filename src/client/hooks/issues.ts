@@ -29,7 +29,7 @@ export interface IssuesActions {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-export function useIssues(): [Status<ReadonlyArray<Issue>>, IssuesActions] {
+export function useIssues(agreement: string): [Status<ReadonlyArray<Issue>>, IssuesActions] {
 
 	const { getCache, setCache }=useCache();
 
@@ -39,16 +39,20 @@ export function useIssues(): [Status<ReadonlyArray<Issue>>, IssuesActions] {
 	const [issues, setIssues]=useState<Status<ReadonlyArray<Issue>>>(cached || Activity.Submitting);
 
 	const updateIssues=(issues: Status<ReadonlyArray<Issue>>) => {
+
 		setIssues(issues);
+
 		if ( isArray<Issue>(issues) ) {
 			setCache(key, issues);
 		}
+
 	};
 
 	const refresh=() => {
 		execute<ReadonlyArray<Issue>>(updateIssues, {
 			type: "issues",
-			refresh: true
+			refresh: true,
+			agreement
 		});
 	};
 
@@ -67,17 +71,19 @@ export function useIssues(): [Status<ReadonlyArray<Issue>>, IssuesActions] {
 
 	useEffect(() => {
 
-		if ( cached ) { setIssues(cached); } else {
+		if ( cached ) { setIssues(cached); } else if ( agreement.trim() !== "" ) {
 
 			execute<ReadonlyArray<Issue>>(updateIssues, {
 
-				type: "issues"
+				type: "issues",
+
+				agreement
 
 			});
 
 		}
 
-	}, [cached]);
+	}, [cached, agreement]);
 
 	return [issues, { refresh, resolve }];
 }

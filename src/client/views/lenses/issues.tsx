@@ -18,15 +18,35 @@
 import { Box, Button, EmptyState, Inline, Stack, Text, xcss } from "@forge/react";
 import React from "react";
 import { isTrace } from "../../../shared";
-import { isActivity } from "../../../shared/tasks";
+import { Document } from "../../../shared/documents";
+import { Language } from "../../../shared/languages";
+import { isActivity, Status } from "../../../shared/tasks";
+import { useAgreement } from "../../hooks/agreement";
 import { useIssues } from "../../hooks/issues";
 import { ToolActivity } from "./activity";
 import ToolIssue from "./issue";
 import { ToolTrace } from "./trace";
 
-export function ToolIssues() {
 
-	const [issues, { refresh, resolve }]=useIssues();
+function isContent(value: Status<Document>): value is Document {
+	return !isActivity(value) && !isTrace(value);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+export function ToolIssues({
+
+	language
+
+}: {
+
+	language: Language
+
+}) {
+
+	const agreement=useAgreement(language);
+	const [issues, { refresh, resolve }]=useIssues(isContent(agreement) ? agreement.content : "");
 
 
 	if ( isActivity(issues) ) {
@@ -55,7 +75,7 @@ export function ToolIssues() {
 			</Inline>
 
 			{[...issues]
-				.sort((a, b) => b.priority - a.priority || a.title.localeCompare(b.title))
+				.sort((x, y) => y.priority - x.priority || x.title.localeCompare(y.title))
 				.map(issue => <ToolIssue key={issue.id} issue={issue} resolve={resolve}/>)
 			}
 

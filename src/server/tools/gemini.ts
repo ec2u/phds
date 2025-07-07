@@ -89,30 +89,30 @@ export async function upload({
 
 export async function process({
 	prompt,
-	file
+	files
 }: {
 	prompt: string
-	file?: FileMetadataResponse
+	files?: ReadonlyArray<FileMetadataResponse>
 }): Promise<string>;
 
 export async function process<T>({
 	prompt,
 	schema,
-	file
+	files
 }: {
 	prompt: string
 	schema: ResponseSchema
-	file?: FileMetadataResponse
+	files?: ReadonlyArray<FileMetadataResponse>
 }): Promise<T>;
 
 export async function process({
 	prompt,
 	schema,
-	file
+	files
 }: {
 	prompt: string
 	schema?: ResponseSchema
-	file?: FileMetadataResponse
+	files?: ReadonlyArray<FileMetadataResponse>
 }): Promise<string | any> {
 
 	try {
@@ -134,14 +134,16 @@ export async function process({
 
 		});
 
-		const result=await (isUndefined(file) ? session.sendMessage("") : session.sendMessage([{
+		const result=await (isUndefined(files) || !files.length
+			? session.sendMessage("")
+			: session.sendMessage(files.map(file => ({
 
-			fileData: {
-				mimeType: file.mimeType,
-				fileUri: file.uri
-			}
+				fileData: {
+					mimeType: file.mimeType,
+					fileUri: file.uri
+				}
 
-		}]));
+			}))));
 
 		return schema ? JSON.parse(result.response.text()) : result.response.text();
 

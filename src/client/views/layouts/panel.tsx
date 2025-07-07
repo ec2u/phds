@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { Box, Stack } from "@forge/react";
+import { Box, Stack, xcss } from "@forge/react";
 import React, { ReactNode } from "react";
 
 export default function ToolPanel({
@@ -35,13 +35,13 @@ export default function ToolPanel({
 
 		<Box>{header}</Box>
 
-		<Box xcss={{
+		<Box xcss={xcss({
 
 			flexGrow: 1,
 			height: "60em", // !!! adapt to screen size
 			overflowY: "auto"
 
-		}}>{
+		})}>{
 
 			children
 

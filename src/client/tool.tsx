@@ -122,7 +122,7 @@ function ToolTool() {
 
 			/>}>
 
-				<ToolIssues/>
+				<ToolIssues language={language}/>
 
 			</ToolPanel>
 

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { Box, Button, Heading, Inline, Stack, Text, xcss } from "@forge/react";
+import { Box, Button, Heading, Icon, Inline, Stack, Text, xcss } from "@forge/react";
 import React, { useState } from "react";
 import { isString, isTrace } from "../../../shared";
 import { Issue } from "../../../shared/issues";
@@ -63,8 +63,18 @@ export default function ToolIssue({
 
 		isTrace(resolving) ? <ToolTrace trace={resolving}/> : <Stack space={"space.100"}>
 
-			<Inline>
+			<Inline alignBlock={"center"} space={"space.100"}>
+
+				<Inline>{Array.from({ length: 3 }, (_, i) => (
+					<Icon key={i}
+						glyph={i < issue.priority ? "star-filled" : "star"}
+						label={`Priority ${issue.priority}/3`}
+						size={"small"}
+					/>
+				))}</Inline>
+
 				<Box xcss={{ flexGrow: 1 }}><Heading size={"small"}>{issue.title}</Heading></Box>
+
 				<Button isDisabled={active} appearance={"default"} iconBefore={"check"}
 					onClick={doResolve}>Resolve</Button>
 			</Inline>

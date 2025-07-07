@@ -63,7 +63,8 @@ export function ToolReference({
 
 		content={() => <Box xcss={xcss({
 
-			padding: "space.200"
+			padding: "space.200",
+			maxWidth: "30em"
 
 		})}
 		>

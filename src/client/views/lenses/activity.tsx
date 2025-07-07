@@ -39,6 +39,7 @@ export function ToolActivity({
 		[Activity.Purging]: "Purging Content…",
 
 		[Activity.Prompting]: "Fetching Prompts…",
+		[Activity.Uploading]: "Uploading Content…",
 		[Activity.Extracting]: "Extracting Text…",
 		[Activity.Translating]: "Translating…",
 		[Activity.Refining]: "Refining…",
