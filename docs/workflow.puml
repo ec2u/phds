@@ -3,44 +3,49 @@
 
 participant "Client" as client
 participant "Server" as server
-participant "Cloud Run" as cloud
+participant "Key-Value Store" as store
+participant "Async Worker" as worker
 participant "Langfuse" as langfuse
 participant "Gemini" as gemini
 
-note over cloud #yellow : integrate code bases\ndeploy with gcloud push\nlimit code base with .gcloudignore
-
 client -> server: launch task
 activate server
-server -> cloud: delegate task
-activate cloud
-server --> client: acknowledge
+server -> store: initialize task status
+server -> worker: delegate task
+activate worker
+server --> client: task id
 deactivate server
 
 par
     group loop [task execution]
-        cloud -> langfuse: retrieve prompt
+        worker -> langfuse: retrieve prompt
         activate langfuse
-        langfuse --> cloud: prompt data
+        langfuse --> worker: prompt
         deactivate langfuse
-        cloud -> gemini: execute prompt
+        worker -> gemini: execute prompt
         activate gemini
-        gemini --> cloud: response
+        gemini --> worker: response
         deactivate gemini
+        worker -> store: update task status
     end
+    worker -> worker: assemble task results
+    worker -> store: store task results
+    deactivate worker
 else
     group loop [polling]
         client -> server: check status
         activate server
-        server --> client: status
+        server -> store: retrieve task status
+        store --> server: task status
+        server --> client: task status
         deactivate server
     end
+
 end
-cloud -> server: return results
-note bottom #yellow : webhook vs API call\nauthorization?
-deactivate cloud
 activate server
-server -> server: store content
-server --> client: results
-note bottom #yellow : polling vs event
+server -> store: retrieve task results
+store --> server: task results
+server -> store: clear task status
+server --> client: task results
 
 @enduml
