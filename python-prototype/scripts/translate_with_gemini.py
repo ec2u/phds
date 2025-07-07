@@ -28,7 +28,7 @@ async def main():
     translation_service = TranslationService(llm_port=gemini_port, prompt_port=langfuse_port)
     tasks = []
 
-    logging.info("Translating {len(input_paths)} documents...")
+    logging.info(f"Translating {len(input_paths)} documents...")
     async with TaskGroup() as tg:
         for input_path in input_paths:
             task = tg.create_task(translation_service.translate(input_path.read_text(), "IT"))

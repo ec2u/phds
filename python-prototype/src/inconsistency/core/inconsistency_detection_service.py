@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from langfuse import observe
 from pydantic import BaseModel
 
@@ -21,14 +23,13 @@ class InconsistencyDetectionService:
         self.prompt_port = prompt_port
 
     @observe
-    async def detect_inconsistencies(self, agreement_content: str, policy_content: str) -> list[Inconsistency]:
+    async def detect_inconsistencies(self, agreement_path: Path, policy_path: Path) -> list[Inconsistency]:
         prompt = self.prompt_port.get_prompt(
             prompt_name="INCONSISTENCY_DETECTION",
-            placeholder_values={
-                "agreement_content": agreement_content,
-                "policy_content": policy_content,
-            },
+            placeholder_values={"document_name": agreement_path.name, "policy_name": policy_path.name},
         )
-        response = await self.llm_port.generate([prompt], response_schema=InconsistencyDetectionResult)
+        response = await self.llm_port.generate(
+            [agreement_path, policy_path, prompt], response_schema=InconsistencyDetectionResult
+        )
 
         return response.inconsistencies
