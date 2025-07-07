@@ -39,10 +39,7 @@ export async function issues(job: string, page: string, { refresh=false, agreeme
 
 	if ( !refresh && results.length > 0 ) {
 
-		await setStatus(job, results
-			.map(result => result.value as Issue)
-			.filter(issue => !issue.resolved)
-		);
+		await setStatus(job, results.map(result => result.value as Issue));
 
 		return;
 	}

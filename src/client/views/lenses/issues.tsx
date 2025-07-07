@@ -15,8 +15,8 @@
  */
 
 
-import { Box, Button, EmptyState, Inline, Stack, Text, xcss } from "@forge/react";
-import React from "react";
+import { Button, EmptyState, Inline, Select, Stack } from "@forge/react";
+import React, { useState } from "react";
 import { isTrace } from "../../../shared";
 import { Document } from "../../../shared/documents";
 import { Language } from "../../../shared/languages";
@@ -47,6 +47,7 @@ export function ToolIssues({
 
 	const agreement=useAgreement(language);
 	const [issues, { refresh, resolve }]=useIssues(isContent(agreement) ? agreement.content : "");
+	const [filter, setFilter]=useState<"open" | "resolved" | "all">("open");
 
 
 	if ( isActivity(issues) ) {
@@ -65,16 +66,43 @@ export function ToolIssues({
 
 	} else {
 
+		const open=issues.filter(issue => !issue.resolved);
+		const resolved=issues.filter(issue => issue.resolved);
+		const total=issues.length;
+
+		const options={
+			open: { label: `${open.length} open ${issue(open.length)}`, value: "open" as const },
+			resolved: { label: `${resolved.length} resolved ${issue(resolved.length)}`, value: "resolved" as const },
+			all: { label: `${total} total ${issue(total)}`, value: "all" as const }
+		};
+
+
+		function issue(count: number) {
+			return `issue${count === 1 ? "" : "s"}`;
+		}
+
+
 		return <Stack space="space.200">
 
-			<Inline>
-				<Box xcss={xcss({ flexGrow: 1 })}>
-					<Text as={"strong"}>{`${issues.length} open issue${issues.length === 1 ? "" : "s"}`}</Text>
-				</Box>
+			<Inline spread={"space-between"}>
+
+				<Select
+
+					appearance="default"
+					spacing={"compact"}
+
+					value={options[filter]}
+					onChange={(option) => setFilter(option.value as "open" | "resolved" | "all")}
+
+					options={Object.values(options)}
+
+				/>
+
 				<Button appearance={"discovery"} iconBefore={"lightbulb"} onClick={refresh}>Refresh Analysis</Button>
+
 			</Inline>
 
-			{[...issues]
+			{[...(filter === "open" ? open : filter === "resolved" ? resolved : issues)]
 				.sort((x, y) => y.priority - x.priority || x.title.localeCompare(y.title))
 				.map(issue => <ToolIssue key={issue.id} issue={issue} resolve={resolve}/>)
 			}

@@ -58,12 +58,18 @@ export function useIssues(agreement: string): [Status<ReadonlyArray<Issue>>, Iss
 
 	const resolve=(ids: ReadonlyArray<string>): Promise<void> => {
 		return execute<void>(() => {}, {
+
 			type: "resolve",
 			issues: ids
-		}).then(() => { // remove resolved issues from local cache
+
+		}).then(() => { // mark resolved issues in local cache
 
 			if ( isArray<Issue>(issues) ) {
-				updateIssues((issues.filter(issue => !ids.includes(issue.id))));
+				updateIssues(issues.map(issue =>
+					ids.includes(issue.id)
+						? { ...issue, resolved: new Date().toISOString() }
+						: issue
+				));
 			}
 
 		});

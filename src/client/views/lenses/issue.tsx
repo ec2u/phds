@@ -38,6 +38,7 @@ export default function ToolIssue({
 	const [resolving, setResolving]=useState<Status<void>>();
 
 	const active=isActivity(resolving);
+	const resolved=issue.resolved !== undefined;
 
 
 	function doResolve() {
@@ -55,7 +56,9 @@ export default function ToolIssue({
 		borderRadius: "border.radius",
 		borderColor: "color.border.accent.gray",
 
-		backgroundColor: "color.background.accent.blue.subtlest",
+		backgroundColor: resolved
+			? "color.background.disabled"
+			: "color.background.accent.blue.subtlest",
 
 		opacity: active ? "opacity.disabled" : undefined
 
@@ -75,7 +78,7 @@ export default function ToolIssue({
 
 				<Box xcss={{ flexGrow: 1 }}><Heading size={"small"}>{issue.title}</Heading></Box>
 
-				<Button isDisabled={active} appearance={"default"} iconBefore={"check"}
+				<Button isDisabled={active || resolved} appearance={"default"} iconBefore={"check"}
 					onClick={doResolve}>Resolve</Button>
 			</Inline>
 
