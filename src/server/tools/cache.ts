@@ -105,17 +105,17 @@ export async function purge(job: string, page?: string): Promise<void> {
 
 	do {
 
-		const query=storage.query()
+		let query=storage.query()
 			.limit(100);
 
 		// if targeting specific page, query only that page's entries
 
 		if ( page ) {
-			query.where("key", { condition: "STARTS_WITH", value: `${page}:` });
+			query=query.where("key", { condition: "STARTS_WITH", value: `${page}:` });
 		}
 
 		if ( cursor ) {
-			query.cursor(cursor);
+			query=query.cursor(cursor);
 		}
 
 		const batch=await query.getMany();

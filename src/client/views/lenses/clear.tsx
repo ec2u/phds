@@ -18,8 +18,11 @@ import { Button, LoadingButton, Modal, ModalBody, ModalFooter, ModalHeader, Moda
 import React, { useState } from "react";
 import { isActivity, Status } from "../../../shared/tasks";
 import { execute } from "../../hooks";
+import { useCache } from "../../hooks/cache";
 
 export function ToolClear() {
+
+	const { clearCache }=useCache();
 
 	const [confirming, setConfirming]=useState(false);
 	const [clearing, setClearing]=useState<Status<void>>();
@@ -31,7 +34,7 @@ export function ToolClear() {
 
 	function confirm() {
 		setConfirming(false);
-		execute(setClearing, { type: "clear" });
+		execute(setClearing, { type: "clear" }).then(clearCache);
 	}
 
 
