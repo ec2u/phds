@@ -37,9 +37,9 @@ export async function issues(job: string, page: string, { refresh=false, agreeme
 		.getMany();
 
 
-	// check cache first if not refreshing
+	// if not refreshing, return cached values (even if empty)
 
-	if ( !refresh && results.length > 0 ) {
+	if ( !refresh ) {
 
 		await setStatus(job, results.map(result => result.value as Issue));
 
@@ -187,19 +187,14 @@ export async function issues(job: string, page: string, { refresh=false, agreeme
 
 	await setStatus(job, Activity.Caching);
 
-	// clear existing issues for this page first
-
-	for (const result of results) {
-		await storage.delete(result.key);
-	}
-
-	// store new issues
-
 	for (const issue of issues) {
 		await storage.set(issueKey(page, issue.id), issue);
 	}
 
-	await setStatus(job, issues);
+
+	// return all issues (existing + new)
+
+	await setStatus(job, [...(results.map(result => result.value as Issue)), ...issues]);
 
 }
 

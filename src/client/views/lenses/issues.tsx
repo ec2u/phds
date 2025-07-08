@@ -73,12 +73,6 @@ export function ToolIssues({
 			description={"Enter Confluence \"Edit\" mode to modify."}
 		/>;
 
-	} else if ( !issues.length ) {
-
-		return <EmptyState header={"No Open Issues"}
-			primaryAction={<Button appearance={"discovery"} onClick={actions.refresh}>Analyse Agreement</Button>}
-		/>;
-
 	} else {
 
 		const open=issues.filter(issue => !issue.resolved);
