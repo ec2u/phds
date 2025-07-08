@@ -157,7 +157,7 @@ export function ToolIssues({
 
 					// third: priority (desc)
 
-					if ( x.priority !== y.priority ) { return y.priority - x.priority; }
+					if ( x.severity !== y.severity ) { return y.severity - x.severity; }
 
 					// fourth: title (asc)
 

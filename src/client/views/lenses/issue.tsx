@@ -96,8 +96,8 @@ export default function ToolIssue({
 			<Inline alignBlock={"center"} space={"space.100"}>
 
 				<Inline>{Array.from({ length: 3 }, (_, i) => <Icon key={i}
-					glyph={i < issue.priority ? "star-filled" : "star"}
-					label={`Priority ${issue.priority}/3`}
+					glyph={i < issue.severity ? "star-filled" : "star"}
+					label={`Priority ${issue.severity}/3`}
 					size={"small"}
 				/>)}</Inline>
 

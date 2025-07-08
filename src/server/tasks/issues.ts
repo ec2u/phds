@@ -17,6 +17,7 @@
 import { storage } from "@forge/api";
 import { SchemaType } from "@google/generative-ai";
 import { Issue, Reference } from "../../shared/issues";
+import { defaultLanguage } from "../../shared/languages";
 import { Activity, IssuesTask } from "../../shared/tasks";
 import { setStatus } from "../async";
 import { fetchAttachment, listAttachments, pdf } from "../tools/attachments";
@@ -86,21 +87,20 @@ export async function issues(job: string, page: string, { refresh=false, agreeme
 
 	// generate report for all existing issues
 
-	const allIssues=results.map(result => result.value as Issue);
-
-	console.log("Issues Report:\n", report(allIssues)); // !!! include report into prompt
-
+	const history=report(results.map(result => result.value as Issue));
 
 
 	// process agreement/policy pairs
 
 	const responses=await Promise.all(policyFiles.map(policyFile => process<{
 
-		reason_title: string;
-		reason_description: string;
+		severity: string
+		reason_title: string
+		reason_description: string
 
-		policy_clash_section: string;
-		document_clash_section: string;
+		policy_clash_section: string
+		document_clash_section: string
+
 
 	}>({
 
@@ -108,7 +108,9 @@ export async function issues(job: string, page: string, { refresh=false, agreeme
 
 		variables: {
 			document_name: "agreement",
-			policy_name: policyFile.displayName!
+			policy_name: policyFile.displayName!,
+			target_language: defaultLanguage, // !!!
+			known_issues: history
 		},
 
 		files: [
@@ -121,6 +123,10 @@ export async function issues(job: string, page: string, { refresh=false, agreeme
 		schema: {
 			type: SchemaType.OBJECT,
 			properties: {
+				severity: {
+					type: SchemaType.STRING,
+					description: "A severity assessment of the clash (high/medium/low)"
+				},
 				reason_title: {
 					type: SchemaType.STRING,
 					description: "A short title explaining why the sections are incompatible"
@@ -139,6 +145,7 @@ export async function issues(job: string, page: string, { refresh=false, agreeme
 				}
 			},
 			required: [
+				"severity",
 				"reason_title",
 				"reason_description",
 				"policy_clash_section",
@@ -152,7 +159,7 @@ export async function issues(job: string, page: string, { refresh=false, agreeme
 
 		id: crypto.randomUUID(),
 		created: new Date().toISOString(),
-		priority: 1, // !!!
+		severity: response.severity === "high" ? 3 : response.severity === "medium" ? 2 : 1,
 
 		title: response.reason_title,
 		description: [
@@ -192,7 +199,6 @@ export async function issues(job: string, page: string, { refresh=false, agreeme
 		await storage.set(issueKey(page, issue.id), issue);
 	}
 
-	console.log("Issues Report:\n", report(issues));
 	await setStatus(job, issues);
 
 }
@@ -208,69 +214,63 @@ function report(issues: ReadonlyArray<Issue>): string {
 	let markdown="# Issues Report\n\n";
 
 	// summary
+
 	markdown+="## Summary\n\n";
 	markdown+=`- **Total Issues**: ${issues.length}\n`;
 	markdown+=`- **Open Issues**: ${openIssues.length}\n`;
 	markdown+=`- **Resolved Issues**: ${resolvedIssues.length}\n\n`;
 
 	// open issues
+
 	if ( openIssues.length > 0 ) {
 		markdown+="## Open Issues\n\n";
 		openIssues.forEach((issue, index) => {
-			const priority="⭐".repeat(issue.priority);
-			markdown+=`### ${index + 1}. ${issue.title} ${priority}\n\n`;
-			markdown+=`**Status**: Open\n`;
-			markdown+=`**Created**: ${new Date(issue.created).toLocaleDateString()}\n`;
-			markdown+=`**Priority**: ${issue.priority}/3\n\n`;
-
-			// description
-			markdown+="**Description**:\n";
-			issue.description.forEach(item => {
-				if ( typeof item === "string" ) {
-					markdown+=`${item}\n\n`;
-				} else {
-					markdown+=`> **${item.title}**: ${item.excerpt}\n\n`;
-				}
-			});
-
-			// annotations if present
-			if ( issue.annotations ) {
-				markdown+=`**Annotations**:\n${issue.annotations}\n\n`;
-			}
-
-			markdown+="---\n\n";
+			markdown+=entry(issue, index);
 		});
 	}
 
 	// resolved issues
+
 	if ( resolvedIssues.length > 0 ) {
 		markdown+="## Resolved Issues\n\n";
 		resolvedIssues.forEach((issue, index) => {
-			const priority="⭐".repeat(issue.priority);
-			markdown+=`### ${index + 1}. ${issue.title} ${priority}\n\n`;
-			markdown+=`**Status**: ✅ Resolved\n`;
-			markdown+=`**Created**: ${new Date(issue.created).toLocaleDateString()}\n`;
-			markdown+=`**Resolved**: ${new Date(issue.resolved!).toLocaleDateString()}\n`;
-			markdown+=`**Priority**: ${issue.priority}/3\n\n`;
-
-			// description
-			markdown+="**Description**:\n";
-			issue.description.forEach(item => {
-				if ( typeof item === "string" ) {
-					markdown+=`${item}\n\n`;
-				} else {
-					markdown+=`> **${item.title}**: ${item.excerpt}\n\n`;
-				}
-			});
-
-			// annotations if present
-			if ( issue.annotations ) {
-				markdown+=`**Annotations**:\n${issue.annotations}\n\n`;
-			}
-
-			markdown+="---\n\n";
+			markdown+=entry(issue, index);
 		});
 	}
+
+	return markdown;
+}
+
+function entry(issue: Issue, index: number): string {
+
+	let markdown=`### ${index + 1}. ${issue.title}\n\n`;
+	markdown+=`**Status**: ${issue.resolved ? "✅ Resolved" : "Open"}\n`;
+	markdown+=`**Created**: ${new Date(issue.created).toLocaleDateString()}\n`;
+
+	if ( issue.resolved ) {
+		markdown+=`**Resolved**: ${new Date(issue.resolved).toLocaleDateString()}\n`;
+	}
+
+	markdown+=`**Severity**: ${issue.severity}/3\n\n`;
+
+	// description
+
+	markdown+="**Description**:\n";
+	issue.description.forEach(item => {
+		if ( typeof item === "string" ) {
+			markdown+=`${item}\n\n`;
+		} else {
+			markdown+=`> **${item.title}**: ${item.excerpt}\n\n`;
+		}
+	});
+
+	// annotations if present
+
+	if ( issue.annotations ) {
+		markdown+=`**Annotations**:\n${issue.annotations}\n\n`;
+	}
+
+	markdown+="---\n\n";
 
 	return markdown;
 }
