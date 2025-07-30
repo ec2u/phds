@@ -19,6 +19,7 @@ import { asTrace } from "../../shared";
 import { setStatus, Specs } from "../async";
 import { dirty, purge } from "../tools/cache";
 import { annotate } from "./annotate";
+import { classify } from "./classify";
 import { clear } from "./clear";
 import { issues } from "./issues";
 import { policies } from "./policies";
@@ -71,6 +72,10 @@ export const handler=new Resolver()
 				case "issues":
 
 					return await issues(job, page, task);
+
+				case "classify":
+
+					return await classify(job, page, task);
 
 				case "annotate":
 

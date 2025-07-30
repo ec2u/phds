@@ -20,8 +20,8 @@ import {
 	Button,
 	ButtonGroup,
 	Heading,
-	Icon,
 	Inline,
+	Select,
 	Stack,
 	Text,
 	TextArea,
@@ -54,9 +54,9 @@ export default function ToolIssue({
 	const resolved=issue.resolved !== undefined;
 
 
-	function resolve() {
+	function classify(severity: Issue["severity"]) {
 		setMode("updating");
-		actions.resolve([issue.id], resolved).then(() => setMode("reading"));
+		actions.classify(issue.id, severity).then(() => setMode("reading"));
 	}
 
 	function annotate() {
@@ -71,6 +71,11 @@ export default function ToolIssue({
 	function save() {
 		setMode("updating");
 		actions.annotate(issue.id, notes).then(() => setMode("reading"));
+	}
+
+	function resolve() {
+		setMode("updating");
+		actions.resolve([issue.id], resolved).then(() => setMode("reading"));
 	}
 
 
@@ -95,12 +100,6 @@ export default function ToolIssue({
 
 			<Inline alignBlock={"center"} space={"space.100"}>
 
-				<Inline>{Array.from({ length: 3 }, (_, i) => <Icon key={i}
-					glyph={i < issue.severity ? "star-filled" : "star"}
-					label={`Priority ${issue.severity}/3`}
-					size={"small"}
-				/>)}</Inline>
-
 				<Box xcss={{ flexGrow: 1 }}><Heading size={"small"}>{issue.title}</Heading></Box>
 
 				{resolved && <Text size="small" color="color.text.subtlest">
@@ -113,14 +112,34 @@ export default function ToolIssue({
 				})}
                 </Text>}
 
+				{mode !== "annotating" && <Select isDisabled={active || resolved}
+
+                    appearance={"subtle"}
+                    spacing="compact"
+
+                    value={{
+						value: issue.severity,
+						label: `${"★".repeat(issue.severity)}${"☆".repeat(3 - issue.severity)}`
+					}}
+
+                    options={[
+						{ value: 1, label: "★☆☆" },
+						{ value: 2, label: "★★☆" },
+						{ value: 3, label: "★★★" }
+					]}
+
+                    onChange={option => classify(option.value)}
+
+                />}
+
 				<ButtonGroup>
 
 					{mode === "annotating" ? <>
-						<Button appearance={"primary"} onClick={save}>Save</Button>
 						<Button appearance="subtle" onClick={cancel}>Cancel</Button>
+						<Button appearance={"primary"} onClick={save}>Save</Button>
 					</> : <>
-						<Button isDisabled={active} onClick={resolve}>{resolved ? "Reopen" : "Resolve"}</Button>
 						<Button isDisabled={active} onClick={annotate}>Annotate</Button>
+						<Button isDisabled={active} onClick={resolve}>{resolved ? "Reopen" : "Resolve"}</Button>
 					</>}
 
 				</ButtonGroup>

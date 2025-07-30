@@ -113,11 +113,6 @@ export async function issues(job: string, page: string, { refresh=false, agreeme
 	const merging=await retrievePrompt("INCONSISTENCY_MERGING");
 
 
-	// generate a report including all existing issues
-
-	const history=report(results.map(result => result.value as Issue));
-
-
 	// upload agreement text
 
 	const agreementName="agreement";
@@ -149,6 +144,11 @@ export async function issues(job: string, page: string, { refresh=false, agreeme
 		});
 
 	}));
+
+
+	// generate a report detailing all existing issues
+
+	const history=report(results.map(result => result.value as Issue));
 
 
 	// process agreement/policy pairs with multiple parallel analysis rounds

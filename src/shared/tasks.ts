@@ -24,6 +24,7 @@ export type Task=
 	| PoliciesTask
 	| PolicyTask
 	| IssuesTask
+	| ClassifyTask
 	| AnnotateTask
 	| ResolveTask
 	| ClearTask
@@ -120,6 +121,15 @@ export interface IssuesTask extends Provider<ReadonlyArray<Issue>> {
 	readonly refresh?: boolean;
 
 	readonly agreement: string;
+
+}
+
+export interface ClassifyTask extends Provider<void> {
+
+	readonly type: "classify";
+
+	readonly issue: string; // issue id
+	readonly severity: Issue["severity"]; // severity level
 
 }
 

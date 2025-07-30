@@ -23,8 +23,9 @@ import { execute } from "./index";
 
 export interface IssuesActions {
 	refresh: () => void;
-	resolve: (issues: ReadonlyArray<string>, reopen?: boolean) => Promise<void>;
+	classify: (issue: string, severity: Issue["severity"]) => Promise<void>;
 	annotate: (issue: string, notes: string) => Promise<void>;
+	resolve: (issues: ReadonlyArray<string>, reopen?: boolean) => Promise<void>;
 }
 
 
@@ -57,6 +58,23 @@ export function useIssues(agreement: string): [Status<ReadonlyArray<Issue>>, Iss
 		});
 	};
 
+	const classify=async (issue: string, severity: Issue["severity"]): Promise<void> => {
+
+		await execute<void>(() => { }, {
+			type: "classify",
+			issue,
+			severity
+		});
+
+		if ( isArray<Issue>(issues) ) {
+			update(issues.map(item => item.id === issue
+				? { ...item, severity }
+				: item
+			));
+		}
+
+	};
+
 	const annotate=async (issue: string, notes: string): Promise<void> => {
 
 		await execute<void>(() => { }, {
@@ -78,7 +96,6 @@ export function useIssues(agreement: string): [Status<ReadonlyArray<Issue>>, Iss
 
 		await execute<void>(() => { }, {
 			type: "resolve",
-
 			issues: ids,
 			reopen
 		});
@@ -117,6 +134,15 @@ export function useIssues(agreement: string): [Status<ReadonlyArray<Issue>>, Iss
 
 	}, [cached, agreement]);
 
-	return [issues, { refresh, annotate, resolve }];
+
+	return [
+		issues,
+		{
+			refresh,
+			classify,
+			annotate,
+			resolve
+		}
+	];
 
 }

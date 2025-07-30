@@ -16,7 +16,7 @@
 
 
 import { Button, EmptyState, Inline, Select, Stack } from "@forge/react";
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { isTrace } from "../../../shared";
 import { Document } from "../../../shared/documents";
 import { Language } from "../../../shared/languages";
@@ -49,6 +49,54 @@ export function ToolIssues({
 	const [issues, actions]=useIssues(isContent(agreement) ? agreement.content : "");
 
 	const [filter, setFilter]=useState<"open" | "resolved" | "all">("open");
+
+	const sorted=useMemo(() => {
+
+		if ( Array.isArray(issues) ) {
+
+			return [...(
+
+				filter === "open" ? issues.filter(issue => !issue.resolved)
+					: filter === "resolved" ? issues.filter(issue => issue.resolved)
+						: issues
+
+			)].sort((x, y) => {
+
+				// first: open issues before resolved issues
+
+				const xIsOpen=!x.resolved;
+				const yIsOpen=!y.resolved;
+
+				if ( xIsOpen !== yIsOpen ) { return xIsOpen ? -1 : 1; }
+
+				// second: for resolved issues, sort by resolution timestamp (desc)
+
+				if ( x.resolved && y.resolved ) {
+
+					const xResolved=new Date(x.resolved).getTime();
+					const yResolved=new Date(y.resolved).getTime();
+
+					if ( xResolved !== yResolved ) { return yResolved - xResolved; }
+
+				}
+
+				// third: priority (desc)
+
+				if ( x.severity !== y.severity ) { return y.severity - x.severity; }
+
+				// fourth: title (asc)
+
+				return x.title.localeCompare(y.title);
+
+			});
+
+		} else {
+
+			return [];
+
+		}
+
+	}, [issues, filter]);
 
 
 	if ( isActivity(agreement) ) {
@@ -107,7 +155,6 @@ export function ToolIssues({
 			return `issue${count === 1 ? "" : "s"}`;
 		}
 
-
 		return <Stack space="space.200">
 
 			<Inline spread={"space-between"}>
@@ -128,38 +175,7 @@ export function ToolIssues({
 
 			</Inline>
 
-			{[...(filter === "open" ? open : filter === "resolved" ? resolved : issues)]
-				.sort((x, y) => {
-
-					// first: open issues before resolved issues
-
-					const xIsOpen=!x.resolved;
-					const yIsOpen=!y.resolved;
-
-					if ( xIsOpen !== yIsOpen ) { return xIsOpen ? -1 : 1; }
-
-					// second: for resolved issues, sort by resolution timestamp (desc)
-
-					if ( x.resolved && y.resolved ) {
-
-						const xResolved=new Date(x.resolved).getTime();
-						const yResolved=new Date(y.resolved).getTime();
-
-						if ( xResolved !== yResolved ) { return yResolved - xResolved; }
-
-					}
-
-					// third: priority (desc)
-
-					if ( x.severity !== y.severity ) { return y.severity - x.severity; }
-
-					// fourth: title (asc)
-
-					return x.title.localeCompare(y.title);
-
-				})
-				.map(issue => <ToolIssue key={issue.id} issue={issue} actions={actions}/>)
-			}
+			{sorted.map(issue => <ToolIssue key={issue.id} issue={issue} actions={actions}/>)}
 
 		</Stack>;
 
