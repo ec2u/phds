@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { GoogleGenerativeAI, ResponseSchema } from "@google/generative-ai";
+import { GenerationConfig, GoogleGenerativeAI, ResponseSchema } from "@google/generative-ai";
 import { FileMetadataResponse, GoogleAIFileManager } from "@google/generative-ai/server";
 import { TextPromptClient } from "langfuse";
 import { asTrace, isObject, isString, isUndefined } from "../../shared";
@@ -22,12 +22,23 @@ import { secret } from "../index";
 import { json, text } from "./attachments";
 
 
-const model="gemini-2.5-flash";
-const timeout=10_000;
+const defaults: {
 
-const setup={
-	seed: 0,
-	temperature: 0
+	model: string,
+	config: GenerationConfig,
+	timeout: number
+
+}={
+
+	model: "gemini-2.5-flash",
+
+	config: {
+		// !!! seed: 0, ;( unable to configure
+		temperature: 0
+	},
+
+	timeout: 10_000
+
 };
 
 
@@ -69,7 +80,7 @@ export async function upload({
 		let f=await manager.getFile(meta.name);
 
 		while ( f.state === "PROCESSING" ) {
-			await new Promise(resolve => setTimeout(resolve, timeout));
+			await new Promise(resolve => setTimeout(resolve, defaults.timeout));
 			f= await manager.getFile(meta.name);
 		}
 
@@ -88,22 +99,32 @@ export async function upload({
 	}
 }
 
+/**
+ * processes a prompt with Gemini and returns the response as plain text
+ */
 export async function process({
+	model,
 	prompt,
 	variables,
 	files
 }: {
+	model?: string
 	prompt: string | TextPromptClient
 	variables?: Record<string, string>
 	files?: ReadonlyArray<FileMetadataResponse>
 }): Promise<string>;
 
+/**
+ * processes a prompt with Gemini using structured output and returns typed response
+ */
 export async function process<T>({
+	model,
 	prompt,
 	variables,
 	files,
 	schema
 }: {
+	model?: string
 	prompt: string | TextPromptClient
 	variables?: Record<string, string>
 	files?: ReadonlyArray<FileMetadataResponse>
@@ -111,11 +132,13 @@ export async function process<T>({
 }): Promise<T>;
 
 export async function process({
+	model,
 	prompt,
 	variables,
 	files,
 	schema
 }: {
+	model?: string
 	prompt: string | TextPromptClient
 	schema?: ResponseSchema
 	files?: ReadonlyArray<FileMetadataResponse>
@@ -142,7 +165,8 @@ export async function process({
 
 		const session=client.getGenerativeModel({
 
-			model: model,
+			model: model ?? defaults.model,
+
 			systemInstruction: isString(prompt)
 				? compile(prompt, variables ?? {})
 				: prompt.compile(variables)
@@ -151,7 +175,7 @@ export async function process({
 
 			generationConfig: {
 
-				...setup,
+				...(defaults.config),
 				...(!isString(prompt) && isObject(prompt.config) ? Object.fromEntries(
 					Object.entries(prompt.config).filter(([, value]) => isString(value))
 				) : {}),

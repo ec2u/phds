@@ -27,6 +27,11 @@ import { process, upload } from "../tools/gemini";
 import { retrievePrompt } from "../tools/langfuse";
 
 
+const model="gemini-2.5-pro";
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 export async function issues(job: string, page: string, { refresh=false, agreement }: IssuesTask) {
 
 	// query for existing issues for this page
@@ -105,7 +110,8 @@ export async function issues(job: string, page: string, { refresh=false, agreeme
 
 	}>({
 
-		prompt: prompt,
+		model,
+		prompt,
 
 		variables: {
 			document_name: "agreement",
