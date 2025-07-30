@@ -16,6 +16,7 @@
 
 import { storage } from "@forge/api";
 import { SchemaType } from "@google/generative-ai";
+import { isString } from "../../shared";
 import { Issue, Reference } from "../../shared/issues";
 import { defaultLanguage } from "../../shared/languages";
 import { Activity, IssuesTask } from "../../shared/tasks";
@@ -96,10 +97,10 @@ export async function issues(job: string, page: string, { refresh=false, agreeme
 
 		severity: string
 		reason_title: string
-		reason_description: string
+		reason_analysis: string
 
-		policy_clash_section: string
-		document_clash_section: string
+		policy_clash_excerpt: string
+		document_clash_excerpt: string
 
 
 	}>({
@@ -131,25 +132,25 @@ export async function issues(job: string, page: string, { refresh=false, agreeme
 					type: SchemaType.STRING,
 					description: "A short title explaining why the sections are incompatible"
 				},
-				reason_description: {
+				reason_analysis: {
 					type: SchemaType.STRING,
 					description: "A more verbose description explaining why the sections are incompatible"
 				},
-				policy_clash_section: {
+				policy_clash_excerpt: {
 					type: SchemaType.STRING,
-					description: "The full text of the section of the policy that clashes with the document"
+					description: "The full text of the excerpt of the policy that clashes with the document"
 				},
-				document_clash_section: {
+				document_clash_excerpt: {
 					type: SchemaType.STRING,
-					description: "The full text of the section of the document that clashes with the policy"
+					description: "The full text of the excerpt of the document that clashes with the policy"
 				}
 			},
 			required: [
 				"severity",
 				"reason_title",
-				"reason_description",
-				"policy_clash_section",
-				"document_clash_section"
+				"reason_analysis",
+				"policy_clash_excerpt",
+				"document_clash_excerpt"
 			]
 		}
 
@@ -163,20 +164,20 @@ export async function issues(job: string, page: string, { refresh=false, agreeme
 
 		title: response.reason_title,
 		description: [
-			response.reason_description,
+			response.reason_analysis,
 			{
 				source: "",
 				title: "Agreement",
-				excerpt: response.document_clash_section,
+				excerpt: response.document_clash_excerpt,
 				offset: 0, // !!!
-				length: response.document_clash_section.length // !!!
+				length: response.document_clash_excerpt.length // !!!
 			} as Reference,
 			{
 				source: policies[index].id,
 				title: policies[index].title,
-				excerpt: response.policy_clash_section,
+				excerpt: response.policy_clash_excerpt,
 				offset: 0, // !!!
-				length: response.policy_clash_section.length // !!!
+				length: response.policy_clash_excerpt.length // !!!
 			} as Reference
 		]
 
@@ -202,70 +203,20 @@ export async function issues(job: string, page: string, { refresh=false, agreeme
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 function report(issues: ReadonlyArray<Issue>): string {
+	return issues
 
-	const openIssues=issues.filter(issue => !issue.resolved);
-	const resolvedIssues=issues.filter(issue => issue.resolved);
+		.map(issue => [
 
-	let markdown="# Issues Report\n\n";
+			`Title: ${issue.title}`,
+			`Severity: ${issue.severity === 3 ? "high" : issue.severity === 2 ? "medium" : "low"}`,
 
-	// summary
+			...(issue.description.map(item =>
+				isString(item) ? `Analysis: ${item}`
+					: item.source ? `Agreement Excerpt: ${item.excerpt}`
+						: `Policy Excerpt: ${item.excerpt}`
+			))
 
-	markdown+="## Summary\n\n";
-	markdown+=`- **Total Issues**: ${issues.length}\n`;
-	markdown+=`- **Open Issues**: ${openIssues.length}\n`;
-	markdown+=`- **Resolved Issues**: ${resolvedIssues.length}\n\n`;
+		].join("\n"))
 
-	// open issues
-
-	if ( openIssues.length > 0 ) {
-		markdown+="## Open Issues\n\n";
-		openIssues.forEach((issue, index) => {
-			markdown+=entry(issue, index);
-		});
-	}
-
-	// resolved issues
-
-	if ( resolvedIssues.length > 0 ) {
-		markdown+="## Resolved Issues\n\n";
-		resolvedIssues.forEach((issue, index) => {
-			markdown+=entry(issue, index);
-		});
-	}
-
-	return markdown;
-}
-
-function entry(issue: Issue, index: number): string {
-
-	let markdown=`### ${index + 1}. ${issue.title}\n\n`;
-	markdown+=`**Status**: ${issue.resolved ? "✅ Resolved" : "Open"}\n`;
-	markdown+=`**Created**: ${new Date(issue.created).toLocaleDateString()}\n`;
-
-	if ( issue.resolved ) {
-		markdown+=`**Resolved**: ${new Date(issue.resolved).toLocaleDateString()}\n`;
-	}
-
-	markdown+=`**Severity**: ${issue.severity}/3\n\n`;
-
-	// description
-
-	markdown+="**Description**:\n";
-	issue.description.forEach(item => {
-		if ( typeof item === "string" ) {
-			markdown+=`${item}\n\n`;
-		} else {
-			markdown+=`> **${item.title}**: ${item.excerpt}\n\n`;
-		}
-	});
-
-	// annotations if present
-
-	if ( issue.annotations ) {
-		markdown+=`**Annotations**:\n${issue.annotations}\n\n`;
-	}
-
-	markdown+="---\n\n";
-
-	return markdown;
+		.join("\n\n");
 }
