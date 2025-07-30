@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import ForgeReconciler, { Box, Button, ButtonGroup, Inline, useConfig } from "@forge/react";
+import ForgeReconciler, { Box, Button, ButtonGroup, Inline, useConfig, xcss } from "@forge/react";
 import React, { useState } from "react";
 import { Source } from "../shared/documents";
 import { defaultLanguage, Language } from "../shared/languages";
@@ -78,7 +78,7 @@ function ToolTool() {
 
 	return <Inline shouldWrap={false} alignBlock={"stretch"} grow={"fill"} space={"space.500"}>
 
-		<Box xcss={{ width: "50%" }}>
+		<Box xcss={xcss({ width: "50%" })}>
 
 			<ToolPanel header={<ToolBar
 
@@ -107,7 +107,7 @@ function ToolTool() {
 
 		</Box>
 
-		<Box xcss={{ width: "50%" }}>
+		<Box xcss={xcss({ width: "50%" })}>
 
 			<ToolPanel header={<ToolBar
 

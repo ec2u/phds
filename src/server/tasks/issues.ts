@@ -245,7 +245,7 @@ export async function issues(job: string, page: string, { refresh=false, agreeme
 				} as Reference,
 				{
 					source: policy.id,
-					title: policy.title,
+					title: policy.title.replace(/\.\w+$/, ""), // remove filename extension
 					excerpt: entry.policy_clash_excerpt,
 					offset: 0, // !!!
 					length: entry.policy_clash_excerpt.length // !!!

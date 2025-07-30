@@ -20,16 +20,19 @@ import {
 	Button,
 	ButtonGroup,
 	Heading,
+	Icon,
 	Inline,
+	Pressable,
 	Select,
 	Stack,
 	Text,
 	TextArea,
+	Tooltip,
 	xcss
 } from "@forge/react";
 import React, { useState } from "react";
 import { isString } from "../../../shared";
-import { Issue } from "../../../shared/issues";
+import { Issue, Reference } from "../../../shared/issues";
 import { IssuesActions } from "../../hooks/issues";
 import { adf } from "../../tools/text";
 import { ToolReference } from "./reference";
@@ -48,15 +51,21 @@ export default function ToolIssue({
 }) {
 
 	const [mode, setMode]=useState<"reading" | "annotating" | "updating">("reading");
+	const [expanded, setExpanded]=useState<boolean>(false);
 	const [notes, setNotes]=useState<string>(issue.annotations || "");
 
 	const active=mode === "updating";
 	const resolved=issue.resolved !== undefined;
+	const references=issue.description.filter((entry): entry is Reference => !isString(entry));
 
+
+	function toggle() {
+		setExpanded(!expanded);
+	}
 
 	function classify(severity: Issue["severity"]) {
 		setMode("updating");
-		actions.classify(issue.id, severity).then(() => setMode("reading"));
+		actions.classify(issue.id, severity).then(() => setMode("reading")).then(() => setExpanded(false));
 	}
 
 	function annotate() {
@@ -75,7 +84,7 @@ export default function ToolIssue({
 
 	function resolve() {
 		setMode("updating");
-		actions.resolve([issue.id], resolved).then(() => setMode("reading"));
+		actions.resolve([issue.id], resolved).then(() => setMode("reading")).then(() => setExpanded(false));
 	}
 
 
@@ -98,9 +107,31 @@ export default function ToolIssue({
 
 		<Stack space={"space.100"}>
 
-			<Inline alignBlock={"center"} space={"space.100"}>
+			<Inline alignBlock={"center"} space={"space.050"}>
 
-				<Box xcss={{ flexGrow: 1 }}><Heading size={"small"}>{issue.title}</Heading></Box>
+				<Heading size={"small"}>{issue.title}</Heading>
+
+				<Pressable onClick={toggle} xcss={xcss({
+
+					padding: "space.025",
+					margin: "space.0",
+
+					backgroundColor: "color.background.neutral.subtle"
+
+				})}>
+
+					<Tooltip content={`${expanded ? "Hide" : "Show"} references`}>
+
+						<Icon size={"medium"}
+							label={`${expanded ? "Hide" : "Show"} references`}
+							glyph={expanded ? "chevron-up" : "chevron-down"}
+						/>
+
+					</Tooltip>
+
+				</Pressable>
+
+				<Box xcss={xcss({ flexGrow: 1 })}/>
 
 				{resolved && <Text size="small" color="color.text.subtlest">
                     Resolved on {new Date(issue.resolved).toLocaleString(undefined, {
@@ -146,6 +177,13 @@ export default function ToolIssue({
 
 			</Inline>
 
+			{expanded && <Inline space={"space.100"}>
+
+                <ToolReferences references={references.filter(reference => !reference.source)}/>
+                <ToolReferences references={references.filter(reference => reference.source)}/>
+
+            </Inline>}
+
 			<Text>{issue.description.map((item, index) => isString(item)
 				? <React.Fragment key={index}>{item} </React.Fragment>
 				: <ToolReference key={`${item.source}:${item.offset}`} reference={item}/>
@@ -181,4 +219,35 @@ export default function ToolIssue({
 		</Stack>
 
 	}</Box>;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+function ToolReferences({
+
+	references
+
+}: {
+
+	references: ReadonlyArray<Reference>
+
+}) {
+
+	return <Box xcss={xcss({
+
+		width: "50%",
+		marginBlock: "space.100"
+
+	})}>{references.map(reference => {
+
+		return <Stack space={"space.100"}>
+
+			<Heading size={"small"}>{reference.title}</Heading>
+			<Text>{reference.excerpt}</Text>
+
+		</Stack>;
+
+	})}</Box>;
+
 }
