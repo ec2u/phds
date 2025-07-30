@@ -81,16 +81,28 @@ const ResponseSchema: Schema={
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
 export async function issues(job: string, page: string, { refresh=false, agreement }: IssuesTask) {
 
 	// query for existing issues for this page
 
 	await setStatus(job, Activity.Fetching);
 
-	const { results }=await storage
-		.query().where("key", { condition: "STARTS_WITH", value: `${page}:issue:` })
-		.getMany();
+	const results: Array<{ key: string; value: any }>=[];
+
+	let cursor: string | undefined;
+
+	do {
+
+		const query=storage.query()
+			.where("key", { condition: "STARTS_WITH", value: `${page}:issue:` })
+			.limit(100);
+
+		const batch=await (cursor ? query.cursor(cursor) : query).getMany();
+
+		results.push(...batch.results);
+		cursor=batch.nextCursor;
+
+	} while ( cursor );
 
 
 	// if not refreshing, return cached values (even if empty)
