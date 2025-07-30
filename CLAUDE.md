@@ -63,6 +63,7 @@ The application follows Atlassian Forge architecture:
   `typeof` checks for consistency
 - DO NOT reformat existing code formatting/spacing - preserve the author's original style
 - Inline comments (`//`) must be lowercase and followed by an empty line for readability
+- Use functional programming style unless imperative style is specifically required
 
 ## Adding New Task Types
 
