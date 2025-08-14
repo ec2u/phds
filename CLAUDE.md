@@ -90,3 +90,12 @@ To add a new task type to the system, follow these steps:
     - Follow pattern: `case "taskname": return await taskname(job, page, task);`
 
 Example task structure follows the existing patterns in `policies.ts` and `policy.ts`.
+
+## Documentation Guidelines
+
+When creating Markdown documents in the `docs/` folder:
+
+- Always include a title in the frontmatter section using `title: Document Title`
+- Use top-level headings (`#`) for main sections, then `##`, `###` for subsections
+- Keep line lengths under 120 characters by wrapping text appropriately
+- Do not duplicate the frontmatter title as a `# Title` heading in the document body

@@ -21,13 +21,17 @@ import { Language } from "./languages";
 
 
 export type Task=
+
 	| PoliciesTask
 	| PolicyTask
+
 	| IssuesTask
 	| ClassifyTask
 	| AnnotateTask
 	| ResolveTask
+
 	| ClearTask
+
 	;
 
 
@@ -114,12 +118,14 @@ export interface PolicyTask extends Provider<Document> {
 
 }
 
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 export interface IssuesTask extends Provider<ReadonlyArray<Issue>> {
 
 	readonly type: "issues";
 
 	readonly refresh?: boolean;
-
 	readonly agreement: string;
 
 }
@@ -150,6 +156,9 @@ export interface ResolveTask extends Provider<void> {
 	readonly issues: ReadonlyArray<string>; // issue ids
 
 }
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 export interface ClearTask extends Provider<void> {
 
