@@ -14,7 +14,7 @@ async def main():
     logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
     input_dir = get_input_dir()
-    output_dir = get_output_dir("pdf-to-md", "gemini-v5")
+    output_dir = get_output_dir("pdf-to-md", "gemini")
 
     logging.info("Instantiating clients...")
     gemini_port = GeminiPort()

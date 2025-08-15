@@ -23,6 +23,8 @@ class GeminiPort(LLMPort):
             config=GenerateContentConfig(
                 temperature=0,
                 seed=42,
+                top_p=0.001,
+                top_k=1,
                 response_schema=response_schema,
                 response_mime_type="application/json" if response_schema else "text/plain",
             ),

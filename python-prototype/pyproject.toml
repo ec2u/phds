@@ -5,14 +5,13 @@ description = "GenAI tools to speed up PhD agreement redaction"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
-    "google-genai>=1.19.0",
-    "langfuse>=3.0.0",
+    "google-genai>=1.29.0",
+    "langfuse>=3.2.4",
 ]
 
 [dependency-groups]
 dev = [
-    "pre-commit-uv>=4.1.4",
-    "pytest>=8.4.0",
+    "pytest>=8.4.1",
 ]
 
 [tool.ruff]
@@ -20,7 +19,3 @@ line-length = 120
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
-
-[build-system]
-requires = ["setuptools >= 40.9.0"]
-build-backend = "setuptools.build_meta"
