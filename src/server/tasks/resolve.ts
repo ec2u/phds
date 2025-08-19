@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { storage } from "@forge/api";
+import { kvs } from "@forge/kvs";
 import { Activity, ResolveTask } from "../../shared/tasks";
 import { setStatus } from "../async";
 import { issueKey } from "../tools/cache";
@@ -28,11 +28,11 @@ export async function resolve(job: string, page: string, { issues: ids, reopen=f
 	for (const issueId of ids) {
 
 		const key=issueKey(page, issueId);
-		const issue=await storage.get(key);
+		const issue=await kvs.get(key);
 
 		if ( issue ) {
 
-			await storage.set(key, {
+			await kvs.set(key, {
 				...issue,
 				resolved: reopen ? undefined : new Date().toISOString()
 			});

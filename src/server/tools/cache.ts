@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { storage } from "@forge/api";
+import { kvs, WhereConditions } from "@forge/kvs";
 import { Activity } from "../../shared/tasks";
 import { setStatus } from "../async";
 import { checkPage } from "./pages";
@@ -78,12 +78,12 @@ export function policyKeyLanguage(key: string): string | undefined {
 
 export async function dirty(): Promise<boolean> {
 
-	const last=await storage.get(purgeKey) as string | undefined;
+	const last=await kvs.get<string>(purgeKey);
 	const next=Date.now();
 
 	if ( !last || (next - parseInt(last)) > purgePeriod ) {
 
-		await storage.set(purgeKey, next.toString());
+		await kvs.set<string>(purgeKey, next.toString());
 
 		return true;
 
@@ -105,13 +105,13 @@ export async function purge(job: string, page?: string): Promise<void> {
 
 	do {
 
-		let query=storage.query()
+		let query=kvs.query()
 			.limit(100);
 
 		// if targeting specific page, query only that page's entries
 
 		if ( page ) {
-			query=query.where("key", { condition: "STARTS_WITH", value: `${page}:` });
+			query=query.where("key", WhereConditions.beginsWith(`${page}:`));
 		}
 
 		if ( cursor ) {
@@ -135,7 +135,7 @@ export async function purge(job: string, page?: string): Promise<void> {
 
 	if ( page ) { // clear all entries for the target page
 
-		await Promise.all(allResults.map(result => storage.delete(result.key)));
+		await Promise.all(allResults.map(result => kvs.delete(result.key)));
 
 	} else { // group cache entries by page id and purge deleted pages
 
@@ -156,7 +156,7 @@ export async function purge(job: string, page?: string): Promise<void> {
 
 		await Promise.all(Array.from(entriesByPage.entries()).map(async ([pageId, entries]) => {
 			if ( !await checkPage(pageId) ) {
-				await Promise.all(entries.map(result => storage.delete(result.key)));
+				await Promise.all(entries.map(result => kvs.delete(result.key)));
 			}
 		}));
 

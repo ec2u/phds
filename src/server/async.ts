@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { storage } from "@forge/api";
+import { kvs } from "@forge/kvs";
 import { isDefined } from "../shared";
 import { Status, Task } from "../shared/tasks";
 
@@ -30,17 +30,17 @@ export interface Specs {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 export async function getStatus<T>(job: string): Promise<Status<T>> {
-	return await storage.get(key(job));
+	return await kvs.get<Status<T>>(key(job)) as Status<T>;
 }
 
 export async function setStatus<T>(job: string, value: undefined | Status<T>): Promise<void> {
 	if ( isDefined(value) ) {
 
-		await storage.set(key(job), value as any); // !!! typing
+		await kvs.set<Status<T>>(key(job), value);
 
 	} else {
 
-		await storage.delete(key(job));
+		await kvs.delete(key(job));
 
 	}
 }

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { storage } from "@forge/api";
+import { kvs, WhereConditions } from "@forge/kvs";
 import { Schema, SchemaType } from "@google/generative-ai";
 import { FileMetadataResponse } from "@google/generative-ai/server";
 import { isString } from "../../shared";
@@ -93,8 +93,8 @@ export async function issues(job: string, page: string, { refresh=false, agreeme
 
 	do {
 
-		const query=storage.query()
-			.where("key", { condition: "STARTS_WITH", value: `${page}:issue:` })
+		const query=kvs.query()
+			.where("key", WhereConditions.beginsWith(`${page}:issue:`))
 			.limit(100);
 
 		const batch=await (cursor ? query.cursor(cursor) : query).getMany();
@@ -261,7 +261,7 @@ export async function issues(job: string, page: string, { refresh=false, agreeme
 	await setStatus(job, Activity.Caching);
 
 	for (const issue of issues) {
-		await storage.set(issueKey(page, issue.id), issue);
+		await kvs.set<Issue>(issueKey(page, issue.id), issue);
 	}
 
 

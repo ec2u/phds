@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { storage } from "@forge/api";
+import { kvs } from "@forge/kvs";
 import { Issue } from "../../shared/issues";
 import { Activity, ClassifyTask } from "../../shared/tasks";
 import { setStatus } from "../async";
@@ -27,10 +27,10 @@ export async function classify(job: string, page: string, { issue: id, severity 
 	// update severity for the specific issue
 
 	const key=issueKey(page, id);
-	const issue: Issue=await storage.get(key);
+	const issue=await kvs.get<Issue>(key);
 
 	if ( issue ) {
-		await storage.set(key, { ...issue, severity });
+		await kvs.set<Issue>(key, { ...issue, severity });
 	}
 
 	await setStatus(job, undefined);

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { storage } from "@forge/api";
+import { kvs, WhereConditions } from "@forge/kvs";
 import { isUndefined } from "../../shared";
 import { Document } from "../../shared/documents";
 import { Activity, PoliciesTask } from "../../shared/tasks";
@@ -35,8 +35,8 @@ export async function policies(job: string, page: string, {}: PoliciesTask) {
 
 	await setStatus(job, Activity.Fetching);
 
-	const cached=await storage.query()
-		.where("key", { condition: "STARTS_WITH", value: `policy:${page}:` })
+	const cached=await kvs.query()
+		.where("key", WhereConditions.beginsWith(`${page}:policy:`))
 		.limit(100)
 		.getMany();
 
@@ -71,7 +71,7 @@ export async function policies(job: string, page: string, {}: PoliciesTask) {
 			}
 
 		})
-		.map(result => storage.delete(result.key)));
+		.map(result => kvs.delete(result.key)));
 
 	// create catalog (using attachment title, as document title is quite expensive to get upfront)
 

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { storage } from "@forge/api";
+import { kvs } from "@forge/kvs";
 import { SchemaType } from "@google/generative-ai";
 import { isUndefined } from "../../shared";
 import { Document } from "../../shared/documents";
@@ -205,7 +205,7 @@ async function fetchPolicy(job: string, page: string, source: string, language?:
 	await setStatus(job, Activity.Fetching);
 
 	const key=policyKey(page, source, language);
-	const cached=await storage.get(key) as Document | undefined;
+	const cached=await kvs.get<Document>(key);
 
 	if ( isUndefined(cached) ) {
 
@@ -227,7 +227,7 @@ async function fetchPolicy(job: string, page: string, source: string, language?:
 
 			await setStatus(job, Activity.Purging);
 
-			await storage.delete(key); // stale entry, purge it
+			await kvs.delete(key); // stale entry, purge it
 
 			return undefined;
 
@@ -246,7 +246,7 @@ async function cachePolicy(job: string, page: string, source: string, document: 
 
 	const key=policyKey(page, source, document.original ? undefined : document.language);
 
-	await storage.set(key, document);
+	await kvs.set<Document>(key, document);
 
 	return document;
 }
