@@ -17,21 +17,26 @@
 import { kvs } from "@forge/kvs";
 import { Activity, AnnotateTask } from "../../shared/tasks";
 import { setStatus } from "../async";
-import { issueKey } from "../tools/cache";
+import { issueKey, lock } from "../tools/cache";
 
 export async function annotate(job: string, page: string, { issue: id, notes }: AnnotateTask): Promise<void> {
 
-	await setStatus(job, Activity.Caching);
-
-	// add annotations to the specific issue
-
 	const key=issueKey(page, id);
-	const issue=await kvs.get(key);
 
-	if ( issue ) {
-		await kvs.set(key, { ...issue, annotations: notes });
-	}
+	await lock(job, key, async () => {
 
-	await setStatus(job, undefined);
+		await setStatus(job, Activity.Caching);
+
+		// add annotations to the specific issue
+
+		const issue=await kvs.get(key);
+
+		if ( issue ) {
+			await kvs.set(key, { ...issue, annotations: notes });
+		}
+
+		await setStatus(job, undefined);
+
+	});
 
 }

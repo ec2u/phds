@@ -19,65 +19,70 @@ import { Document } from "../../shared/documents";
 import { Activity, PoliciesTask } from "../../shared/tasks";
 import { setStatus } from "../async";
 import { listAttachments, pdf } from "../tools/attachments";
-import { policyKeySource } from "../tools/cache";
+import { keySource, lock, policiesKey } from "../tools/cache";
 
 export async function policies(job: string, page: string, {}: PoliciesTask) {
 
-	// get all attachments metadata
+	await lock(job, policiesKey(page), async () => {
 
-	await setStatus(job, Activity.Scanning);
+		// get all attachments metadata
 
-	const attachments=(await listAttachments(page))
-		.filter(attachment => attachment.mediaType === pdf);
+		await setStatus(job, Activity.Scanning);
 
-
-	// get cached policy documents for this page (limit 100 should be sufficient for single page, no pagination needed)
-
-	await setStatus(job, Activity.Fetching);
-
-	const cached=await kvs.query()
-		.where("key", WhereConditions.beginsWith(`${page}:policy:`))
-		.limit(100)
-		.getMany();
+		const attachments=(await listAttachments(page))
+			.filter(attachment => attachment.mediaType === pdf);
 
 
-	// purge stale cache entries
+		// get cached policy documents for this page (limit 100 should be sufficient for single page, no pagination
+		// needed)
 
-	await setStatus(job, Activity.Purging);
+		await setStatus(job, Activity.Fetching);
 
-	await Promise.all(cached.results
-		.filter(result => {
+		const cached=await kvs.query()
+			.where("key", WhereConditions.beginsWith(`${page}:policy:`))
+			.limit(100)
+			.getMany();
 
-			// extract source id from cache key
 
-			const source=policyKeySource(result.key);
+		// purge stale cache entries
 
-			// find matching attachment
+		await setStatus(job, Activity.Purging);
 
-			const attachment=attachments.find(attachment => source === attachment.id);
+		await Promise.all(cached.results
+			.filter(result => {
 
-			if ( isUndefined(attachment) ) { // attachment no longer exists, purge this cache entry
+				// extract source id from cache key
 
-				return true;
+				const source=keySource(result.key);
 
-			} else { // check timestamp staleness: purge if document was cached before attachment was modified
+				// find matching attachment
 
-				const document=result.value as Document;
-				const attachmentCreated=new Date(attachment.createdAt).getTime();
-				const cachedCreated=new Date(document.created).getTime();
+				const attachment=attachments.find(attachment => source === attachment.id);
 
-				return cachedCreated < attachmentCreated; // stale if cached before attachment modified
+				if ( isUndefined(attachment) ) { // attachment no longer exists, purge this cache entry
 
-			}
+					return true;
 
-		})
-		.map(result => kvs.delete(result.key)));
+				} else { // check timestamp staleness: purge if document was cached before attachment was modified
 
-	// create catalog (using attachment title, as document title is quite expensive to get upfront)
+					const document=result.value as Document;
+					const attachmentCreated=new Date(attachment.createdAt).getTime();
+					const cachedCreated=new Date(document.created).getTime();
 
-	await setStatus(job, attachments.reduce((catalog, attachment) => ({
-		...catalog,
-		[attachment.id]: attachment.title.replace(/\.pdf$/, "")
-	}), {} as Record<string, string>));
+					return cachedCreated < attachmentCreated; // stale if cached before attachment modified
+
+				}
+
+			})
+			.map(result => kvs.delete(result.key)));
+
+		// create catalog (using attachment title, as document title is quite expensive to get upfront)
+
+		await setStatus(job, attachments.reduce((catalog, attachment) => ({
+			...catalog,
+			[attachment.id]: attachment.title.replace(/\.pdf$/, "")
+		}), {} as Record<string, string>));
+
+	});
 
 }

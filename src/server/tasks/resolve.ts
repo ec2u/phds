@@ -17,30 +17,34 @@
 import { kvs } from "@forge/kvs";
 import { Activity, ResolveTask } from "../../shared/tasks";
 import { setStatus } from "../async";
-import { issueKey } from "../tools/cache";
+import { issueKey, issuesKey, lock } from "../tools/cache";
 
 export async function resolve(job: string, page: string, { issues: ids, reopen=false }: ResolveTask): Promise<void> {
 
-	await setStatus(job, Activity.Purging);
+	await lock(job, issuesKey(page), async () => {
 
-	// mark individual issues as resolved or reopen them
+		await setStatus(job, Activity.Purging);
 
-	for (const issueId of ids) {
+		// mark individual issues as resolved or reopen them
 
-		const key=issueKey(page, issueId);
-		const issue=await kvs.get(key);
+		for (const issueId of ids) {
 
-		if ( issue ) {
+			const key=issueKey(page, issueId);
+			const issue=await kvs.get(key);
 
-			await kvs.set(key, {
-				...issue,
-				resolved: reopen ? undefined : new Date().toISOString()
-			});
+			if ( issue ) {
+
+				await kvs.set(key, {
+					...issue,
+					resolved: reopen ? undefined : new Date().toISOString()
+				});
+
+			}
 
 		}
 
-	}
+		await setStatus(job, undefined);
 
-	await setStatus(job, undefined);
+	});
 
 }

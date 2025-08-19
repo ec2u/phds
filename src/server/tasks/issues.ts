@@ -23,7 +23,7 @@ import { defaultLanguage } from "../../shared/languages";
 import { Activity, IssuesTask } from "../../shared/tasks";
 import { setStatus } from "../async";
 import { Attachment, fetchAttachment, listAttachments, pdf } from "../tools/attachments";
-import { issueKey } from "../tools/cache";
+import { issueKey, issuesKey, lock } from "../tools/cache";
 import { process, upload } from "../tools/gemini";
 import { retrievePrompt } from "../tools/langfuse";
 
@@ -83,191 +83,195 @@ const ResponseSchema: Schema={
 
 export async function issues(job: string, page: string, { refresh=false, agreement }: IssuesTask) {
 
-	// query for existing issues for this page
+	await lock(job, issuesKey(page), async () => {
 
-	await setStatus(job, Activity.Fetching);
+		// query for existing issues for this page
 
-	const results: Array<{ key: string; value: any }>=[];
+		await setStatus(job, Activity.Fetching);
 
-	let cursor: string | undefined;
+		const results: Array<{ key: string; value: any }>=[];
 
-	do {
+		let cursor: string | undefined;
 
-		const query=kvs.query()
-			.where("key", WhereConditions.beginsWith(`${page}:issue:`))
-			.limit(100);
+		do {
 
-		const batch=await (cursor ? query.cursor(cursor) : query).getMany();
+			const query=kvs.query()
+				.where("key", WhereConditions.beginsWith(`${page}:issue:`))
+				.limit(100);
 
-		results.push(...batch.results);
-		cursor=batch.nextCursor;
+			const batch=await (cursor ? query.cursor(cursor) : query).getMany();
 
-	} while ( cursor );
+			results.push(...batch.results);
+			cursor=batch.nextCursor;
 
-
-	// if not refreshing, return cached values (even if empty)
-
-	if ( !refresh ) {
-
-		await setStatus(job, results.map(result => result.value as Issue));
-
-		return;
-
-	}
+		} while ( cursor );
 
 
-	await setStatus(job, Activity.Analyzing);
+		// if not refreshing, return cached values (even if empty)
+
+		if ( !refresh ) {
+
+			await setStatus(job, results.map(result => result.value as Issue));
+
+			return;
+
+		}
 
 
-	// retrieve prompts
-
-	const detection=await retrievePrompt("INCONSISTENCY_DETECTION");
-	const merging=await retrievePrompt("INCONSISTENCY_MERGING");
+		await setStatus(job, Activity.Analyzing);
 
 
-	// upload agreement text
+		// retrieve prompts
 
-	const agreementName="agreement";
-	const agreementFile=await upload({
-		name: agreementName,
-		mime: "text/plain",
-		data: Buffer.from(agreement, "utf-8")
-	});
+		const detection=await retrievePrompt("INCONSISTENCY_DETECTION");
+		const merging=await retrievePrompt("INCONSISTENCY_MERGING");
 
 
-	// upload policies
+		// upload agreement text
 
-	const policies=(await listAttachments(page)).filter(attachment =>
-		attachment.mediaType === pdf
-	);
-
-	const policyFiles=await Promise.all(policies.map(async (attachment) => {
-
-		// fetch the attachment content
-
-		const content=await fetchAttachment(page, attachment.id);
-
-		// upload to Gemini
-
-		return await upload({
-			name: attachment.title,
-			mime: attachment.mediaType,
-			data: content
+		const agreementName="agreement";
+		const agreementFile=await upload({
+			name: agreementName,
+			mime: "text/plain",
+			data: Buffer.from(agreement, "utf-8")
 		});
 
-	}));
 
+		// upload policies
 
-	// generate a report detailing all existing issues
-
-	const history=report(results.map(result => result.value as Issue));
-
-
-	// process agreement/policy pairs with multiple parallel analysis rounds
-
-	const issues=await analyse();
-
-
-	async function analyse(): Promise<Issue[]> {
-
-		// for each agreement/policy pair
-
-		const issues=await Promise.all(
-			policyFiles.map(async (file, index) => {
-
-				// do multiple parallel rounds of detection for this policy
-
-				const detected=await Promise.all(
-					Array.from({ length: iterations }, () => detect(file, policies[index]))
-				);
-
-				// merge all detected issues for this policy
-
-				return await merge(detected.flat(), policies[index]);
-
-			})
+		const policies=(await listAttachments(page)).filter(attachment =>
+			attachment.mediaType === pdf
 		);
 
-		// merge all issues
+		const policyFiles=await Promise.all(policies.map(async (attachment) => {
 
-		return issues.flat();
-	}
+			// fetch the attachment content
 
-	async function detect(file: FileMetadataResponse, policy: Attachment): Promise<Issue[]> {
+			const content=await fetchAttachment(page, attachment.id);
 
-		const response=await process<Response>({
-			model,
-			prompt: detection,
-			variables: {
-				document_name: agreementName,
-				policy_name: file.displayName!,
-				target_language: defaultLanguage, // !!!
-				known_issues: history
-			},
-			files: [file, agreementFile],
-			schema: ResponseSchema
-		});
+			// upload to Gemini
 
-		return response.map(entry => convert(entry, policy));
-	}
+			return await upload({
+				name: attachment.title,
+				mime: attachment.mediaType,
+				data: content
+			});
 
-	async function merge(issues: ReadonlyArray<Issue>, policy: Attachment): Promise<Issue[]> {
-
-		const response=await process<Response>({
-			model,
-			prompt: merging,
-			variables: {
-				inconsistencies: report(issues)
-			},
-			schema: ResponseSchema
-		});
-
-		return response.map((entry, index) => convert(entry, policy));
-	}
+		}));
 
 
-	function convert(entry: Response[number], policy: Attachment): Issue {
-		return {
+		// generate a report detailing all existing issues
 
-			id: crypto.randomUUID(),
-			created: new Date().toISOString(),
-			severity: entry.severity === "high" ? 3 : entry.severity === "medium" ? 2 : 1,
-
-			title: entry.reason_title,
-			description: [
-				entry.reason_analysis,
-				{
-					source: "",
-					title: "Agreement",
-					excerpt: entry.document_clash_excerpt,
-					offset: 0, // !!!
-					length: entry.document_clash_excerpt.length // !!!
-				} as Reference,
-				{
-					source: policy.id,
-					title: policy.title.replace(/\.\w+$/, ""), // remove filename extension
-					excerpt: entry.policy_clash_excerpt,
-					offset: 0, // !!!
-					length: entry.policy_clash_excerpt.length // !!!
-				} as Reference
-			]
-
-		};
-	}
+		const history=report(results.map(result => result.value as Issue));
 
 
-	// cache results
+		// process agreement/policy pairs with multiple parallel analysis rounds
 
-	await setStatus(job, Activity.Caching);
-
-	for (const issue of issues) {
-		await kvs.set<Issue>(issueKey(page, issue.id), issue);
-	}
+		const issues=await analyse();
 
 
-	// return all issues (existing + new)
+		async function analyse(): Promise<Issue[]> {
 
-	await setStatus(job, [...(results.map(result => result.value as Issue)), ...issues]);
+			// for each agreement/policy pair
+
+			const issues=await Promise.all(
+				policyFiles.map(async (file, index) => {
+
+					// do multiple parallel rounds of detection for this policy
+
+					const detected=await Promise.all(
+						Array.from({ length: iterations }, () => detect(file, policies[index]))
+					);
+
+					// merge all detected issues for this policy
+
+					return await merge(detected.flat(), policies[index]);
+
+				})
+			);
+
+			// merge all issues
+
+			return issues.flat();
+		}
+
+		async function detect(file: FileMetadataResponse, policy: Attachment): Promise<Issue[]> {
+
+			const response=await process<Response>({
+				model,
+				prompt: detection,
+				variables: {
+					document_name: agreementName,
+					policy_name: file.displayName!,
+					target_language: defaultLanguage, // !!!
+					known_issues: history
+				},
+				files: [file, agreementFile],
+				schema: ResponseSchema
+			});
+
+			return response.map(entry => convert(entry, policy));
+		}
+
+		async function merge(issues: ReadonlyArray<Issue>, policy: Attachment): Promise<Issue[]> {
+
+			const response=await process<Response>({
+				model,
+				prompt: merging,
+				variables: {
+					inconsistencies: report(issues)
+				},
+				schema: ResponseSchema
+			});
+
+			return response.map((entry) => convert(entry, policy));
+		}
+
+
+		function convert(entry: Response[number], policy: Attachment): Issue {
+			return {
+
+				id: crypto.randomUUID(),
+				created: new Date().toISOString(),
+				severity: entry.severity === "high" ? 3 : entry.severity === "medium" ? 2 : 1,
+
+				title: entry.reason_title,
+				description: [
+					entry.reason_analysis,
+					{
+						source: "",
+						title: "Agreement",
+						excerpt: entry.document_clash_excerpt,
+						offset: 0, // !!!
+						length: entry.document_clash_excerpt.length // !!!
+					} as Reference,
+					{
+						source: policy.id,
+						title: policy.title.replace(/\.\w+$/, ""), // remove filename extension
+						excerpt: entry.policy_clash_excerpt,
+						offset: 0, // !!!
+						length: entry.policy_clash_excerpt.length // !!!
+					} as Reference
+				]
+
+			};
+		}
+
+
+		// cache results
+
+		await setStatus(job, Activity.Caching);
+
+		for (const issue of issues) {
+			await kvs.set<Issue>(issueKey(page, issue.id), issue);
+		}
+
+
+		// return all issues (existing + new)
+
+		await setStatus(job, [...(results.map(result => result.value as Issue)), ...issues]);
+
+	});
 
 }
 

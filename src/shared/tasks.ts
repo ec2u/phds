@@ -49,6 +49,7 @@ export const enum Activity {
 
 	Submitting,
 	Scheduling,
+	Locking,
 
 	Scanning,
 	Fetching,

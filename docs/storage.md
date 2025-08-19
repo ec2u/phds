@@ -122,12 +122,85 @@ Submit → Process (Activity updates) → Complete → Cleanup
 - **Policies only:** `{page}:policy:*` - all policies for a page
 - **System data:** `system:*` - global metadata
 
-# Utility Functions
+# Concurrency Control and Locking
 
-Key construction and parsing utilities in `src/server/tools/cache.ts`:
+## Lock Management System
 
-- `policyKey(page, source, language?)` - Construct policy cache keys
-- `issueKey(page, issueId)` - Construct issue cache keys
-- `keyPage(key)` - Extract page ID from cache key
-- `policyKeySource(key)` - Extract source ID from policy key
-- `policyKeyLanguage(key)` - Extract language from policy key
+The system implements a hierarchical locking mechanism to prevent race conditions and enable cooperative caching when
+multiple users access the same resources simultaneously.
+
+### Lock Storage Structure
+
+**Lock Catalog Pattern:** `{page}` (page-scoped lock catalog)
+
+Lock catalogs use the `LockCatalog` interface defined in `src/server/tools/cache.ts:43-48`, storing all active
+locks for a page in a single KVS entry with optimistic concurrency control via version tracking.
+
+### Lock Hierarchy (Coarsest → Finest)
+
+#### 1. Page Level - Most Restrictive
+
+**Lock Identifier:** `{page}`
+
+- **Purpose**: Operations affecting the entire page
+- **Used by**: `clear` (purge all data), full page operations
+- **Blocks**: All other locks on the same page
+
+#### 2. Resource Type Level - Catalog Scoped
+
+**Lock Identifiers:** `policies` | `issues`
+
+- **Purpose**: Operations on resource catalogs (bulk operations)
+- **Used by**: `policies` (catalog building), `issues` (bulk issue analysis)
+- **Blocks**: Individual resource locks of same type
+
+#### 3. Individual Resource Level - Most Granular
+
+**Lock Identifiers:** `policy:{source}:{language?}` | `issue:{issueId}`
+
+- **Purpose**: Operations on specific resources
+- **Used by**: `policy`, `classify`, `annotate`, `resolve`
+- **Blocks**: Conflicts with catalog operations of same type
+
+### Conflict Detection Algorithm
+
+The system uses hierarchical conflict detection with prefix matching (see `conflicts()` function in
+`src/server/tools/cache.ts:360-375`). Lock conflicts occur when:
+
+- **Exact match**: Requested lock identical to existing lock
+- **Parent-child hierarchy**: One lock is a prefix of another (e.g., `policies` conflicts with `policy:123`)
+- **Bidirectional blocking**: Both upward (fine→coarse) and downward (coarse→fine) conflicts detected
+
+### KVS Platform Limitations
+
+**Current Implementation Status:**
+
+- **Race condition limitation**: KVS API constraints prevent atomic read-check-write operations
+- **Probabilistic correctness**: System accepts rare race conditions with extensive monitoring and logging
+- **2-minute timeout**: Minimizes impact of stuck locks from race conditions
+
+**Missing Features for Distributed Locking:**
+
+- ❌ Conditional reads (no `.if()`, `.exists()`, `.hasVersion()`)
+- ❌ Compare-and-swap operations
+- ❌ Read operations within transactions
+- ❌ Built-in lock primitives
+
+**Mitigation Strategies:**
+
+- Hierarchical design reduces conflict probability
+- 2-minute timeout minimizes stuck lock impact
+- Exponential backoff reduces contention
+- Extensive logging enables issue detection
+
+## Cooperative Caching Workflow
+
+**Example: Multiple Policy Translation Requests**
+
+1. User A requests `policy:123:fr` translation
+2. User A acquires lock `policy:123:fr`
+3. Users B & C wait for lock release
+4. User A completes work, caches result, releases lock
+5. Users B & C find cached result, skip duplicate work
+
+**Result**: Only one AI operation triggered, all users get consistent results.

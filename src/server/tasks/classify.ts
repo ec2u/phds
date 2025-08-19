@@ -18,21 +18,25 @@ import { kvs } from "@forge/kvs";
 import { Issue } from "../../shared/issues";
 import { Activity, ClassifyTask } from "../../shared/tasks";
 import { setStatus } from "../async";
-import { issueKey } from "../tools/cache";
+import { issueKey, lock } from "../tools/cache";
 
 export async function classify(job: string, page: string, { issue: id, severity }: ClassifyTask): Promise<void> {
 
-	await setStatus(job, Activity.Caching);
-
-	// update severity for the specific issue
-
 	const key=issueKey(page, id);
-	const issue=await kvs.get<Issue>(key);
+	await lock(job, key, async () => {
 
-	if ( issue ) {
-		await kvs.set<Issue>(key, { ...issue, severity });
-	}
+		await setStatus(job, Activity.Caching);
 
-	await setStatus(job, undefined);
+		// update severity for the specific issue
+
+		const issue=await kvs.get<Issue>(key);
+
+		if ( issue ) {
+			await kvs.set<Issue>(key, { ...issue, severity });
+		}
+
+		await setStatus(job, undefined);
+
+	});
 
 }

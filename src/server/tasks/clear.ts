@@ -14,13 +14,20 @@
  * limitations under the License.
  */
 
-import { ClearTask } from "../../shared/tasks";
+import { Activity, ClearTask } from "../../shared/tasks";
 import { setStatus } from "../async";
-import { purge } from "../tools/cache";
+import { lock, pageKey, purge } from "../tools/cache";
 
 export async function clear(job: string, page: string, {}: ClearTask) {
 
-	await purge(job, page);
-	await setStatus(job, undefined);
+	await lock(job, pageKey(page), async () => {
+
+		await setStatus(job, Activity.Purging);
+
+		await purge(page);
+
+		await setStatus(job, undefined);
+
+	});
 
 }

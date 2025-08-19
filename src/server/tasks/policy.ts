@@ -21,36 +21,42 @@ import { Language } from "../../shared/languages";
 import { Activity, PolicyTask } from "../../shared/tasks";
 import { setStatus } from "../async";
 import { fetchAttachment, getAttachment, pdf } from "../tools/attachments";
-import { policyKey } from "../tools/cache";
+import { lock, policyKey } from "../tools/cache";
 import { process, upload } from "../tools/gemini";
 import { retrievePrompt } from "../tools/langfuse";
 
 
 export async function policy(job: string, page: string, { source, language }: PolicyTask): Promise<Document> {
 
-	const cached=await fetchPolicy(job, page, source, language);
+	const key=policyKey(page, source, language);
 
-	if ( cached ) {
+	return await lock(job, key, async () => {
 
-		await setStatus(job, cached);
+		const cached=await fetchPolicy(job, page, source, language);
 
-		return cached;
+		if ( cached ) {
 
-	} else {
+			await setStatus(job, cached);
 
-		const original=await fetchPolicy(job, page, source);
-		const document=original || await extract(job, page, source);
+			return cached;
 
-		// translate the document if needed
+		} else {
 
-		const translation=(document.language === language)
-			? document
-			: await translate(job, page, source, document, language);
+			const original=await fetchPolicy(job, page, source);
+			const document=original || await extract(job, page, source);
 
-		await setStatus(job, translation);
+			// translate the document if needed
 
-		return translation;
-	}
+			const translation=(document.language === language)
+				? document
+				: await translate(job, page, source, document, language);
+
+			await setStatus(job, translation);
+
+			return translation;
+		}
+
+	});
 
 }
 

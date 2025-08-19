@@ -32,6 +32,7 @@ export function ToolActivity({
 
 		[Activity.Submitting]: "Submitting Request…",
 		[Activity.Scheduling]: "Scheduling Request…",
+		[Activity.Locking]: "Acquiring Resources…",
 
 		[Activity.Scanning]: "Scanning Attachments…",
 		[Activity.Fetching]: "Fetching Content…",
