@@ -13,13 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import { kvs, WhereConditions } from "@forge/kvs";
 import { isUndefined } from "../../shared";
 import { Document } from "../../shared/documents";
 import { Activity, PoliciesTask } from "../../shared/tasks";
 import { setStatus } from "../async";
 import { listAttachments, pdf } from "../tools/attachments";
-import { keySource, lock, policiesKey } from "../tools/cache";
+import { keyPrefix, keySource, lock, policiesKey } from "../tools/cache";
 
 export async function policies(job: string, page: string, {}: PoliciesTask) {
 
@@ -33,13 +34,12 @@ export async function policies(job: string, page: string, {}: PoliciesTask) {
 			.filter(attachment => attachment.mediaType === pdf);
 
 
-		// get cached policy documents for this page (limit 100 should be sufficient for single page, no pagination
-		// needed)
+		// get cached policy documents for this page (100 should be sufficient for single page, no pagination needed)
 
 		await setStatus(job, Activity.Fetching);
 
 		const cached=await kvs.query()
-			.where("key", WhereConditions.beginsWith(`${page}:policy:`))
+			.where("key", WhereConditions.beginsWith(keyPrefix(policiesKey(page))))
 			.limit(100)
 			.getMany();
 

@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 import { kvs } from "@forge/kvs";
 import { SchemaType } from "@google/generative-ai";
 import { isUndefined } from "../../shared";
@@ -24,7 +25,6 @@ import { fetchAttachment, getAttachment, pdf } from "../tools/attachments";
 import { lock, policyKey } from "../tools/cache";
 import { process, upload } from "../tools/gemini";
 import { retrievePrompt } from "../tools/langfuse";
-
 
 export async function policy(job: string, page: string, { source, language }: PolicyTask): Promise<Document> {
 

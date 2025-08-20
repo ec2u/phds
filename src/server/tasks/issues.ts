@@ -23,7 +23,7 @@ import { defaultLanguage } from "../../shared/languages";
 import { Activity, IssuesTask } from "../../shared/tasks";
 import { setStatus } from "../async";
 import { Attachment, fetchAttachment, listAttachments, pdf } from "../tools/attachments";
-import { issueKey, issuesKey, lock } from "../tools/cache";
+import { issueKey, issuesKey, keyPrefix, lock } from "../tools/cache";
 import { process, upload } from "../tools/gemini";
 import { retrievePrompt } from "../tools/langfuse";
 
@@ -96,7 +96,7 @@ export async function issues(job: string, page: string, { refresh=false, agreeme
 		do {
 
 			const query=kvs.query()
-				.where("key", WhereConditions.beginsWith(`${page}:issue:`))
+				.where("key", WhereConditions.beginsWith(keyPrefix(issuesKey(page))))
 				.limit(100);
 
 			const batch=await (cursor ? query.cursor(cursor) : query).getMany();

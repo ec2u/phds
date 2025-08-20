@@ -86,6 +86,10 @@ export const handler=new Resolver()
 
 					return await clear(job, page, task);
 
+				default:
+
+					throw new Error(`unknown task type <${(task as any).type}>`);
+
 			}
 
 		} catch ( error ) {

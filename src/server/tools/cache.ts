@@ -119,6 +119,16 @@ export function issueKey(page: string, issueId: string): Key {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
+ * Generate cache key prefix for filtering operations
+ * @param entry - Cache key entry type
+ * @returns Formatted prefix string ending with ":"
+ */
+export function keyPrefix(entry: Key) {
+	return `${entry}:`;
+}
+
+
+/**
  * Extract page id from cache key
  * @param key - Cache key in format "{page}:type:..."
  * @returns Page id
@@ -225,7 +235,7 @@ async function scan(page?: string) {
 		// if targeting specific page, query only that page's entries
 
 		if ( page ) {
-			query=query.where("key", WhereConditions.beginsWith(`${page}:`));
+			query=query.where("key", WhereConditions.beginsWith(keyPrefix(pageKey(page))));
 		}
 
 		if ( cursor ) {
@@ -413,9 +423,9 @@ function conflicts(requested: Key, entries: Record<Key, LockEntry>): boolean {
 
 		// hierarchical conflict: one lock is prefix of another
 
-		if ( requested.startsWith(entry + ":")
-			|| entry.startsWith(requested + ":")
-			|| requested === entry
+		if ( requested === entry
+			|| requested.startsWith(keyPrefix(entry))
+			|| entry.startsWith(keyPrefix(requested))
 		) {
 			return true;
 		}
