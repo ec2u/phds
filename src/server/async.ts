@@ -46,6 +46,10 @@ export async function setStatus<T>(job: string, value: undefined | Status<T>): P
 
 		}
 
+	} else {
+
+		console.info(`background job status set to <${value}>`);
+
 	}
 }
 
