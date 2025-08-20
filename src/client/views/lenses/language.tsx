@@ -31,7 +31,7 @@ export function ToolLanguage({
 
 }) {
 
-	return <Select spacing={"compact"} isRequired={true} isDisabled={true}
+	return <Select spacing={"compact"} isRequired={true}
 
 		value={{ value: locale, label: languages[locale] }}
 		onChange={option => onChange(option.value)}
