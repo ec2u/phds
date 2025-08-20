@@ -18,8 +18,8 @@ import { kvs, WhereConditions } from "@forge/kvs";
 import { checkPage } from "./pages";
 
 
-const policyTag="policy";
-const issueTag="issue";
+const policiesTag="policies";
+const issuesTag="issues";
 
 const purgeKey="system:purged";
 const purgePeriod=24 * 60 * 60 * 1000; // purge period in ms
@@ -75,7 +75,7 @@ export function pageKey(page: string): Key {
  * @returns Policies catalog lock key that conflicts with all individual policy locks on the page
  */
 export function policiesKey(page: string): Key {
-	return `${page}:${policyTag}`;
+	return `${page}:${policiesTag}`;
 }
 
 /**
@@ -88,7 +88,7 @@ export function policiesKey(page: string): Key {
  * @returns Policy cache key (e.g., "{page}:policy:{source}" or "{page}:policy:{source}:{language}")
  */
 export function policyKey(page: string, source: string, language?: string): Key {
-	return language ? `${page}:${policyTag}:${source}:${language}` : `${page}:${policyTag}:${source}`;
+	return language ? `${page}:${policiesTag}:${source}:${language}` : `${page}:${policiesTag}:${source}`;
 }
 
 
@@ -100,7 +100,7 @@ export function policyKey(page: string, source: string, language?: string): Key 
  * @returns Issues catalog lock key that conflicts with all individual issue locks on the page
  */
 export function issuesKey(page: string): Key {
-	return `${page}:${issueTag}`;
+	return `${page}:${issuesTag}`;
 }
 
 /**
@@ -112,7 +112,7 @@ export function issuesKey(page: string): Key {
  * @returns Issue cache key
  */
 export function issueKey(page: string, issueId: string): Key {
-	return `${page}:${issueTag}:${issueId}`;
+	return `${page}:${issuesTag}:${issueId}`;
 }
 
 
@@ -345,14 +345,14 @@ async function acquire(job: string, key: Key): Promise<void> {
 
 		} catch ( error ) {
 
-			console.warn(`lock acquisition for ${key} failed on attempt ${attempts + 1}:`, error);
+			console.warn(`lock acquisition for <${key}> failed on attempt <${attempts + 1}>:`, error);
 
 			await backoff(attempts);
 
 		}
 	}
 
-	throw new Error(`lock acquisition for ${key} failed after ${lockAttempts} attempts`);
+	throw new Error(`lock acquisition for <${key}> failed after <${lockAttempts}> attempts`);
 }
 
 async function release(job: string, key: Key): Promise<void> {
@@ -373,20 +373,26 @@ async function release(job: string, key: Key): Promise<void> {
 
 				if ( currentLock?.job === job ) {
 
-					// use single read to reduce race condition window
-
 					if ( catalog.version === ((await kvs.get<LockCatalog>(locks))?.version ?? 0) ) { // no version conflict
 
 						const { [key]: _, ...remainingLocks }=catalog.locks;
 
-						await kvs.transact()
-							.set(locks, {
+						const transaction=kvs.transact();
 
+						if ( Object.keys(remainingLocks).length > 0 ) {
+
+							transaction.set(locks, {
 								locks: remainingLocks,
 								version: catalog.version + 1
+							});
 
-							})
-							.execute();
+						} else {
+
+							transaction.delete(locks);
+
+						}
+
+						await transaction.execute();
 
 						return;
 
@@ -397,7 +403,9 @@ async function release(job: string, key: Key): Promise<void> {
 					}
 
 				} else { // lock not owned by this job
-					console.warn(`attempted to release lock not owned by job ${job}: ${key}`);
+
+					console.warn(`attempted to release lock <${key}> not owned by job <${job}>`);
+
 					return;
 				}
 
