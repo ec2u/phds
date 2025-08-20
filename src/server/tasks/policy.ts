@@ -26,9 +26,6 @@ import { lock, policyKey } from "../tools/cache";
 import { process, upload } from "../tools/gemini";
 import { retrievePrompt } from "../tools/langfuse";
 
-
-// !!! reporting is broken: this task will always wait for background extraction/translation launched by inde.ts
-
 export async function policy(job: string, page: string, {
 
 	source,

@@ -48,16 +48,7 @@ export const handler=new Resolver()
 
 	}) {
 
-		Promise.all([ // launch background tasks (fire-and-forget; resource locking handles contentions)
-
-			purge(), // global cache purge
-			translate(page, defaultLanguage) // policy translation
-
-		]).catch(error =>
-			console.error("background task failed:", asTrace(error))
-		);
-
-		try { // process task
+		try {
 
 			switch ( task.type ) {
 
@@ -98,6 +89,19 @@ export const handler=new Resolver()
 		} catch ( error ) {
 
 			return await setStatus(job, asTrace(error));
+
+		} finally {
+
+			// launch background tasks (fire-and-forget; resource locking handles contentions)
+
+			Promise.all([
+
+				purge(), // global cache purge
+				translate(page, defaultLanguage) // policy translation
+
+			]).catch(error =>
+				console.error("background task failed:", asTrace(error))
+			);
 
 		}
 
