@@ -15,10 +15,11 @@
  */
 
 import { kvs } from "@forge/kvs";
-import { isDefined } from "../shared";
+import { isDefined, isString } from "../shared";
 import { Activity, isActivity, Status, Task } from "../shared/tasks";
 
 const statusTimeout=30 * 1000;
+const statusClipping=20;
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -37,11 +38,14 @@ export async function getStatus<T>(job: string): Promise<Status<T>> {
 	return await kvs.get<Status<T>>(jobKey(job)) as Status<T>;
 }
 
+
 export async function setStatus<T>(job: string, value: undefined | Status<T>): Promise<void> {
 
 	console.info(`${job || "background job"} status set to <${
 
-		isActivity(value) ? Activity[value] : JSON.stringify(value)
+		isActivity(value) ? Activity[value] : JSON.stringify(value, (_, value) =>
+			isString(value) && value.length > statusClipping ? `${value.slice(0, statusClipping)}...` : value
+		)
 
 	}>`);
 
