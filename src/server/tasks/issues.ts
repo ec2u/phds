@@ -15,18 +15,17 @@
  */
 
 import { kvs, WhereConditions } from "@forge/kvs";
-import { Schema, SchemaType } from "@google/generative-ai";
-import { FileMetadataResponse } from "@google/generative-ai/server";
+import { File, Schema, Type } from "@google/genai";
 import { isString } from "../../shared";
 import { Issue, Reference } from "../../shared/issues";
 import { defaultLanguage } from "../../shared/languages";
 import { Activity, IssuesTask, Payload } from "../../shared/tasks";
 import { setStatus } from "../async";
-import { Attachment, fetchAttachment, listAttachments, markdown, pdf } from "../tools/attachments";
+import { Attachment, fetchAttachment, listAttachments } from "../tools/attachments";
 import { issueKey, issuesKey, keyPrefix, lock } from "../tools/cache";
 import { process, upload } from "../tools/gemini";
 import { retrievePrompt } from "../tools/langfuse";
-
+import { markdown, pdf } from "../tools/mime";
 
 const model="gemini-2.5-pro";
 const iterations=5;
@@ -43,28 +42,29 @@ type Response=ReadonlyArray<{
 }>;
 
 const ResponseSchema: Schema={
-	type: SchemaType.ARRAY,
+	type: Type.ARRAY,
 	items: {
-		type: SchemaType.OBJECT,
+		type: Type.OBJECT,
 		properties: {
 			severity: {
-				type: SchemaType.STRING,
-				description: "A severity assessment of the clash (high/medium/low)"
+				type: Type.STRING,
+				description: "A severity assessment of the clash",
+				enum: ["high", "medium", "low"]
 			},
 			reason_title: {
-				type: SchemaType.STRING,
+				type: Type.STRING,
 				description: "A short title explaining why the sections are incompatible"
 			},
 			reason_analysis: {
-				type: SchemaType.STRING,
+				type: Type.STRING,
 				description: "A more verbose description explaining why the sections are incompatible"
 			},
 			policy_clash_excerpt: {
-				type: SchemaType.STRING,
+				type: Type.STRING,
 				description: "The full text of the excerpt of the policy that clashes with the document"
 			},
 			document_clash_excerpt: {
-				type: SchemaType.STRING,
+				type: Type.STRING,
 				description: "The full text of the excerpt of the document that clashes with the policy"
 			}
 		},
@@ -198,7 +198,7 @@ export async function issues(job: string, page: string, {
 			return issues.flat();
 		}
 
-		async function detect(file: FileMetadataResponse, policy: Attachment): Promise<Issue[]> {
+		async function detect(file: File, policy: Attachment): Promise<Issue[]> {
 
 			const response=await process<Response>({
 				model,

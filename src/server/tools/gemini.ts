@@ -14,30 +14,27 @@
  * limitations under the License.
  */
 
-import { GenerationConfig, GoogleGenerativeAI, ResponseSchema } from "@google/generative-ai";
-import { FileMetadataResponse, GoogleAIFileManager } from "@google/generative-ai/server";
+import { File, GenerationConfig, GoogleGenAI, Schema } from "@google/genai";
 import { TextPromptClient } from "langfuse";
 import { asTrace, isObject, isString, isUndefined } from "../../shared";
 import { secret } from "../index";
-import { json, text } from "./attachments";
+
+import { json } from "./mime";
 
 
 const defaults: {
 
 	model: string,
-	config: GenerationConfig,
-	timeout: number
+	config: GenerationConfig
 
 }={
 
 	model: "gemini-2.5-flash",
 
 	config: {
-		// !!! seed: 0, ;( unable to configure
+		seed: 0,
 		temperature: 0
-	},
-
-	timeout: 10_000
+	}
 
 };
 
@@ -46,14 +43,13 @@ const defaults: {
 
 const key=secret("GEMINI_KEY");
 
-const client=new GoogleGenerativeAI(key);
-const manager=new GoogleAIFileManager(key);
+const client=new GoogleGenAI({ apiKey: key });
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
- * uploads are deleted after 48 hours (https://ai.google.dev/gemini-api/docs/files#delete-uploaded)
+ * Uploads are deleted after 48 hours (https://ai.google.dev/gemini-api/docs/files#delete-uploaded)
  */
 export async function upload({
 
@@ -67,28 +63,17 @@ export async function upload({
 	mime: string,
 	data: Buffer
 
-}): Promise<FileMetadataResponse> {
+}): Promise<File> {
+
 	try {
 
-		const response=await manager.uploadFile(data, {
-			displayName: name,
-			mimeType: mime
+		return await client.files.upload({
+			file: new Blob([data], { type: mime }),
+			config: {
+				displayName: name,
+				mimeType: mime
+			}
 		});
-
-		const meta=response.file;
-
-		let f=await manager.getFile(meta.name);
-
-		while ( f.state === "PROCESSING" ) {
-			await new Promise(resolve => setTimeout(resolve, defaults.timeout));
-			f= await manager.getFile(meta.name);
-		}
-
-		if ( f.state !== "ACTIVE" ) {
-			throw new Error(`unable to process file <${meta.name}>`);
-		}
-
-		return meta;
 
 	} catch ( error ) {
 
@@ -97,6 +82,7 @@ export async function upload({
 		throw asTrace(error);
 
 	}
+
 }
 
 /**
@@ -111,7 +97,7 @@ export async function process({
 	model?: string
 	prompt: string | TextPromptClient
 	variables?: Record<string, string>
-	files?: ReadonlyArray<FileMetadataResponse>
+	files?: ReadonlyArray<File>
 }): Promise<string>;
 
 /**
@@ -127,8 +113,8 @@ export async function process<T>({
 	model?: string
 	prompt: string | TextPromptClient
 	variables?: Record<string, string>
-	files?: ReadonlyArray<FileMetadataResponse>
-	schema: ResponseSchema
+	files?: ReadonlyArray<File>
+	schema: Schema
 }): Promise<T>;
 
 export async function process({
@@ -140,8 +126,8 @@ export async function process({
 }: {
 	model?: string
 	prompt: string | TextPromptClient
-	schema?: ResponseSchema
-	files?: ReadonlyArray<FileMetadataResponse>
+	schema?: Schema
+	files?: ReadonlyArray<File>
 	variables?: Record<string, string>
 }): Promise<string | any> {
 
@@ -163,41 +149,64 @@ export async function process({
 		}
 
 
-		const session=client.getGenerativeModel({
+		const systemInstruction=isString(prompt)
+			? compile(prompt, variables ?? {})
+			: prompt.compile(variables);
 
-			model: model ?? defaults.model,
-
-			systemInstruction: isString(prompt)
-				? compile(prompt, variables ?? {})
-				: prompt.compile(variables)
-
-		}).startChat({
-
-			generationConfig: {
-
-				...(defaults.config),
-				...(!isString(prompt) && isObject(prompt.config) ? Object.fromEntries(
-					Object.entries(prompt.config).filter(([, value]) => isString(value))
-				) : {}),
-
-				responseMimeType: schema ? json : text,
+		const config={
+			...(defaults.config),
+			...(!isString(prompt) && isObject(prompt.config) ? Object.fromEntries(
+				Object.entries(prompt.config).filter(([, value]) => isString(value))
+			) : {}),
+			...(schema && {
+				responseMimeType: json,
 				responseSchema: schema
-			}
+			}),
+			systemInstruction: { parts: [{ text: systemInstruction }] }
+		};
 
+		const contents=isUndefined(files) || !files.length
+			? [{ role: "user", parts: [{ text: "" }] }]
+			: [{
+				role: "user",
+				parts: [
+					{ text: "" },
+					...files.map(file => ({
+						fileData: {
+							mimeType: file.mimeType,
+							fileUri: file.uri || file.name
+						}
+					}))
+				]
+			}];
+
+		const result=await client.models.generateContent({
+			model: model ?? defaults.model,
+			contents,
+			config
 		});
 
-		const result=await (isUndefined(files) || !files.length
-			? session.sendMessage("")
-			: session.sendMessage(files.map(file => ({
+		const responseText=result.text || "";
 
-				fileData: {
-					mimeType: file.mimeType,
-					fileUri: file.uri
-				}
+		if ( schema ) {
 
-			}))));
+			try {
 
-		return schema ? JSON.parse(result.response.text()) : result.response.text();
+				return responseText.trim() ? JSON.parse(responseText) : {};
+
+			} catch ( parseError ) {
+
+				console.warn(`malformed JSON response <${responseText}>`);
+
+				return {};
+
+			}
+
+		} else {
+
+			return responseText;
+
+		}
 
 	} catch ( error ) {
 

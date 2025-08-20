@@ -15,16 +15,17 @@
  */
 
 import { kvs } from "@forge/kvs";
-import { SchemaType } from "@google/generative-ai";
+import { Type } from "@google/genai";
 import { isUndefined } from "../../shared";
 import { Document } from "../../shared/documents";
 import { Language } from "../../shared/languages";
 import { Activity, Payload, PolicyTask } from "../../shared/tasks";
 import { setStatus } from "../async";
-import { fetchAttachment, getAttachment, pdf } from "../tools/attachments";
+import { fetchAttachment, getAttachment } from "../tools/attachments";
 import { lock, policyKey } from "../tools/cache";
 import { process, upload } from "../tools/gemini";
 import { retrievePrompt } from "../tools/langfuse";
+import { pdf } from "../tools/mime";
 
 export async function policy(job: string, page: string, {
 
@@ -106,11 +107,11 @@ async function extract(job: string, page: string, source: string): Promise<Docum
 		files: [file],
 
 		schema: {
-			type: SchemaType.OBJECT,
+			type: Type.OBJECT,
 			properties: {
-				title: { type: SchemaType.STRING },
-				language: { type: SchemaType.STRING },
-				markdownContent: { type: SchemaType.STRING }
+				title: { type: Type.STRING },
+				language: { type: Type.STRING },
+				markdownContent: { type: Type.STRING }
 			},
 			required: [
 				"title",
@@ -177,11 +178,11 @@ async function translate(job: string, page: string, source: string, document: Do
 		},
 
 		schema: {
-			type: SchemaType.OBJECT,
+			type: Type.OBJECT,
 			properties: {
-				target_language: { type: SchemaType.STRING },
-				translated_content: { type: SchemaType.STRING },
-				translated_title: { type: SchemaType.STRING }
+				target_language: { type: Type.STRING },
+				translated_content: { type: Type.STRING },
+				translated_title: { type: Type.STRING }
 			},
 			required: [
 				"target_language",

@@ -19,8 +19,9 @@ import { isUndefined } from "../../shared";
 import { Document, Source, Title } from "../../shared/documents";
 import { Activity, Payload, PoliciesTask } from "../../shared/tasks";
 import { setStatus } from "../async";
-import { listAttachments, pdf } from "../tools/attachments";
+import { listAttachments } from "../tools/attachments";
 import { keyPrefix, keySource, lock, policiesKey } from "../tools/cache";
+import { pdf } from "../tools/mime";
 
 export async function policies(job: string, page: string, {}: Payload<PoliciesTask>): Promise<Record<Source, Title>> {
 

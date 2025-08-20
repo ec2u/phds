@@ -64,14 +64,6 @@ interface AttachmentsResponse {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-export const text="text/plain";
-export const markdown="text/markdown";
-export const pdf="application/pdf";
-export const json="application/json";
-
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 export async function listAttachments(page: string, mime?: string): Promise<Attachment[]> {
 
 	const response=await api.asApp().requestConfluence(route`/wiki/api/v2/pages/${page}/attachments?${query({
