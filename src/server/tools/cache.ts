@@ -15,6 +15,8 @@
  */
 
 import { kvs, WhereConditions } from "@forge/kvs";
+import { Activity } from "../../shared/tasks";
+import { setStatus } from "../async";
 import { checkPage } from "./pages";
 
 
@@ -155,7 +157,7 @@ export async function purge(page?: string): Promise<void> {
 
 		const results=await scan(page);
 
-		// delete all entries for the target page; locking handled at the cll site
+		// delete all entries for the target page; locking handled at the call site
 
 		await Promise.all(results.map(result => kvs.delete(result.key)));
 
@@ -274,6 +276,8 @@ async function scan(page?: string) {
  * @throws Error if lock cannot be acquired or released or task fails
  */
 export async function lock<T>(job: string, key: Key, task: () => Promise<T>): Promise<T> {
+
+	await setStatus(job, Activity.Locking);
 
 	await acquire(job, key);
 
