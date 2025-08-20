@@ -16,8 +16,12 @@
 
 import { kvs } from "@forge/kvs";
 import { isDefined } from "../shared";
-import { Status, Task } from "../shared/tasks";
+import { isActivity, Status, Task } from "../shared/tasks";
 
+const statusTimeout=30 * 1000;
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 export interface Specs {
 
@@ -30,19 +34,25 @@ export interface Specs {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 export async function getStatus<T>(job: string): Promise<Status<T>> {
-	return await kvs.get<Status<T>>(key(job)) as Status<T>;
+	return await kvs.get<Status<T>>(jobKey(job)) as Status<T>;
 }
 
 export async function setStatus<T>(job: string, value: undefined | Status<T>): Promise<void> {
 	if ( job ) {
 
+		const key=jobKey(job);
+
 		if ( isDefined(value) ) {
 
-			await kvs.set<Status<T>>(key(job), value);
+			await kvs.set<Status<T>>(key, value);
+
+			if ( !isActivity(value) ) { // delete final status if not picked up by job monitor
+				setTimeout(() => kvs.delete(key), statusTimeout);
+			}
 
 		} else {
 
-			await kvs.delete(key(job));
+			await kvs.delete(key);
 
 		}
 
@@ -56,6 +66,6 @@ export async function setStatus<T>(job: string, value: undefined | Status<T>): P
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-function key(job: string) {
+function jobKey(job: string) {
 	return `job:${job}`;
 }
