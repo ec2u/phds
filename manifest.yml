@@ -15,13 +15,13 @@ modules:
 
         function: resolver
 
-      config:
-
-        title: EC2U PhD Agreements Tool
-        resource: tool
-        render: native
-        viewportSize: max
-        openOnInsert: false
+  #      config:
+  #
+  #        title: EC2U PhD Agreements Tool
+  #        resource: tool
+  #        render: native
+  #        viewportSize: max
+  #        openOnInsert: false
 
   consumer:
 
@@ -45,8 +45,8 @@ resources:
   - key: body
     path: src/client/body.tsx
 
-  - key: tool
-    path: src/client/tool.tsx
+#  - key: tool
+#    path: src/client/tool.tsx
 
 app:
   id: ari:cloud:ecosystem::app/68e73326-bb04-4df2-a14c-382ba3abbe2b
