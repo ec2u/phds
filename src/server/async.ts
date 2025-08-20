@@ -16,7 +16,7 @@
 
 import { kvs } from "@forge/kvs";
 import { isDefined } from "../shared";
-import { isActivity, Status, Task } from "../shared/tasks";
+import { Activity, isActivity, Status, Task } from "../shared/tasks";
 
 const statusTimeout=30 * 1000;
 
@@ -38,6 +38,13 @@ export async function getStatus<T>(job: string): Promise<Status<T>> {
 }
 
 export async function setStatus<T>(job: string, value: undefined | Status<T>): Promise<void> {
+
+	console.info(`${job || "background job"} status set to <${
+
+		isActivity(value) ? Activity[value] : JSON.stringify(value)
+
+	}>`);
+
 	if ( job ) {
 
 		const key=jobKey(job);
@@ -55,10 +62,6 @@ export async function setStatus<T>(job: string, value: undefined | Status<T>): P
 			await kvs.delete(key);
 
 		}
-
-	} else {
-
-		console.info(`background job status set to <${JSON.stringify(value)}>`);
 
 	}
 }

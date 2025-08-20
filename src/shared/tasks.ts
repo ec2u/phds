@@ -47,7 +47,7 @@ export type Status<T>=Activity | T | Trace;
 /**
  * Enumeration of task activity states.
  */
-export const enum Activity {
+export enum Activity {
 
 	Submitting,
 	Scheduling,
