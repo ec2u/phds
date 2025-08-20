@@ -37,12 +37,21 @@ export async function submitTask({ payload: task, context }: Request<Task>): Pro
 }
 
 export async function monitorTask<T>({ payload: { id } }: Request<{ id: string }>): Promise<Status<T>> {
+	try {
 
-	const status=await getStatus<T>(id);
+		const status=await getStatus<T>(id);
 
-	if ( !isActivity(status) ) {
-		await setStatus(id, undefined); // clean up storage after completion
+		if ( !isActivity(status) ) {
+			await setStatus(id, undefined); // clean up storage after completion
+		}
+
+		return status;
+
+	} catch ( e ) {
+
+		await setStatus(id, undefined); // clean up storage on error
+
+		throw e;
+
 	}
-
-	return status;
 }
