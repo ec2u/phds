@@ -62,11 +62,6 @@ permissions:
     - delete:attachment:confluence
     - storage:app
 
-  external:
-    fetch:
-      backend:
-        - remote: gemini
-
 remotes:
 
   - key: gemini
