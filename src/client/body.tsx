@@ -21,7 +21,6 @@ import { defaultLanguage, Language } from "../shared/languages";
 import { ToolCache } from "./hooks/cache";
 import { ToolBar } from "./views/layouts/bar";
 import { ToolAgreement } from "./views/lenses/agreement";
-import { ToolChat } from "./views/lenses/chat";
 import { ToolClear } from "./views/lenses/clear";
 import { ToolIssues } from "./views/lenses/issues";
 import { ToolPolicies } from "./views/lenses/policies";
@@ -31,8 +30,8 @@ import { ToolPolicy } from "./views/lenses/policy";
 const modes={
 	"Agreement": false,
 	"Policies": false,
-	"Issues": false,
-	"Chat": true
+	"Issues": false
+	// !!! "Chat": true
 } as const;
 
 
@@ -76,8 +75,8 @@ function ToolBody() {
 			mode === "Agreement" ? <ToolAgreement language={language}/>
 				: mode === "Policies" ? <ToolPolicies onClick={setMode}/>
 					: mode === "Issues" ? <ToolIssues language={language}/>
-						: mode === "Chat" ? <ToolChat/>
-							: <ToolPolicy source={mode} language={language}/>
+						// !!! : mode === "Chat" ? <ToolChat/>
+						: <ToolPolicy source={mode} language={language}/>
 
 		}
 
