@@ -16,6 +16,7 @@
 
 import Resolver from "@forge/resolver";
 import { asTrace } from "../../shared";
+import { defaultLanguage, Language } from "../../shared/languages";
 import { setStatus, Specs } from "../async";
 import { purge } from "../tools/cache";
 import { annotate } from "./annotate";
@@ -47,14 +48,16 @@ export const handler=new Resolver()
 
 	}) {
 
-		try {
+		Promise.all([ // launch background tasks (fire-and-forget; resource locking handles contentions)
 
-			// global cache purge (run completely in background)
+			purge(), // global cache purge
+			translate(page, defaultLanguage) // policy translation
 
-			purge();
+		]).catch(error =>
+			console.error("background task failed:", asTrace(error))
+		);
 
-
-			// process task
+		try { // process task
 
 			switch ( task.type ) {
 
@@ -101,3 +104,14 @@ export const handler=new Resolver()
 	} as any)
 
 	.getDefinitions();
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+function translate(page: string, language: Language) {
+	return policies("", page, {}).then(policies =>
+		Promise.all(Object.keys(policies).map(source =>
+			policy("", page, { source, language })
+		))
+	);
+}
