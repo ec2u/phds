@@ -72,7 +72,7 @@ export const json="application/json";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-export async function listAttachments(page: string): Promise<Attachment[]> {
+export async function listAttachments(page: string, mime?: string): Promise<Attachment[]> {
 
 	const response=await api.asApp().requestConfluence(route`/wiki/api/v2/pages/${page}/attachments?${query({
 
@@ -88,7 +88,9 @@ export async function listAttachments(page: string): Promise<Attachment[]> {
 
 		const data: AttachmentsResponse=await response.json();
 
-		return data.results;
+		return data.results.filter(attachment =>
+			!mime || attachment.mediaType === mime
+		);
 
 	} else {
 

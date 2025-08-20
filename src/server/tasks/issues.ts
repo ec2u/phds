@@ -22,7 +22,7 @@ import { Issue, Reference } from "../../shared/issues";
 import { defaultLanguage } from "../../shared/languages";
 import { Activity, IssuesTask, Payload } from "../../shared/tasks";
 import { setStatus } from "../async";
-import { Attachment, fetchAttachment, listAttachments, pdf } from "../tools/attachments";
+import { Attachment, fetchAttachment, listAttachments, markdown, pdf } from "../tools/attachments";
 import { issueKey, issuesKey, keyPrefix, lock } from "../tools/cache";
 import { process, upload } from "../tools/gemini";
 import { retrievePrompt } from "../tools/langfuse";
@@ -137,16 +137,14 @@ export async function issues(job: string, page: string, {
 		const agreementName="agreement";
 		const agreementFile=await upload({
 			name: agreementName,
-			mime: "text/plain",
+			mime: markdown,
 			data: Buffer.from(agreement, "utf-8")
 		});
 
 
 		// upload policies
 
-		const policies=(await listAttachments(page)).filter(attachment =>
-			attachment.mediaType === pdf
-		);
+		const policies=await listAttachments(page, pdf);
 
 		const policyFiles=await Promise.all(policies.map(async (attachment) => {
 

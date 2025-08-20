@@ -30,8 +30,7 @@ export async function policies(job: string, page: string, {}: Payload<PoliciesTa
 
 		await setStatus(job, Activity.Scanning);
 
-		const attachments=(await listAttachments(page))
-			.filter(attachment => attachment.mediaType === pdf);
+		const attachments=await listAttachments(page, pdf);
 
 
 		// get cached policy documents for this page (100 should be sufficient for single page, no pagination needed)
