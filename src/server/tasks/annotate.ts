@@ -15,13 +15,18 @@
  */
 
 import { kvs } from "@forge/kvs";
-import { Activity, AnnotateTask } from "../../shared/tasks";
+import { Activity, AnnotateTask, Payload } from "../../shared/tasks";
 import { setStatus } from "../async";
 import { issueKey, lock } from "../tools/cache";
 
-export async function annotate(job: string, page: string, { issue: id, notes }: AnnotateTask): Promise<void> {
+export async function annotate(job: string, page: string, {
 
-	const key=issueKey(page, id);
+	issue,
+	notes
+
+}: Payload<AnnotateTask>): Promise<void> {
+
+	const key=issueKey(page, issue);
 
 	await lock(job, key, async () => {
 

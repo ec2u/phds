@@ -22,6 +22,9 @@ export type Catalog=Readonly<Record<Source, string>>;
 export type Source="" | string // source attachment id; empty for macro body
 export type Instant=string // UTC ISO dateTime with ms precision
 
+export type Title=string
+export type Markdown=string
+
 export interface Document {
 
 	readonly original: boolean;
@@ -29,7 +32,7 @@ export interface Document {
 	readonly source: Source;
 	readonly created: Instant;
 
-	readonly title: string;
-	readonly content: string;
+	readonly title: Title;
+	readonly content: Markdown;
 
 }

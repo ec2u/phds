@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-import { Activity, ClearTask } from "../../shared/tasks";
+import { Activity, ClearTask, Payload } from "../../shared/tasks";
 import { setStatus } from "../async";
 import { lock, pageKey, purge } from "../tools/cache";
 
-export async function clear(job: string, page: string, {}: ClearTask) {
+export async function clear(job: string, page: string, {}: Payload<ClearTask>): Promise<void> {
 
 	await lock(job, pageKey(page), async () => {
 

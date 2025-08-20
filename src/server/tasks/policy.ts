@@ -19,14 +19,20 @@ import { SchemaType } from "@google/generative-ai";
 import { isUndefined } from "../../shared";
 import { Document } from "../../shared/documents";
 import { Language } from "../../shared/languages";
-import { Activity, PolicyTask } from "../../shared/tasks";
+import { Activity, Payload, PolicyTask } from "../../shared/tasks";
 import { setStatus } from "../async";
 import { fetchAttachment, getAttachment, pdf } from "../tools/attachments";
 import { lock, policyKey } from "../tools/cache";
 import { process, upload } from "../tools/gemini";
 import { retrievePrompt } from "../tools/langfuse";
 
-export async function policy(job: string, page: string, { source, language }: PolicyTask): Promise<Document> {
+
+export async function policy(job: string, page: string, {
+
+	source,
+	language
+
+}: Payload<PolicyTask>): Promise<Document> {
 
 	const key=policyKey(page, source, language);
 

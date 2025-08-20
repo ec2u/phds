@@ -16,15 +16,15 @@
 
 import { kvs, WhereConditions } from "@forge/kvs";
 import { isUndefined } from "../../shared";
-import { Document } from "../../shared/documents";
-import { Activity, PoliciesTask } from "../../shared/tasks";
+import { Document, Source, Title } from "../../shared/documents";
+import { Activity, Payload, PoliciesTask } from "../../shared/tasks";
 import { setStatus } from "../async";
 import { listAttachments, pdf } from "../tools/attachments";
 import { keyPrefix, keySource, lock, policiesKey } from "../tools/cache";
 
-export async function policies(job: string, page: string, {}: PoliciesTask) {
+export async function policies(job: string, page: string, {}: Payload<PoliciesTask>): Promise<Record<Source, Title>> {
 
-	await lock(job, policiesKey(page), async () => {
+	return await lock(job, policiesKey(page), async () => {
 
 		// get all attachments metadata
 
@@ -74,14 +74,19 @@ export async function policies(job: string, page: string, {}: PoliciesTask) {
 				}
 
 			})
-			.map(result => kvs.delete(result.key)));
+			.map(result => kvs.delete(result.key))
+		);
 
 		// create catalog (using attachment title, as document title is quite expensive to get upfront)
 
-		await setStatus(job, attachments.reduce((catalog, attachment) => ({
+		const catalog=attachments.reduce((catalog, attachment) => ({
 			...catalog,
 			[attachment.id]: attachment.title.replace(/\.pdf$/, "")
-		}), {} as Record<string, string>));
+		}), {} as Record<Source, Title>);
+
+		await setStatus(job, catalog);
+
+		return catalog;
 
 	});
 

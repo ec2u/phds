@@ -34,6 +34,8 @@ export type Task=
 
 	;
 
+export type Payload<T extends Task>=Omit<T, "type">
+
 
 /**
  * Status type representing task state as either an activity, result data, or error trace.

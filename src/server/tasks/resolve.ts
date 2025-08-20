@@ -15,11 +15,16 @@
  */
 
 import { kvs } from "@forge/kvs";
-import { Activity, ResolveTask } from "../../shared/tasks";
+import { Activity, Payload, ResolveTask } from "../../shared/tasks";
 import { setStatus } from "../async";
 import { issueKey, issuesKey, lock } from "../tools/cache";
 
-export async function resolve(job: string, page: string, { issues: ids, reopen=false }: ResolveTask): Promise<void> {
+export async function resolve(job: string, page: string, {
+
+	issues: ids,
+	reopen=false
+
+}: Payload<ResolveTask>): Promise<void> {
 
 	await lock(job, issuesKey(page), async () => {
 

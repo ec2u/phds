@@ -20,7 +20,7 @@ import { FileMetadataResponse } from "@google/generative-ai/server";
 import { isString } from "../../shared";
 import { Issue, Reference } from "../../shared/issues";
 import { defaultLanguage } from "../../shared/languages";
-import { Activity, IssuesTask } from "../../shared/tasks";
+import { Activity, IssuesTask, Payload } from "../../shared/tasks";
 import { setStatus } from "../async";
 import { Attachment, fetchAttachment, listAttachments, pdf } from "../tools/attachments";
 import { issueKey, issuesKey, keyPrefix, lock } from "../tools/cache";
@@ -81,7 +81,12 @@ const ResponseSchema: Schema={
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-export async function issues(job: string, page: string, { refresh=false, agreement }: IssuesTask) {
+export async function issues(job: string, page: string, {
+
+	refresh=false,
+	agreement
+
+}: Payload<IssuesTask>): Promise<void> {
 
 	await lock(job, issuesKey(page), async () => {
 
