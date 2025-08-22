@@ -140,7 +140,7 @@ async function translate(job: string, page: string, source: string, document: Do
 
 	await setStatus(job, Activity.Translating);
 
-	const translated=await process({
+	const translated=await process({ // !!! use expected structure as currently expected after refinement
 
 		prompt: translate,
 
@@ -151,8 +151,12 @@ async function translate(job: string, page: string, source: string, document: Do
 
 		}
 
+		// !!! use schema as currently expected after refinement
+
 	});
 
+
+	// !!! disable
 
 	await setStatus(job, Activity.Prompting);
 

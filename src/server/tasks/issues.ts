@@ -177,6 +177,9 @@ export async function issues(job: string, page: string, {
 
 			// for each agreement/policy pair
 
+
+			// !!! disable iterations/merge: return directly detect() results
+
 			const issues=await Promise.all(
 				policyFiles.map(async (file, index) => {
 
@@ -188,7 +191,9 @@ export async function issues(job: string, page: string, {
 
 					// merge all detected issues for this policy
 
-					return await merge(detected.flat(), policies[index]);
+					return await merge(detected.flat(), policies[index]); // !!! disable
+
+					// !!! return detect(file, policies[index])
 
 				})
 			);
