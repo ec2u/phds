@@ -155,9 +155,7 @@ export async function process({
 
 		const config={
 			...(defaults.config),
-			...(!isString(prompt) && isObject(prompt.config) ? Object.fromEntries(
-				Object.entries(prompt.config).filter(([, value]) => isString(value))
-			) : {}),
+			...(isObject(prompt) && isObject(prompt.config) ? prompt.config : {}),
 			...(schema && {
 				responseMimeType: json,
 				responseSchema: schema
