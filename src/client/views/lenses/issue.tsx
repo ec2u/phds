@@ -19,6 +19,7 @@ import {
 	Box,
 	Button,
 	ButtonGroup,
+	DynamicTable,
 	Heading,
 	Icon,
 	Inline,
@@ -177,12 +178,7 @@ export default function ToolIssue({
 
 			</Inline>
 
-			{expanded && <Inline space={"space.100"}>
-
-                <ToolReferences references={references.filter(reference => !reference.source)}/>
-                <ToolReferences references={references.filter(reference => reference.source)}/>
-
-            </Inline>}
+			{expanded && <ToolReferences references={references}/>}
 
 			<Text>{issue.description.map((item, index) => isString(item)
 				? <React.Fragment key={index}>{item} </React.Fragment>
@@ -234,20 +230,43 @@ function ToolReferences({
 
 }) {
 
-	return <Box xcss={xcss({
+	const agreementReferences=references.filter(reference => !reference.source);
+	const policyReferences=references.filter(reference => reference.source);
 
-		width: "50%",
-		marginBlock: "space.100"
+	const agreementCount=agreementReferences.length;
+	const policyCount=policyReferences.length;
 
-	})}>{references.map(reference => {
+	return <DynamicTable
 
-		return <Stack space={"space.100"}>
+		head={{ cells: [{ key: "agreement", width: 50 }, { key: "policy", width: 50 }] }}
 
-			<Heading size={"small"}>{reference.title}</Heading>
-			<Text>{reference.excerpt}</Text>
+		rows={Array.from({ length: Math.max(agreementCount, policyCount) }).flatMap((_, i) => {
 
-		</Stack>;
+			const agreementReference=agreementReferences[i];
+			const policyReference=policyReferences[i];
 
-	})}</Box>;
+			return [
+
+				// title row
+
+				{
+					key: `title-${i}`,
+					cells: [agreementReference, policyReference].map(reference => ({
+						content: reference ? <Heading size={"small"}>{reference.title}</Heading> : null
+					}))
+				},
+
+				// text row
+
+				{
+					key: `text-${i}`,
+					cells: [agreementReference, policyReference].map(reference => ({
+						content: reference ? <Text>{reference.excerpt}</Text> : null
+					}))
+				}
+
+			];
+
+		})}/>;
 
 }
