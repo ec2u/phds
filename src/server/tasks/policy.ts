@@ -136,7 +136,7 @@ async function translate(job: string, page: string, source: string, document: Do
 
 	await setStatus(job, Activity.Prompting);
 
-	const translate=await retrievePrompt("TRANSLATION");
+	const translate=await retrievePrompt("TRANSLATION_DRAFTING");
 
 	await setStatus(job, Activity.Translating);
 
