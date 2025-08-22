@@ -136,11 +136,18 @@ async function translate(job: string, page: string, source: string, document: Do
 
 	await setStatus(job, Activity.Prompting);
 
-	const translate=await retrievePrompt("TRANSLATION_DRAFTING");
+	const translate=await retrievePrompt("TRANSLATION");
+
 
 	await setStatus(job, Activity.Translating);
 
-	const translated=await process({ // !!! use expected structure as currently expected after refinement
+	const translated: {
+
+		target_language: string;
+		translated_title: string;
+		translated_content: string;
+
+	}=await process({
 
 		prompt: translate,
 
@@ -149,49 +156,19 @@ async function translate(job: string, page: string, source: string, document: Do
 			target_language: language,
 			source_content: document.content
 
-		}
-
-		// !!! use schema as currently expected after refinement
-
-	});
-
-
-	// !!! disable
-
-	await setStatus(job, Activity.Prompting);
-
-	const refine=await retrievePrompt("TRANSLATION_IMPROVEMENT");
-
-
-	await setStatus(job, Activity.Refining);
-
-	const refined: {
-
-		target_language: string;
-		translated_content: string;
-		translated_title: string;
-
-	}=await process({
-
-		prompt: refine,
-
-		variables: {
-			target_language: language,
-			source_content: document.content,
-			target_content: translated
 		},
 
 		schema: {
 			type: Type.OBJECT,
 			properties: {
 				target_language: { type: Type.STRING },
-				translated_content: { type: Type.STRING },
-				translated_title: { type: Type.STRING }
+				translated_title: { type: Type.STRING },
+				translated_content: { type: Type.STRING }
 			},
 			required: [
 				"target_language",
-				"translated_content",
-				"translated_title"
+				"translated_title",
+				"translated_content"
 			]
 		}
 
@@ -207,8 +184,8 @@ async function translate(job: string, page: string, source: string, document: Do
 		source: document.source,
 		created: new Date().toISOString(),
 
-		title: refined.translated_title,
-		content: refined.translated_content
+		title: translated.translated_title,
+		content: translated.translated_content
 
 	});
 }

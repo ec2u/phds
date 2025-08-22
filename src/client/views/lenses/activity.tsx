@@ -43,7 +43,6 @@ export function ToolActivity({
 		[Activity.Uploading]: "Uploading Content…",
 		[Activity.Extracting]: "Extracting Text…",
 		[Activity.Translating]: "Translating…",
-		[Activity.Refining]: "Refining…",
 		[Activity.Analyzing]: "Analyzing…"
 
 	};

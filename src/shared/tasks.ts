@@ -62,7 +62,6 @@ export enum Activity {
 	Uploading,
 	Extracting,
 	Translating,
-	Refining,
 	Analyzing
 
 }
