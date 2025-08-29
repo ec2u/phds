@@ -49,6 +49,7 @@ resources:
 #    path: src/client/tool.tsx
 
 app:
+
   id: ari:cloud:ecosystem::app/68e73326-bb04-4df2-a14c-382ba3abbe2b
   runtime:
     name: nodejs22.x

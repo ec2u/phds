@@ -7,6 +7,7 @@ This guide covers the complete app lifecycle management for the EC2U PhD Agreeme
 - Atlassian Developer Account
 - Forge CLI installed globally: `npm install -g @forge/cli`
 - Access to Confluence Cloud site for development/testing
+- Access to Atlassian Developer Console: https://developer.atlassian.com/console/myapps/
 
 ## App Registration
 
@@ -74,6 +75,9 @@ This guide covers the complete app lifecycle management for the EC2U PhD Agreeme
    ```
 
 ## Secret Management
+
+**IMPORTANT**: After setting or updating environment variables, the app must be redeployed to the target
+environment to pick up the new secret values.
 
 ### Deployment Environment Variables
 
@@ -186,6 +190,20 @@ forge settings list             # App settings
 forge lint                      # Check for issues
 forge logs                      # View app logs
 ```
+
+### Developer Console Management
+
+Access the Atlassian Developer Console to manage your apps via web interface:
+
+- **Console URL**: https://developer.atlassian.com/console/myapps/
+- **Features Available**:
+   - View all registered apps
+   - Manage app installations across sites
+   - View app analytics and usage metrics
+   - Manage environment variables through UI
+   - Monitor app health and performance
+   - Configure app permissions and scopes
+   - Access real-time and historical logs
 
 ### Site Management
 
