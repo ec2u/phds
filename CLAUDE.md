@@ -9,6 +9,10 @@ supports local PhD coordinators and other stakeholders in the agreement drafting
 
 This is an Atlassian Forge application built with React and TypeScript that runs as a macro within Confluence.
 
+## Extended Documentation
+
+For complete app lifecycle management, deployment, and environment setup instructions, see @MANAGEMENT.md
+
 ## Build Commands
 
 ```bash
