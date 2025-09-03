@@ -183,7 +183,13 @@ export async function purge(page?: string): Promise<void> {
 		await Promise.all(Object.entries(entriesByPage).map(async ([pageId, entries]) => {
 
 			if ( !await checkPage(pageId) ) {
-				await Promise.all(entries.map(result => kvs.delete(result.key)));
+				await Promise.all(entries.map(result => {
+
+					console.log(`deleting cache key <${result.key}> for deleted page <${pageId}>`);
+
+					return kvs.delete(result.key);
+
+				}));
 			}
 
 		}));
@@ -211,6 +217,7 @@ async function dirty(): Promise<boolean> {
 	if ( !last || (next - parseInt(last)) > purgePeriod ) {
 
 		// claim this purge period by setting our timestamp
+
 		await kvs.set<string>(purgeKey, next.toString());
 
 		return true; // we won the race - proceed with global purge
