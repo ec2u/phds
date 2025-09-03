@@ -20,11 +20,21 @@ export async function checkPage(page: string): Promise<boolean> {
 
 	const url=route`/wiki/api/v2/pages/${page}`;
 
-	const response=await api.asApp().requestConfluence(url, {
+	try {
 
-		headers: { "Accept": "application/json" }
+		const response=await api.asApp().requestConfluence(url, {
 
-	});
+			headers: { "Accept": "application/json" }
 
-	return response.ok;
+		});
+
+		// only treat 404 as "page deleted", all other responses should be treated as "page exists but inaccessible"
+
+		return response.status !== 404;
+
+	} catch ( error ) {
+
+		return true; // treat API errors as "page still exists" to avoid false deletions
+
+	}
 }
