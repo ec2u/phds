@@ -185,7 +185,7 @@ export async function purge(page?: string): Promise<void> {
 			if ( !await checkPage(pageId) ) {
 				await Promise.all(entries.map(result => {
 
-					console.log(`deleting cache key <${result.key}> for deleted page <${pageId}>`);
+					console.info(`deleting cache key <${result.key}> for deleted page <${pageId}>`);
 
 					return kvs.delete(result.key);
 
