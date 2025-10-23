@@ -211,9 +211,9 @@ export async function issues(job: string, page: string, {
 				variables: {
 					document_name: agreementName,
 					policy_name: file.displayName!,
-					target_language: defaultLanguage, // !!!
-					known_issues: history
+					target_language: defaultLanguage
 				},
+				input: history,
 				files: [file, agreementFile],
 				schema: ResponseSchema
 			});
@@ -226,9 +226,7 @@ export async function issues(job: string, page: string, {
 			const response=await process<Response>({
 				model,
 				prompt: merging,
-				variables: {
-					inconsistencies: report(issues)
-				},
+				input: report(issues),
 				schema: ResponseSchema
 			});
 
