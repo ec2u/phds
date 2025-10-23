@@ -16,7 +16,7 @@
 
 import { File, GenerationConfig, GoogleGenAI, Schema } from "@google/genai";
 import { TextPromptClient } from "langfuse";
-import { asTrace, isObject, isString, isUndefined } from "../../shared";
+import { asTrace, isObject, isString } from "../../shared";
 import { secret } from "../index";
 
 import { json } from "./mime";
@@ -27,7 +27,7 @@ const defaults: {
 	model: string,
 	config: GenerationConfig
 
-}={
+} = {
 
 	model: "gemini-2.5-flash",
 
@@ -41,9 +41,9 @@ const defaults: {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-const key=secret("GEMINI_KEY");
+const key = secret("GEMINI_KEY");
 
-const client=new GoogleGenAI({ apiKey: key });
+const client = new GoogleGenAI({ apiKey: key });
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -92,12 +92,14 @@ export async function process({
 	model,
 	prompt,
 	variables,
+	input,
 	files
 }: {
 	model?: string
 	prompt: string | TextPromptClient
 	variables?: Record<string, string>
-	files?: ReadonlyArray<File>
+	input?: string | readonly string[]
+	files?: File | readonly File[]
 }): Promise<string>;
 
 /**
@@ -107,13 +109,15 @@ export async function process<T>({
 	model,
 	prompt,
 	variables,
+	input,
 	files,
 	schema
 }: {
 	model?: string
 	prompt: string | TextPromptClient
 	variables?: Record<string, string>
-	files?: ReadonlyArray<File>
+	input?: string | readonly string[]
+	files?: File | readonly File[]
 	schema: Schema
 }): Promise<T>;
 
@@ -121,14 +125,16 @@ export async function process({
 	model,
 	prompt,
 	variables,
+	input,
 	files,
 	schema
 }: {
 	model?: string
 	prompt: string | TextPromptClient
 	schema?: Schema
-	files?: ReadonlyArray<File>
 	variables?: Record<string, string>
+	input?: string | readonly string[]
+	files?: File | readonly File[]
 }): Promise<string | any> {
 
 	try {
@@ -137,7 +143,7 @@ export async function process({
 		function compile(prompt: string, variables: Record<string, string>) {
 			return prompt.replace(/{{(\w+)}}/g, (_, variable) => {
 
-				const value=variables[variable];
+				const value = variables[variable];
 
 				if ( value === undefined ) {
 					throw new Error(`undefined variable <${variable}>`);
@@ -149,11 +155,19 @@ export async function process({
 		}
 
 
-		const systemInstruction=isString(prompt)
+		const systemInstruction = isString(prompt)
 			? compile(prompt, variables ?? {})
 			: prompt.compile(variables);
 
-		const config={
+		const inputArray = input ? (Array.isArray(input) ? input : [input]) : undefined;
+		const filesArray = files ? (Array.isArray(files) ? files : [files]) : undefined;
+
+		const promptName = isString(prompt) ? "inline" : prompt.name;
+		const modelName = model ?? defaults.model;
+
+		console.info(`gemini request: ${promptName} (${modelName})`);
+
+		const config = {
 			...(defaults.config),
 			...(isObject(prompt) && isObject(prompt.config) ? prompt.config : {}),
 			...(schema && {
@@ -163,28 +177,37 @@ export async function process({
 			systemInstruction: { parts: [{ text: systemInstruction }] }
 		};
 
-		const contents=isUndefined(files) || !files.length
-			? [{ role: "user", parts: [{ text: "" }] }]
-			: [{
-				role: "user",
-				parts: [
-					{ text: "" },
-					...files.map(file => ({
-						fileData: {
-							mimeType: file.mimeType,
-							fileUri: file.uri || file.name
-						}
-					}))
-				]
-			}];
+		const contents = [
+			...(inputArray && inputArray.length > 0
+					? [{
+						role: "user" as const,
+						parts: inputArray.map(text => ({ text }))
+					}]
+					: []
+			),
+			...(filesArray && filesArray.length > 0
+					? [{
+						role: "user" as const,
+						parts: filesArray.map(file => ({
+							fileData: {
+								mimeType: file.mimeType,
+								fileUri: file.uri || file.name
+							}
+						}))
+					}]
+					: []
+			)
+		];
 
-		const result=await client.models.generateContent({
+		const result = await client.models.generateContent({
 			model: model ?? defaults.model,
 			contents,
 			config
 		});
 
-		const responseText=result.text || "";
+		const responseText = result.text || "";
+
+		console.info(`gemini response: ${promptName} (${responseText.length} chars)`);
 
 		if ( schema ) {
 

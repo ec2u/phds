@@ -152,11 +152,10 @@ async function translate(job: string, page: string, source: string, document: Do
 		prompt: translate,
 
 		variables: {
-
 			target_language: language,
-			source_content: document.content
-
 		},
+
+		input: document.content,
 
 		schema: {
 			type: Type.OBJECT,
