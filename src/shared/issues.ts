@@ -16,12 +16,15 @@
 
 import { Instant, Source } from "./documents";
 
-export enum State {
-	Pending = "pending",
-	Active = "active",
-	Blocked = "blocked",
-	Resolved = "resolved"
-}
+
+export const States = ["pending", "active", "blocked", "resolved"] as const;
+export const Severities = [1, 2, 3] as const;
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+export type State = typeof States[number];
+export type Severity = typeof Severities[number];
 
 export interface Issue {
 
@@ -31,7 +34,7 @@ export interface Issue {
 	readonly updated?: Instant;
 
 	readonly state: State;
-	readonly severity: 1 | 2 | 3;
+	readonly severity: Severity;
 
 	readonly title: string;
 	readonly description: ReadonlyArray<string | Reference>;

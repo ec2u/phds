@@ -20,7 +20,7 @@ import { Issue, State } from "./issues";
 import { Language } from "./languages";
 
 
-export type Task=
+export type Task =
 
 	| PoliciesTask
 	| PolicyTask
@@ -34,7 +34,7 @@ export type Task=
 
 	;
 
-export type Payload<T extends Task>=Omit<T, "type">
+export type Payload<T extends Task> = Omit<T, "type">
 
 
 /**
@@ -42,7 +42,7 @@ export type Payload<T extends Task>=Omit<T, "type">
  *
  * @template T the type of result data
  */
-export type Status<T>=Activity | T | Trace;
+export type Status<T> = Activity | T | Trace;
 
 /**
  * Enumeration of task activity states.

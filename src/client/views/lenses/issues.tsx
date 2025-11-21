@@ -14,18 +14,17 @@
  * limitations under the License.
  */
 
-
 import { Button, EmptyState, Inline, Select, Stack, Text } from "@forge/react";
 import React, { useMemo, useState } from "react";
 import { isTrace } from "../../../shared";
 import { Document } from "../../../shared/documents";
-import { State } from "../../../shared/issues";
+import { Issue, Severities, Severity, State, States } from "../../../shared/issues";
 import { Language } from "../../../shared/languages";
 import { isActivity, Status } from "../../../shared/tasks";
 import { useAgreement } from "../../hooks/agreement";
 import { useIssues } from "../../hooks/issues";
 import { ToolActivity } from "./activity";
-import ToolIssue from "./issue";
+import ToolIssue, { severityLabel, stateLabel } from "./issue";
 import { ToolTrace } from "./trace";
 
 
@@ -46,65 +45,50 @@ export function ToolIssues({
 
 }) {
 
-	const agreement=useAgreement(language);
-	const [issues, actions]=useIssues(isContent(agreement) ? agreement.content : "");
+	const agreement = useAgreement(language);
+	const [issues, actions] = useIssues(isContent(agreement) ? agreement.content : "");
 
-	const [stateFilter, setStateFilter] = useState<State | "open" | "all">("open");
-	const [severityFilter, setSeverityFilter] = useState<1 | 2 | 3 | "all">("all");
+	const [state, setState] = useState<readonly State[]>();
+	const [severity, setSeverity] = useState<Severity>();
 
-	const sorted=useMemo(() => {
+	const sorted = useMemo(() => {
 
 		if ( Array.isArray(issues) ) {
 
-			return issues
-				.filter(issue => {
-
-					// filter by state
-
-					if ( stateFilter === "open" && issue.state === State.Resolved ) {
-						return false;
-					} else if ( stateFilter !== "all" && stateFilter !== "open" && issue.state !== stateFilter ) {
-						return false;
-					}
-
-					// filter by severity
-
-					if ( severityFilter !== "all" && issue.severity !== severityFilter ) {
-						return false;
-					}
-
-					return true;
-
-				})
+			return (issues as readonly Issue[])
+				.filter(issue =>
+					(!state?.length || state.includes(issue.state))
+					&& (!severity || severity === issue.severity)
+				)
 				.sort((x, y) => {
 
-				// first: open issues before resolved issues
+					// first: open issues before resolved issues
 
-				const xIsOpen = x.state !== State.Resolved;
-				const yIsOpen = y.state !== State.Resolved;
+					const xIsOpen = x.state !== "resolved";
+					const yIsOpen = y.state !== "resolved";
 
-				if ( xIsOpen !== yIsOpen ) { return xIsOpen ? -1 : 1; }
+					if ( xIsOpen !== yIsOpen ) { return xIsOpen ? -1 : 1; }
 
-				// second: for resolved issues, sort by updated timestamp (desc)
+					// second: for resolved issues, sort by updated timestamp (desc)
 
-				if ( x.state === State.Resolved && y.state === State.Resolved && x.updated && y.updated ) {
+					if ( x.state === "resolved" && y.state === "resolved" && x.updated && y.updated ) {
 
-					const xUpdated=new Date(x.updated).getTime();
-					const yUpdated=new Date(y.updated).getTime();
+						const xUpdated = new Date(x.updated).getTime();
+						const yUpdated = new Date(y.updated).getTime();
 
-					if ( xUpdated !== yUpdated ) { return yUpdated - xUpdated; }
+						if ( xUpdated !== yUpdated ) { return yUpdated-xUpdated; }
 
-				}
+					}
 
-				// third: priority (desc)
+					// third: priority (desc)
 
-				if ( x.severity !== y.severity ) { return y.severity - x.severity; }
+					if ( x.severity !== y.severity ) { return y.severity-x.severity; }
 
-				// fourth: title (asc)
+					// fourth: title (asc)
 
-				return x.title.localeCompare(y.title);
+					return x.title.localeCompare(y.title);
 
-			});
+				});
 
 		} else {
 
@@ -112,7 +96,7 @@ export function ToolIssues({
 
 		}
 
-	}, [issues, stateFilter, severityFilter]);
+	}, [issues, state, severity]);
 
 
 	if ( isActivity(agreement) ) {
@@ -142,65 +126,63 @@ export function ToolIssues({
 		const count = sorted.length;
 		const total = issues.length;
 
+		const states = Object.fromEntries(States.map(value => [value, {
+			value,
+			label: stateLabel(value),
+			isDisabled: !sorted.some(({ state }) => value === state)
+		}]));
+
+		const severities = Object.fromEntries(Severities.map(value => [value, {
+			value,
+			label: severityLabel(value),
+			isDisabled: !sorted.some(({ severity }) => value === severity)
+		}]));
+
+
 		return <Stack space="space.200">
 
 			<Inline spread={"space-between"} alignBlock="center">
 
 				<Inline space="space.100" alignBlock="center">
 
-					<Button
-						appearance="subtle"
-						onClick={() => {
-							setStateFilter("open");
-							setSeverityFilter("all");
-						}}
-					>
-						Reset Filters
-					</Button>
-
-
 					<Select
-						appearance="default"
-						spacing="compact"
-						value={{
-							value: stateFilter,
-							label: stateFilter === "all"
-								? "All States"
-								: stateFilter === "open"
-									? "Open Issues"
-									: stateFilter.charAt(0).toUpperCase()+stateFilter.slice(1)
-						}}
-						onChange={(option) => setStateFilter(option.value as State | "open" | "all")}
-						options={[
-							{ value: "open", label: "Open Issues" },
-							{ value: "all", label: "All States" },
-							{ value: State.Pending, label: "Pending" },
-							{ value: State.Active, label: "Active" },
-							{ value: State.Blocked, label: "Blocked" },
-							{ value: State.Resolved, label: "Resolved" }
-						]}
+
+						isMulti={true}
+						isSearchable={true}
+						isClearable={true}
+
+						spacing={"compact"}
+						placeholder={"State"}
+
+						value={state?.map(s => states[s])}
+						options={Object.values(states)}
+
+						onChange={(options: undefined | typeof states[State][]) =>
+							setState(options?.map(option => option.value))
+						}
+
+
 					/>
 
-					<Select
-						appearance="default"
+					<Select id={"severity"}
+
+						isSearchable={true}
+						isClearable={true}
+
 						spacing="compact"
-						value={{
-							value: severityFilter,
-							label: severityFilter === "all"
-								? "All Severities"
-								: `${"★".repeat(severityFilter)}${"☆".repeat(3-severityFilter)}`
-						}}
-						onChange={(option) => setSeverityFilter(option.value as 1 | 2 | 3 | "all")}
-						options={[
-							{ value: "all", label: "All Severities" },
-							{ value: 1, label: "★☆☆" },
-							{ value: 2, label: "★★☆" },
-							{ value: 3, label: "★★★" }
-						]}
+						placeholder={"Severity"}
+
+						value={severity ? severities[severity] : undefined}
+						options={Object.values(severities)}
+
+						onChange={(option: undefined | typeof severities[Severity]) =>
+							setSeverity(option?.value)
+						}
+
 					/>
 
 					<Text>
-						Showing {count} of {total} issue{total === 1 ? "" : "s"}
+						{count}/{total} Issue{total === 1 ? "" : "s"}
 					</Text>
 
 				</Inline>

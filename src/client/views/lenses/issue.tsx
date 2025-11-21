@@ -33,11 +33,22 @@ import {
 } from "@forge/react";
 import React, { useState } from "react";
 import { isString } from "../../../shared";
-import { Issue, Reference, State } from "../../../shared/issues";
+import { Issue, Reference, Severities, Severity, State, States } from "../../../shared/issues";
 import { IssuesActions } from "../../hooks/issues";
 import { adf } from "../../tools/text";
 import { ToolReference } from "./reference";
 
+
+export function stateLabel(value: string) {
+	return value.charAt(0).toUpperCase()+value.slice(1);
+}
+
+export function severityLabel(value: number) {
+	return "★".repeat(value)+"☆".repeat(3-value);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 export default function ToolIssue({
 
@@ -56,8 +67,20 @@ export default function ToolIssue({
 	const [notes, setNotes] = useState<string>(issue.annotations || "");
 
 	const active = mode === "updating";
-	const resolved = issue.state === State.Resolved;
+	const resolved = issue.state === "resolved";
+
 	const references = issue.description.filter((entry): entry is Reference => !isString(entry));
+
+
+	const states = Object.fromEntries(States.map(value => [value, {
+		value,
+		label: stateLabel(value)
+	}]));
+
+	const severities = Object.fromEntries(Severities.map(value => [value, {
+		value,
+		label: severityLabel(value)
+	}]));
 
 
 	function toggle() {
@@ -134,63 +157,29 @@ export default function ToolIssue({
 
 				<Box xcss={xcss({ flexGrow: 1 })}/>
 
-				{issue.updated && <Text size="small" color="color.text.subtlest">
-                    Updated on {new Date(issue.updated).toLocaleString(undefined, {
-					year: "numeric",
-					month: "numeric",
-					day: "numeric",
-					hour: "2-digit",
-					minute: "2-digit"
-				})}
-                </Text>}
+				{mode !== "annotating" && <Select isDisabled={active}
 
-				{mode !== "annotating" && <Tooltip content="Change issue state">
-                    <Select isDisabled={active}
+                    appearance={"subtle"}
+                    spacing={"compact"}
 
-                        appearance={"subtle"}
-                        spacing="compact"
+                    value={states[issue.state ?? "pending"]}
+                    options={Object.values(states)}
 
-                        value={(() => {
-							const state = issue.state || State.Pending;
-							return {
-								value: state,
-								label: state.charAt(0).toUpperCase()+state.slice(1)
-							};
-						})()}
+                    onChange={(option: typeof states[State]) => transition(option?.value)}
 
-                        options={[
-							{ value: State.Pending, label: "Pending" },
-							{ value: State.Active, label: "Active" },
-							{ value: State.Blocked, label: "Blocked" },
-							{ value: State.Resolved, label: "Resolved" }
-						]}
+                />}
 
-                        onChange={option => transition(option.value)}
+				{mode !== "annotating" && <Select isDisabled={active || resolved}
 
-                    />
-                </Tooltip>}
+                    appearance={"subtle"}
+                    spacing={"compact"}
 
-				{mode !== "annotating" && <Tooltip content="Change issue severity">
-                    <Select isDisabled={active || resolved}
+                    value={severities[issue.severity]}
+                    options={Object.values(severities)}
 
-                        appearance={"subtle"}
-                        spacing="compact"
+                    onChange={(option: typeof severities[Severity]) => classify(option.value)}
 
-                        value={{
-							value: issue.severity,
-							label: `${"★".repeat(issue.severity)}${"☆".repeat(3-issue.severity)}`
-						}}
-
-                        options={[
-							{ value: 1, label: "★☆☆" },
-							{ value: 2, label: "★★☆" },
-							{ value: 3, label: "★★★" }
-						]}
-
-                        onChange={option => classify(option.value)}
-
-                    />
-                </Tooltip>}
+                />}
 
 				<ButtonGroup>
 
