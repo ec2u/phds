@@ -17,7 +17,7 @@
 import { Instant, Source } from "./documents";
 
 
-export const States = ["pending", "active", "blocked", "resolved"] as const;
+export const States = ["blocked", "active", "pending", "resolved"] as const;
 export const Severities = [1, 2, 3] as const;
 
 

@@ -51,42 +51,27 @@ export function ToolIssues({
 	const [state, setState] = useState<readonly State[]>();
 	const [severity, setSeverity] = useState<Severity>();
 
+
+	function hasSeverity(issue: Issue) { return !severity || severity === issue.severity; }
+
+	function hasState(issue: Issue) { return !state?.length || state.includes(issue.state); }
+
+
 	const sorted = useMemo(() => {
 
 		if ( Array.isArray(issues) ) {
 
 			return (issues as readonly Issue[])
-				.filter(issue =>
-					(!state?.length || state.includes(issue.state))
-					&& (!severity || severity === issue.severity)
-				)
+				.filter(hasState)
+				.filter(hasSeverity)
 				.sort((x, y) => {
 
-					// first: open issues before resolved issues
+					const xOrder = States.indexOf(x.state);
+					const yOrder = States.indexOf(y.state);
 
-					const xIsOpen = x.state !== "resolved";
-					const yIsOpen = y.state !== "resolved";
-
-					if ( xIsOpen !== yIsOpen ) { return xIsOpen ? -1 : 1; }
-
-					// second: for resolved issues, sort by updated timestamp (desc)
-
-					if ( x.state === "resolved" && y.state === "resolved" && x.updated && y.updated ) {
-
-						const xUpdated = new Date(x.updated).getTime();
-						const yUpdated = new Date(y.updated).getTime();
-
-						if ( xUpdated !== yUpdated ) { return yUpdated-xUpdated; }
-
-					}
-
-					// third: priority (desc)
-
-					if ( x.severity !== y.severity ) { return y.severity-x.severity; }
-
-					// fourth: title (asc)
-
-					return x.title.localeCompare(y.title);
+					return xOrder !== yOrder ? xOrder-yOrder
+						: x.severity !== y.severity ? y.severity-x.severity
+							: x.title.localeCompare(y.title);
 
 				});
 
@@ -129,13 +114,13 @@ export function ToolIssues({
 		const states = Object.fromEntries(States.map(value => [value, {
 			value,
 			label: stateLabel(value),
-			isDisabled: !sorted.some(({ state }) => value === state)
+			isDisabled: !issues.filter(hasSeverity).some(({ state }) => value === state)
 		}]));
 
 		const severities = Object.fromEntries(Severities.map(value => [value, {
 			value,
 			label: severityLabel(value),
-			isDisabled: !sorted.some(({ severity }) => value === severity)
+			isDisabled: !issues.filter(hasState).some(({ severity }) => value === severity)
 		}]));
 
 
