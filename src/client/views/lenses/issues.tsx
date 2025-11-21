@@ -15,10 +15,11 @@
  */
 
 
-import { Button, EmptyState, Inline, Select, Stack } from "@forge/react";
+import { Button, EmptyState, Inline, Select, Stack, Text } from "@forge/react";
 import React, { useMemo, useState } from "react";
 import { isTrace } from "../../../shared";
 import { Document } from "../../../shared/documents";
+import { State } from "../../../shared/issues";
 import { Language } from "../../../shared/languages";
 import { isActivity, Status } from "../../../shared/tasks";
 import { useAgreement } from "../../hooks/agreement";
@@ -48,35 +49,50 @@ export function ToolIssues({
 	const agreement=useAgreement(language);
 	const [issues, actions]=useIssues(isContent(agreement) ? agreement.content : "");
 
-	const [filter, setFilter]=useState<"open" | "resolved" | "all">("open");
+	const [stateFilter, setStateFilter] = useState<State | "open" | "all">("open");
+	const [severityFilter, setSeverityFilter] = useState<1 | 2 | 3 | "all">("all");
 
 	const sorted=useMemo(() => {
 
 		if ( Array.isArray(issues) ) {
 
-			return [...(
+			return issues
+				.filter(issue => {
 
-				filter === "open" ? issues.filter(issue => !issue.resolved)
-					: filter === "resolved" ? issues.filter(issue => issue.resolved)
-						: issues
+					// filter by state
 
-			)].sort((x, y) => {
+					if ( stateFilter === "open" && issue.state === State.Resolved ) {
+						return false;
+					} else if ( stateFilter !== "all" && stateFilter !== "open" && issue.state !== stateFilter ) {
+						return false;
+					}
+
+					// filter by severity
+
+					if ( severityFilter !== "all" && issue.severity !== severityFilter ) {
+						return false;
+					}
+
+					return true;
+
+				})
+				.sort((x, y) => {
 
 				// first: open issues before resolved issues
 
-				const xIsOpen=!x.resolved;
-				const yIsOpen=!y.resolved;
+				const xIsOpen = x.state !== State.Resolved;
+				const yIsOpen = y.state !== State.Resolved;
 
 				if ( xIsOpen !== yIsOpen ) { return xIsOpen ? -1 : 1; }
 
-				// second: for resolved issues, sort by resolution timestamp (desc)
+				// second: for resolved issues, sort by updated timestamp (desc)
 
-				if ( x.resolved && y.resolved ) {
+				if ( x.state === State.Resolved && y.state === State.Resolved && x.updated && y.updated ) {
 
-					const xResolved=new Date(x.resolved).getTime();
-					const yResolved=new Date(y.resolved).getTime();
+					const xUpdated=new Date(x.updated).getTime();
+					const yUpdated=new Date(y.updated).getTime();
 
-					if ( xResolved !== yResolved ) { return yResolved - xResolved; }
+					if ( xUpdated !== yUpdated ) { return yUpdated - xUpdated; }
 
 				}
 
@@ -96,7 +112,7 @@ export function ToolIssues({
 
 		}
 
-	}, [issues, filter]);
+	}, [issues, stateFilter, severityFilter]);
 
 
 	if ( isActivity(agreement) ) {
@@ -123,53 +139,71 @@ export function ToolIssues({
 
 	} else {
 
-		const open=issues.filter(issue => !issue.resolved);
-		const resolved=issues.filter(issue => issue.resolved);
-
-		const options={
-			open: {
-
-				label: `${open.length === 0 ? "No" : open.length} open ${issue(open.length)}`,
-				value: "open" as const,
-				isDisabled: open.length === 0
-
-			},
-			resolved: {
-
-				label: `${resolved.length === 0 ? "No" : resolved.length} resolved ${issue(resolved.length)}`,
-				value: "resolved" as const,
-				isDisabled: resolved.length === 0
-
-			},
-			all: {
-
-				label: `${issues.length === 0 ? "No" : issues.length} total ${issue(issues.length)}`,
-				value: "all" as const,
-				isDisabled: issues.length === 0
-
-			}
-		};
-
-
-		function issue(count: number) {
-			return `issue${count === 1 ? "" : "s"}`;
-		}
+		const count = sorted.length;
+		const total = issues.length;
 
 		return <Stack space="space.200">
 
-			<Inline spread={"space-between"}>
+			<Inline spread={"space-between"} alignBlock="center">
 
-				<Select
+				<Inline space="space.100" alignBlock="center">
 
-					appearance="default"
-					spacing={"compact"}
+					<Button
+						appearance="subtle"
+						onClick={() => {
+							setStateFilter("open");
+							setSeverityFilter("all");
+						}}
+					>
+						Reset Filters
+					</Button>
 
-					value={options[filter]}
-					onChange={(option) => setFilter(option.value as "open" | "resolved" | "all")}
 
-					options={Object.values(options)}
+					<Select
+						appearance="default"
+						spacing="compact"
+						value={{
+							value: stateFilter,
+							label: stateFilter === "all"
+								? "All States"
+								: stateFilter === "open"
+									? "Open Issues"
+									: stateFilter.charAt(0).toUpperCase()+stateFilter.slice(1)
+						}}
+						onChange={(option) => setStateFilter(option.value as State | "open" | "all")}
+						options={[
+							{ value: "open", label: "Open Issues" },
+							{ value: "all", label: "All States" },
+							{ value: State.Pending, label: "Pending" },
+							{ value: State.Active, label: "Active" },
+							{ value: State.Blocked, label: "Blocked" },
+							{ value: State.Resolved, label: "Resolved" }
+						]}
+					/>
 
-				/>
+					<Select
+						appearance="default"
+						spacing="compact"
+						value={{
+							value: severityFilter,
+							label: severityFilter === "all"
+								? "All Severities"
+								: `${"★".repeat(severityFilter)}${"☆".repeat(3-severityFilter)}`
+						}}
+						onChange={(option) => setSeverityFilter(option.value as 1 | 2 | 3 | "all")}
+						options={[
+							{ value: "all", label: "All Severities" },
+							{ value: 1, label: "★☆☆" },
+							{ value: 2, label: "★★☆" },
+							{ value: 3, label: "★★★" }
+						]}
+					/>
+
+					<Text>
+						Showing {count} of {total} issue{total === 1 ? "" : "s"}
+					</Text>
+
+				</Inline>
 
 				<Button appearance={"discovery"} onClick={actions.refresh}>Refresh Analysis</Button>
 

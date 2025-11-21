@@ -33,7 +33,7 @@ import {
 } from "@forge/react";
 import React, { useState } from "react";
 import { isString } from "../../../shared";
-import { Issue, Reference } from "../../../shared/issues";
+import { Issue, Reference, State } from "../../../shared/issues";
 import { IssuesActions } from "../../hooks/issues";
 import { adf } from "../../tools/text";
 import { ToolReference } from "./reference";
@@ -51,17 +51,22 @@ export default function ToolIssue({
 
 }) {
 
-	const [mode, setMode]=useState<"reading" | "annotating" | "updating">("reading");
-	const [expanded, setExpanded]=useState<boolean>(false);
-	const [notes, setNotes]=useState<string>(issue.annotations || "");
+	const [mode, setMode] = useState<"reading" | "annotating" | "updating">("reading");
+	const [expanded, setExpanded] = useState<boolean>(false);
+	const [notes, setNotes] = useState<string>(issue.annotations || "");
 
-	const active=mode === "updating";
-	const resolved=issue.resolved !== undefined;
-	const references=issue.description.filter((entry): entry is Reference => !isString(entry));
+	const active = mode === "updating";
+	const resolved = issue.state === State.Resolved;
+	const references = issue.description.filter((entry): entry is Reference => !isString(entry));
 
 
 	function toggle() {
 		setExpanded(!expanded);
+	}
+
+	function transition(state: State) {
+		setMode("updating");
+		actions.transition(issue.id, state).then(() => setMode("reading")).then(() => setExpanded(false));
 	}
 
 	function classify(severity: Issue["severity"]) {
@@ -81,11 +86,6 @@ export default function ToolIssue({
 	function save() {
 		setMode("updating");
 		actions.annotate(issue.id, notes).then(() => setMode("reading"));
-	}
-
-	function resolve() {
-		setMode("updating");
-		actions.resolve([issue.id], resolved).then(() => setMode("reading")).then(() => setExpanded(false));
 	}
 
 
@@ -134,8 +134,8 @@ export default function ToolIssue({
 
 				<Box xcss={xcss({ flexGrow: 1 })}/>
 
-				{resolved && <Text size="small" color="color.text.subtlest">
-                    Resolved on {new Date(issue.resolved).toLocaleString(undefined, {
+				{issue.updated && <Text size="small" color="color.text.subtlest">
+                    Updated on {new Date(issue.updated).toLocaleString(undefined, {
 					year: "numeric",
 					month: "numeric",
 					day: "numeric",
@@ -144,34 +144,67 @@ export default function ToolIssue({
 				})}
                 </Text>}
 
-				{mode !== "annotating" && <Select isDisabled={active || resolved}
+				{mode !== "annotating" && <Tooltip content="Change issue state">
+                    <Select isDisabled={active}
 
-                    appearance={"subtle"}
-                    spacing="compact"
+                        appearance={"subtle"}
+                        spacing="compact"
 
-                    value={{
-						value: issue.severity,
-						label: `${"★".repeat(issue.severity)}${"☆".repeat(3 - issue.severity)}`
-					}}
+                        value={(() => {
+							const state = issue.state || State.Pending;
+							return {
+								value: state,
+								label: state.charAt(0).toUpperCase()+state.slice(1)
+							};
+						})()}
 
-                    options={[
-						{ value: 1, label: "★☆☆" },
-						{ value: 2, label: "★★☆" },
-						{ value: 3, label: "★★★" }
-					]}
+                        options={[
+							{ value: State.Pending, label: "Pending" },
+							{ value: State.Active, label: "Active" },
+							{ value: State.Blocked, label: "Blocked" },
+							{ value: State.Resolved, label: "Resolved" }
+						]}
 
-                    onChange={option => classify(option.value)}
+                        onChange={option => transition(option.value)}
 
-                />}
+                    />
+                </Tooltip>}
+
+				{mode !== "annotating" && <Tooltip content="Change issue severity">
+                    <Select isDisabled={active || resolved}
+
+                        appearance={"subtle"}
+                        spacing="compact"
+
+                        value={{
+							value: issue.severity,
+							label: `${"★".repeat(issue.severity)}${"☆".repeat(3-issue.severity)}`
+						}}
+
+                        options={[
+							{ value: 1, label: "★☆☆" },
+							{ value: 2, label: "★★☆" },
+							{ value: 3, label: "★★★" }
+						]}
+
+                        onChange={option => classify(option.value)}
+
+                    />
+                </Tooltip>}
 
 				<ButtonGroup>
 
 					{mode === "annotating" ? <>
-						<Button appearance="subtle" onClick={cancel}>Cancel</Button>
-						<Button appearance={"primary"} onClick={save}>Save</Button>
+						<Tooltip content="Cancel editing annotations">
+							<Button appearance="subtle" onClick={cancel}>Cancel</Button>
+						</Tooltip>
+						<Tooltip content="Save annotations">
+							<Button appearance={"primary"} onClick={save}>Save</Button>
+						</Tooltip>
 					</> : <>
-						<Button isDisabled={active} onClick={annotate}>Annotate</Button>
-						<Button isDisabled={active} onClick={resolve}>{resolved ? "Reopen" : "Resolve"}</Button>
+						<Tooltip content="Add or edit annotations">
+							<Button isDisabled={active} onClick={annotate}>Annotate</Button>
+						</Tooltip>
 					</>}
 
 				</ButtonGroup>
@@ -230,11 +263,11 @@ function ToolReferences({
 
 }) {
 
-	const agreementReferences=references.filter(reference => !reference.source);
-	const policyReferences=references.filter(reference => reference.source);
+	const agreementReferences = references.filter(reference => !reference.source);
+	const policyReferences = references.filter(reference => reference.source);
 
-	const agreementCount=agreementReferences.length;
-	const policyCount=policyReferences.length;
+	const agreementCount = agreementReferences.length;
+	const policyCount = policyReferences.length;
 
 	return <DynamicTable
 
@@ -242,8 +275,8 @@ function ToolReferences({
 
 		rows={Array.from({ length: Math.max(agreementCount, policyCount) }).flatMap((_, i) => {
 
-			const agreementReference=agreementReferences[i];
-			const policyReference=policyReferences[i];
+			const agreementReference = agreementReferences[i];
+			const policyReference = policyReferences[i];
 
 			return [
 

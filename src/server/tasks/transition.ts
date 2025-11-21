@@ -15,36 +15,31 @@
  */
 
 import { kvs } from "@forge/kvs";
-import { Activity, Payload, ResolveTask } from "../../shared/tasks";
+import { Activity, Payload, TransitionTask } from "../../shared/tasks";
 import { setStatus } from "../async";
 import { issueKey, issuesKey, lock } from "../tools/cache";
 
-export async function resolve(job: string, page: string, {
+export async function transition(job: string, page: string, {
 
-	issues: ids,
-	reopen=false
+	issue: issueId,
+	state: newState
 
-}: Payload<ResolveTask>): Promise<void> {
+}: Payload<TransitionTask>): Promise<void> {
 
 	await lock(job, issuesKey(page), async () => {
 
 		await setStatus(job, Activity.Purging);
 
-		// mark individual issues as resolved or reopen them
+		const key = issueKey(page, issueId);
+		const issue = await kvs.get(key);
 
-		for (const issueId of ids) {
+		if ( issue ) {
 
-			const key=issueKey(page, issueId);
-			const issue=await kvs.get(key);
-
-			if ( issue ) {
-
-				await kvs.set(key, {
-					...issue,
-					resolved: reopen ? undefined : new Date().toISOString()
-				});
-
-			}
+			await kvs.set(key, {
+				...issue,
+				state: newState,
+				updated: new Date().toISOString()
+			});
 
 		}
 

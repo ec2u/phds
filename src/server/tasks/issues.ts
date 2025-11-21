@@ -17,7 +17,7 @@
 import { kvs, WhereConditions } from "@forge/kvs";
 import { File, Schema, Type } from "@google/genai";
 import { isString } from "../../shared";
-import { Issue, Reference } from "../../shared/issues";
+import { Issue, Reference, State } from "../../shared/issues";
 import { defaultLanguage } from "../../shared/languages";
 import { Activity, IssuesTask, Payload } from "../../shared/tasks";
 import { setStatus } from "../async";
@@ -81,6 +81,15 @@ const ResponseSchema: Schema={
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+function normalizeIssue(issue: Issue): Issue {
+	return {
+		...issue,
+		state: issue.state || State.Pending
+	};
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 export async function issues(job: string, page: string, {
 
 	refresh=false,
@@ -116,7 +125,7 @@ export async function issues(job: string, page: string, {
 
 		if ( !refresh ) {
 
-			await setStatus(job, results.map(result => result.value as Issue));
+			await setStatus(job, results.map(result => normalizeIssue(result.value as Issue)));
 
 			return;
 
@@ -240,6 +249,7 @@ export async function issues(job: string, page: string, {
 				id: crypto.randomUUID(),
 				created: new Date().toISOString(),
 				severity: entry.severity === "high" ? 3 : entry.severity === "medium" ? 2 : 1,
+				state: State.Pending,
 
 				title: entry.reason_title,
 				description: [
@@ -275,7 +285,10 @@ export async function issues(job: string, page: string, {
 
 		// return all issues (existing + new)
 
-		await setStatus(job, [...(results.map(result => result.value as Issue)), ...issues]);
+		await setStatus(job, [
+			...(results.map(result => normalizeIssue(result.value as Issue))),
+			...issues
+		]);
 
 	});
 

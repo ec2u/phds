@@ -16,14 +16,23 @@
 
 import { Instant, Source } from "./documents";
 
+export enum State {
+	Pending = "pending",
+	Active = "active",
+	Blocked = "blocked",
+	Resolved = "resolved"
+}
+
 export interface Issue {
 
 	readonly id: string;
 
 	readonly created: Instant;
-	readonly resolved?: Instant;
+	readonly updated?: Instant;
 
+	readonly state: State;
 	readonly severity: 1 | 2 | 3;
+
 	readonly title: string;
 	readonly description: ReadonlyArray<string | Reference>;
 
