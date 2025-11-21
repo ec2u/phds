@@ -81,15 +81,6 @@ const ResponseSchema: Schema={
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-function normalizeIssue(issue: Issue): Issue {
-	return {
-		...issue,
-		state: issue.state || "pending"
-	};
-}
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 export async function issues(job: string, page: string, {
 
 	refresh=false,
@@ -120,12 +111,19 @@ export async function issues(job: string, page: string, {
 
 		} while ( cursor );
 
+		// normalize retrieved issues to ensure state defaults to "pending"
+
+		const normalized = results.map(result => ({
+			...result,
+			value: normalize(result.value as Issue)
+		}));
+
 
 		// if not refreshing, return cached values (even if empty)
 
 		if ( !refresh ) {
 
-			await setStatus(job, results.map(result => normalizeIssue(result.value as Issue)));
+			await setStatus(job, normalized.map(result => result.value as Issue));
 
 			return;
 
@@ -174,7 +172,7 @@ export async function issues(job: string, page: string, {
 
 		// generate a report detailing all existing issues
 
-		const history=report(results.map(result => result.value as Issue));
+		const history = report(normalized.map(result => result.value as Issue));
 
 
 		// process agreement/policy pairs with multiple parallel analysis rounds
@@ -286,7 +284,7 @@ export async function issues(job: string, page: string, {
 		// return all issues (existing + new)
 
 		await setStatus(job, [
-			...(results.map(result => normalizeIssue(result.value as Issue))),
+			...(normalized.map(result => result.value as Issue)),
 			...issues
 		]);
 
@@ -296,6 +294,13 @@ export async function issues(job: string, page: string, {
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+function normalize(issue: Issue): Issue {
+	return {
+		...issue,
+		state: issue.state || "pending"
+	};
+}
 
 function report(issues: ReadonlyArray<Issue>): string {
 	return issues
