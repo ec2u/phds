@@ -39,10 +39,10 @@ description: User manual for the collaborative AI-assisted cotutelle PhD agreeme
 
 3. Enter agreement metadata
 
-  - **Status** / Delete immaterial tags or use the `/status` command to enter new color-coded values
-  - **Area** / Enter name of the reference faculty/department
-  - **Host/Partner** / Enter the name of host/partner institutions
-  - **Contact** / Use `@Mention` to link the profile of the principal editor for the agreement
+- **Status** / Delete immaterial tags or use the `/status` command to enter new color-coded values
+- **Area** / Enter name of the reference faculty/department
+- **Host/Partner** / Enter the name of host/partner institutions
+- **Contact** / Use `@Mention` to link the profile of the principal editor for the agreement
 
 4. Enter the initial agreement text into the body of the `EC2U PhD Agreement Tool` macro
 
@@ -62,8 +62,8 @@ description: User manual for the collaborative AI-assisted cotutelle PhD agreeme
 
 2. Identify the relevant agreement
 
-  - Use the search field to filter on the agreement name
-  - Click on the catalogue field names in the table header to alter sorting
+- Use the search field to filter on the agreement name
+- Click on the catalogue field names in the table header to alter sorting
 
 3. Click on the relevant agreement name to open it
 
@@ -77,13 +77,13 @@ description: User manual for the collaborative AI-assisted cotutelle PhD agreeme
 
 3. Edit agreement metadata or the text in the body of the `EC2U PhD Agreement Tool` macro
 
-  - All Confluence collaborative features are available in editing mode
+- All Confluence collaborative features are available in editing mode
 
 4. When done, click on the `Update` button to save and publish changes
 
-  - The `Close` button will save changes as a draft version without publishing them
+- The `Close` button will save changes as a draft version without publishing them
 
-   ![Save Agreement](index/save-agreement.png)
+![Save Agreement](index/save-agreement.png)
 
 ## Delete Agreement
 
@@ -95,13 +95,19 @@ description: User manual for the collaborative AI-assisted cotutelle PhD agreeme
 
 3. Click on the `Delete` button in the dropdown menu
 
-  - The `Archive` button would move the document to an archival area without permanently deleting it
+- The `Archive` button would move the document to an archival area without permanently deleting it
 
-   ![Delete Agreement - Step 2](index/delete-agreement-2-2.png)
+![Delete Agreement - Step 2](index/delete-agreement-2-2.png)
 
 4. Click on the `Delete` button to confirm the operation
 
 # Policies
+
+*Policies* are institutional or regulatory documents that define requirements, guidelines, and standards governing PhD
+agreements. These PDF documents are attached to agreements and serve as reference materials during the analysis process,
+helping identify potential issues and ensuring compliance with institutional norms. Policies can originate from both
+institutions involved in the agreement and may apply at different levels: national, institutional, or area-specific
+(for instance, department or faculty).
 
 ## Attach Policies to Agreement
 
@@ -168,6 +174,25 @@ description: User manual for the collaborative AI-assisted cotutelle PhD agreeme
 
 # Issues
 
+*Issues* are specific problems, inconsistencies, or points of concern identified when the agreement text is evaluated
+against attached [policy](#policies) documents. They help users track, classify, and resolve all matters that may affect
+the completeness or compliance of the PhD agreement.
+
+Issues are structured with the following properties:
+
+| Property        | Value        | Description                                                                                                                                                |
+|-----------------|--------------|------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Title**       |              | Describes the specific problem or concern                                                                                                                  |
+| **State**       | `Blocked`    | The solution to the issue is blocked by external factors. This means progress cannot continue until these external dependencies or obstacles are resolved. |
+|                 | `Active`     | The issue is currently being actively worked on. Team members are engaged in addressing or resolving the issue.                                            |
+|                 | `Pending`    | The issue is still awaiting initial triage. No active work has started yet, and it may be waiting for assignment, clarification, or prioritization.        |
+|                 | `Resolved`   | The issue has been successfully resolved. All necessary actions have been completed, and no further work is required.                                      |
+| **Severity**    | ★★★ (High)   | Issues that are critical and require immediate attention or could significantly impact the agreement or compliance.                                        |
+|                 | ★★☆ (Medium) | Issues that are important but not urgent; they should be addressed but do not block progress.                                                              |
+|                 | ★☆☆ (Low)    | Minor issues that have little impact and can be resolved at a later stage.                                                                                 |
+| **References**  |              | Excerpts from the agreement text and citations from relevant policy documents (expandable/collapsible)                                                     |
+| **Annotations** |              | User-added notes supporting Markdown format for tracking decisions and context                                                                             |
+
 ## Analyse Agreement
 
 1. [Open the target agreement](#open-agreement)
@@ -219,7 +244,7 @@ description: User manual for the collaborative AI-assisted cotutelle PhD agreeme
    ![Transition Issue](index/transition-issue.png)
 
 2. Click on the issue state dropdown and select the relevant state classification to override the value automatically
-   assigned by the system on creation
+   assigned by the system on creation (see [issue structure](#issues) for available values)
 
 ## Classify Issue
 
@@ -228,7 +253,7 @@ description: User manual for the collaborative AI-assisted cotutelle PhD agreeme
    ![Classify Issue](index/classify-issue.png)
 
 2. Click on the issue severity dropdown and select the relevant severity classification to override the value
-   automatically assigned by the system on creation
+   automatically assigned by the system on creation (see [issue structure](#issues) for available values)
 
 ## Annotate Issue
 
