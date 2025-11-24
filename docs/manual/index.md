@@ -3,6 +3,10 @@ title: PhD Agreements - Manual
 description: User manual for the collaborative AI-assisted cotutelle PhD agreement drafting tool.
 ---
 
+> [!TIP]
+> New to the PhD Agreements Tool? Start with the [Introduction](../overview.md) for an overview of what the tool does
+> and how it can help streamline your cotutelle agreement drafting process.
+
 > [!CAUTION]
 > AI-based tools can make mistakes: double check results and use them with caution.
 
