@@ -40,7 +40,8 @@ export function useIssues(agreement: string): [Status<ReadonlyArray<Issue>>, Iss
 
 	const [issues, setIssues] = useState<Status<ReadonlyArray<Issue>>>(cached ?? []);
 
-	const update = (issues: Status<ReadonlyArray<Issue>>) => {
+
+	function update(issues: Status<ReadonlyArray<Issue>>) {
 
 		setIssues(issues);
 
@@ -48,17 +49,41 @@ export function useIssues(agreement: string): [Status<ReadonlyArray<Issue>>, Iss
 			setCache(key, issues);
 		}
 
-	};
+	}
 
-	const refresh = () => {
+	function mutate(id: string, changes: Partial<Issue>) {
+
+		setIssues(current => {
+			if ( isArray<Issue>(current) ) {
+
+				const updated = current.map(issue => issue.id === id
+					? { ...issue, ...changes }
+					: issue
+				);
+
+				setCache(key, updated);
+
+				return updated;
+
+			} else {
+
+				return current;
+
+			}
+		});
+
+	}
+
+
+	function refresh() {
 		execute<ReadonlyArray<Issue>>(update, {
 			type: "issues",
 			refresh: true,
 			agreement
 		});
-	};
+	}
 
-	const transition = async (issue: string, state: State): Promise<void> => {
+	async function transition(issue: string, state: State): Promise<void> {
 
 		await execute<void>(() => { }, {
 			type: "transition",
@@ -66,16 +91,11 @@ export function useIssues(agreement: string): [Status<ReadonlyArray<Issue>>, Iss
 			state
 		});
 
-		if ( isArray<Issue>(issues) ) {
-			update(issues.map(item => item.id === issue
-				? { ...item, state }
-				: item
-			));
-		}
+		mutate(issue, { state });
 
-	};
+	}
 
-	const classify = async (issue: string, severity: Issue["severity"]): Promise<void> => {
+	async function classify(issue: string, severity: Issue["severity"]): Promise<void> {
 
 		await execute<void>(() => { }, {
 			type: "classify",
@@ -83,31 +103,21 @@ export function useIssues(agreement: string): [Status<ReadonlyArray<Issue>>, Iss
 			severity
 		});
 
-		if ( isArray<Issue>(issues) ) {
-			update(issues.map(item => item.id === issue
-				? { ...item, severity }
-				: item
-			));
-		}
+		mutate(issue, { severity });
 
-	};
+	}
 
-	const annotate = async (issue: string, notes: string): Promise<void> => {
+	async function annotate(issue: string, annotations: string): Promise<void> {
 
 		await execute<void>(() => { }, {
 			type: "annotate",
 			issue,
-			notes
+			annotations
 		});
 
-		if ( isArray<Issue>(issues) ) {
-			update(issues.map(item => item.id === issue
-				? { ...item, annotations: notes }
-				: item
-			));
-		}
+		mutate(issue, { annotations });
 
-	};
+	}
 
 
 	useEffect(() => {

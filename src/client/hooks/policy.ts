@@ -31,16 +31,16 @@ export function usePolicy(source: Source, language: Language): Status<Document> 
 	const [policy, setPolicy]=useState<Status<Document>>(cached || Activity.Submitting);
 
 
-	const updatePolicy=(policy: Status<Document>) => {
+	function update(policy: Status<Document>) {
 		setPolicy(policy);
 		setCache(key, policy);
-	};
+	}
 
 	useEffect(() => {
 
 		if ( cached ) { setPolicy(cached); } else {
 
-			execute<Document>(updatePolicy, {
+			execute<Document>(update, {
 
 				type: "policy",
 

@@ -155,7 +155,7 @@ export interface AnnotateTask extends Provider<void> {
 	readonly type: "annotate";
 
 	readonly issue: string; // issue id
-	readonly notes: string; // markdown annotations
+	readonly annotations: string; // markdown annotations
 
 }
 
