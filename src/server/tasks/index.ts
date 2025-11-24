@@ -24,7 +24,7 @@ import { clear } from "./clear";
 import { issues } from "./issues";
 import { policies } from "./policies";
 import { policy } from "./policy";
-import { resolve } from "./resolve";
+import { transition } from "./transition";
 
 interface AsyncEventContext {
 	jobId: string;
@@ -63,6 +63,10 @@ export const handler=new Resolver()
 
 					return await issues(job, page, task);
 
+				case "transition":
+
+					return await transition(job, page, task);
+
 				case "classify":
 
 					return await classify(job, page, task);
@@ -70,10 +74,6 @@ export const handler=new Resolver()
 				case "annotate":
 
 					return await annotate(job, page, task);
-
-				case "resolve":
-
-					return await resolve(job, page, task);
 
 				case "clear":
 

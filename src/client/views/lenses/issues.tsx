@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-
-import { Button, EmptyState, Inline, Select, Stack } from "@forge/react";
-import React, { useMemo, useState } from "react";
+import { Button, EmptyState, Inline, Select, Stack, Text } from "@forge/react";
+import React, { useState } from "react";
 import { isTrace } from "../../../shared";
 import { Document } from "../../../shared/documents";
+import { Issue, Severities, Severity, State, States } from "../../../shared/issues";
 import { Language } from "../../../shared/languages";
 import { isActivity, Status } from "../../../shared/tasks";
 import { useAgreement } from "../../hooks/agreement";
 import { useIssues } from "../../hooks/issues";
 import { ToolActivity } from "./activity";
-import ToolIssue from "./issue";
+import ToolIssue, { severityLabel, stateLabel } from "./issue";
 import { ToolTrace } from "./trace";
 
 
@@ -34,6 +34,7 @@ function isContent(value: Status<Document>): value is Document {
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 export function ToolIssues({
 
@@ -45,58 +46,30 @@ export function ToolIssues({
 
 }) {
 
-	const agreement=useAgreement(language);
-	const [issues, actions]=useIssues(isContent(agreement) ? agreement.content : "");
+	const agreement = useAgreement(language);
+	const [issues, actions] = useIssues(isContent(agreement) ? agreement.content : "");
 
-	const [filter, setFilter]=useState<"open" | "resolved" | "all">("open");
+	const [state, setState] = useState<readonly State[]>([]);
+	const [severity, setSeverity] = useState<readonly Severity[]>([]);
 
-	const sorted=useMemo(() => {
+	function includes<T>(values: readonly T[], value: T) {
+		return values.length === 0 || values.includes(value);
+	}
 
-		if ( Array.isArray(issues) ) {
 
-			return [...(
+	const sorted = !Array.isArray(issues) ? [] : [...(issues as readonly Issue[])]
+		.filter(issue => includes(state, issue.state))
+		.filter(issue => includes(severity, issue.severity))
+		.sort((x, y) => {
 
-				filter === "open" ? issues.filter(issue => !issue.resolved)
-					: filter === "resolved" ? issues.filter(issue => issue.resolved)
-						: issues
+			const xOrder = States.indexOf(x.state);
+			const yOrder = States.indexOf(y.state);
 
-			)].sort((x, y) => {
+			return xOrder !== yOrder ? xOrder-yOrder
+				: x.severity !== y.severity ? y.severity-x.severity
+					: x.title.localeCompare(y.title);
 
-				// first: open issues before resolved issues
-
-				const xIsOpen=!x.resolved;
-				const yIsOpen=!y.resolved;
-
-				if ( xIsOpen !== yIsOpen ) { return xIsOpen ? -1 : 1; }
-
-				// second: for resolved issues, sort by resolution timestamp (desc)
-
-				if ( x.resolved && y.resolved ) {
-
-					const xResolved=new Date(x.resolved).getTime();
-					const yResolved=new Date(y.resolved).getTime();
-
-					if ( xResolved !== yResolved ) { return yResolved - xResolved; }
-
-				}
-
-				// third: priority (desc)
-
-				if ( x.severity !== y.severity ) { return y.severity - x.severity; }
-
-				// fourth: title (asc)
-
-				return x.title.localeCompare(y.title);
-
-			});
-
-		} else {
-
-			return [];
-
-		}
-
-	}, [issues, filter]);
+		});
 
 
 	if ( isActivity(agreement) ) {
@@ -123,59 +96,79 @@ export function ToolIssues({
 
 	} else {
 
-		const open=issues.filter(issue => !issue.resolved);
-		const resolved=issues.filter(issue => issue.resolved);
+		const count = sorted.length;
+		const total = issues.length;
 
-		const options={
-			open: {
+		const states = States.map(value => ({
+			value,
+			label: stateLabel(value),
+			isDisabled: !issues.filter(issue => includes(severity, issue.severity)).some(({ state }) => value === state)
+		}));
 
-				label: `${open.length === 0 ? "No" : open.length} open ${issue(open.length)}`,
-				value: "open" as const,
-				isDisabled: open.length === 0
+		const severities = Severities.map(value => ({
+			value,
+			label: severityLabel(value),
+			isDisabled: !issues.filter(issue => includes(state, issue.state)).some(({ severity }) => value === severity)
+		}));
 
-			},
-			resolved: {
-
-				label: `${resolved.length === 0 ? "No" : resolved.length} resolved ${issue(resolved.length)}`,
-				value: "resolved" as const,
-				isDisabled: resolved.length === 0
-
-			},
-			all: {
-
-				label: `${issues.length === 0 ? "No" : issues.length} total ${issue(issues.length)}`,
-				value: "all" as const,
-				isDisabled: issues.length === 0
-
-			}
-		};
-
-
-		function issue(count: number) {
-			return `issue${count === 1 ? "" : "s"}`;
-		}
 
 		return <Stack space="space.200">
 
-			<Inline spread={"space-between"}>
+			<Inline space={"space.200"} alignBlock="center" shouldWrap={false}>
 
-				<Select
+				<Inline space={"space.150"} alignBlock="center" grow={"fill"}>
 
-					appearance="default"
-					spacing={"compact"}
+					<Select
 
-					value={options[filter]}
-					onChange={(option) => setFilter(option.value as "open" | "resolved" | "all")}
+						isMulti={true}
+						isClearable={true}
 
-					options={Object.values(options)}
+						spacing={"compact"}
+						placeholder={"State"}
 
-				/>
+						value={state?.map(value => states.find(option => option.value === value))}
+						options={states}
+
+						onChange={(options: undefined | typeof states[number][]) =>
+							setState(options?.map(option => option.value) ?? [])
+						}
+
+					/>
+
+					<Select id={"severity"}
+
+						isMulti={true}
+						isClearable={true}
+
+						spacing="compact"
+						placeholder={"Severity"}
+
+						value={severity?.map(value => severities.find(option => option.value === value))}
+						options={severities}
+
+						onChange={(options: undefined | typeof severities[number][]) =>
+							setSeverity(options?.map(option => option.value) ?? [])
+						}
+
+					/>
+
+					<Text weight={"bold"}>{
+						total === 0 ? "No Issues"
+							: state?.length || severity?.length ? `${count}/${total} Issue${total === 1 ? "" : "s"}`
+								: `${total} Issue${total === 1 ? "" : "s"}`
+					}</Text>
+
+				</Inline>
 
 				<Button appearance={"discovery"} onClick={actions.refresh}>Refresh Analysis</Button>
 
 			</Inline>
 
-			{sorted.map(issue => <ToolIssue key={issue.id} issue={issue} actions={actions}/>)}
+			{sorted.map(issue => <ToolIssue
+				key={`${issue.id}-${issue.state}-${issue.severity}`} // ;( dom not reordered w/out state/severity
+				issue={issue}
+				actions={actions}
+			/>)}
 
 		</Stack>;
 

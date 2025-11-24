@@ -16,14 +16,26 @@
 
 import { Instant, Source } from "./documents";
 
+
+export const States = ["blocked", "active", "pending", "resolved"] as const;
+export const Severities = [3, 2, 1] as const;
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+export type State = typeof States[number];
+export type Severity = typeof Severities[number];
+
 export interface Issue {
 
 	readonly id: string;
 
 	readonly created: Instant;
-	readonly resolved?: Instant;
+	readonly updated?: Instant;
 
-	readonly severity: 1 | 2 | 3;
+	readonly state: State;
+	readonly severity: Severity;
+
 	readonly title: string;
 	readonly description: ReadonlyArray<string | Reference>;
 

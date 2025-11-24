@@ -33,11 +33,48 @@ import {
 } from "@forge/react";
 import React, { useState } from "react";
 import { isString } from "../../../shared";
-import { Issue, Reference } from "../../../shared/issues";
+import { Issue, Reference, Severities, State, States } from "../../../shared/issues";
 import { IssuesActions } from "../../hooks/issues";
 import { adf } from "../../tools/text";
 import { ToolReference } from "./reference";
 
+
+const StateColors = {
+	blocked: toColors("purple"),
+	active: toColors("red"),
+	pending: toColors("yellow"),
+	resolved: toColors("gray")
+} as const;
+
+const SeverityColors = {
+	3: toColors("purple"),
+	2: toColors("red"),
+	1: toColors("yellow")
+} as const;
+
+const GrayColors = toColors("gray");
+
+
+function toColors<T extends string>(color: T) {
+	return {
+		borderColor: `color.border.accent.${color}` as const,
+		backgroundColor: `color.background.accent.${color}.subtlest` as const
+	};
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+export function stateLabel(value: string) {
+	return value.charAt(0).toUpperCase()+value.slice(1);
+}
+
+export function severityLabel(value: number) {
+	return "★".repeat(value)+"☆".repeat(3-value);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 export default function ToolIssue({
 
@@ -51,17 +88,32 @@ export default function ToolIssue({
 
 }) {
 
-	const [mode, setMode]=useState<"reading" | "annotating" | "updating">("reading");
-	const [expanded, setExpanded]=useState<boolean>(false);
-	const [notes, setNotes]=useState<string>(issue.annotations || "");
+	const [mode, setMode] = useState<"reading" | "annotating" | "updating">("reading");
+	const [expanded, setExpanded] = useState<boolean>(false);
+	const [notes, setNotes] = useState<string>(issue.annotations || "");
 
-	const active=mode === "updating";
-	const resolved=issue.resolved !== undefined;
-	const references=issue.description.filter((entry): entry is Reference => !isString(entry));
+	const active = mode === "updating";
+	const references = issue.description.filter((entry): entry is Reference => !isString(entry));
+
+
+	const states = States.map(value => ({
+		value,
+		label: stateLabel(value)
+	}));
+
+	const severities = Severities.map(value => ({
+		value,
+		label: severityLabel(value)
+	}));
 
 
 	function toggle() {
 		setExpanded(!expanded);
+	}
+
+	function transition(state: State) {
+		setMode("updating");
+		actions.transition(issue.id, state).then(() => setMode("reading")).then(() => setExpanded(false));
 	}
 
 	function classify(severity: Issue["severity"]) {
@@ -83,11 +135,6 @@ export default function ToolIssue({
 		actions.annotate(issue.id, notes).then(() => setMode("reading"));
 	}
 
-	function resolve() {
-		setMode("updating");
-		actions.resolve([issue.id], resolved).then(() => setMode("reading")).then(() => setExpanded(false));
-	}
-
 
 	return <Box xcss={xcss({
 
@@ -98,7 +145,7 @@ export default function ToolIssue({
 		borderRadius: "border.radius",
 		borderColor: "color.border.accent.gray",
 
-		backgroundColor: resolved
+		backgroundColor: issue.state === "resolved"
 			? "color.background.disabled"
 			: "color.background.accent.blue.subtlest",
 
@@ -134,45 +181,74 @@ export default function ToolIssue({
 
 				<Box xcss={xcss({ flexGrow: 1 })}/>
 
-				{resolved && <Text size="small" color="color.text.subtlest">
-                    Resolved on {new Date(issue.resolved).toLocaleString(undefined, {
-					year: "numeric",
-					month: "numeric",
-					day: "numeric",
-					hour: "2-digit",
-					minute: "2-digit"
-				})}
-                </Text>}
+				{mode !== "annotating" && <Box xcss={xcss({
 
-				{mode !== "annotating" && <Select isDisabled={active || resolved}
+					borderStyle: "solid",
+					borderWidth: "border.width",
+					borderRadius: "border.radius",
 
-                    appearance={"subtle"}
-                    spacing="compact"
+					...(issue.state === "resolved" ? GrayColors : StateColors[issue.state])
 
-                    value={{
-						value: issue.severity,
-						label: `${"★".repeat(issue.severity)}${"☆".repeat(3 - issue.severity)}`
-					}}
+				})}>
 
-                    options={[
-						{ value: 1, label: "★☆☆" },
-						{ value: 2, label: "★★☆" },
-						{ value: 3, label: "★★★" }
-					]}
+                    <Select isDisabled={active}
 
-                    onChange={option => classify(option.value)}
+                        appearance={"subtle"}
+                        spacing={"compact"}
 
-                />}
+                        value={states.find(option => option.value === issue.state)}
+                        options={states}
+
+                        onChange={(option: typeof states[number]) => transition(option?.value)}
+
+                    />
+
+                </Box>}
+
+				{mode !== "annotating" && <Box xcss={xcss({
+
+					borderStyle: "solid",
+					borderWidth: "border.width",
+					borderRadius: "border.radius",
+
+					...(issue.state === "resolved" ? GrayColors : SeverityColors[issue.severity])
+
+				})}>
+
+                    <Select isDisabled={active}
+
+                        appearance={"subtle"}
+                        spacing={"compact"}
+
+                        value={severities.find(option => option.value === issue.severity)}
+                        options={severities}
+
+                        onChange={(option: typeof severities[number]) => classify(option.value)}
+
+                    />
+
+                </Box>}
 
 				<ButtonGroup>
 
-					{mode === "annotating" ? <>
-						<Button appearance="subtle" onClick={cancel}>Cancel</Button>
-						<Button appearance={"primary"} onClick={save}>Save</Button>
-					</> : <>
-						<Button isDisabled={active} onClick={annotate}>Annotate</Button>
-						<Button isDisabled={active} onClick={resolve}>{resolved ? "Reopen" : "Resolve"}</Button>
-					</>}
+					{mode === "annotating"
+
+						? <>
+							<Tooltip content="Cancel editing annotations">
+								<Button appearance="subtle" onClick={cancel}>Cancel</Button>
+							</Tooltip>
+							<Tooltip content="Save annotations">
+								<Button appearance={"primary"} onClick={save}>Save</Button>
+							</Tooltip>
+						</>
+
+						: <Box xcss={xcss({ backgroundColor: "color.background.neutral" })}>
+							<Tooltip content="Add or edit annotations">
+								<Button isDisabled={active} onClick={annotate}>Annotate</Button>
+							</Tooltip>
+						</Box>
+
+					}
 
 				</ButtonGroup>
 
@@ -230,11 +306,11 @@ function ToolReferences({
 
 }) {
 
-	const agreementReferences=references.filter(reference => !reference.source);
-	const policyReferences=references.filter(reference => reference.source);
+	const agreementReferences = references.filter(reference => !reference.source);
+	const policyReferences = references.filter(reference => reference.source);
 
-	const agreementCount=agreementReferences.length;
-	const policyCount=policyReferences.length;
+	const agreementCount = agreementReferences.length;
+	const policyCount = policyReferences.length;
 
 	return <DynamicTable
 
@@ -242,8 +318,8 @@ function ToolReferences({
 
 		rows={Array.from({ length: Math.max(agreementCount, policyCount) }).flatMap((_, i) => {
 
-			const agreementReference=agreementReferences[i];
-			const policyReference=policyReferences[i];
+			const agreementReference = agreementReferences[i];
+			const policyReference = policyReferences[i];
 
 			return [
 

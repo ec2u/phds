@@ -38,7 +38,7 @@ export async function classify(job: string, page: string, {
 		const issue=await kvs.get<Issue>(key);
 
 		if ( issue ) {
-			await kvs.set<Issue>(key, { ...issue, severity });
+			await kvs.set<Issue>(key, { ...issue, severity, updated: new Date().toISOString() });
 		}
 
 		await setStatus(job, undefined);

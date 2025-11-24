@@ -16,11 +16,11 @@
 
 import { Catalog, Source } from "./documents";
 import { isNumber, Trace } from "./index";
-import { Issue } from "./issues";
+import { Issue, State } from "./issues";
 import { Language } from "./languages";
 
 
-export type Task=
+export type Task =
 
 	| PoliciesTask
 	| PolicyTask
@@ -28,13 +28,13 @@ export type Task=
 	| IssuesTask
 	| ClassifyTask
 	| AnnotateTask
-	| ResolveTask
+	| TransitionTask
 
 	| ClearTask
 
 	;
 
-export type Payload<T extends Task>=Omit<T, "type">
+export type Payload<T extends Task> = Omit<T, "type">
 
 
 /**
@@ -42,7 +42,7 @@ export type Payload<T extends Task>=Omit<T, "type">
  *
  * @template T the type of result data
  */
-export type Status<T>=Activity | T | Trace;
+export type Status<T> = Activity | T | Trace;
 
 /**
  * Enumeration of task activity states.
@@ -132,6 +132,15 @@ export interface IssuesTask extends Provider<ReadonlyArray<Issue>> {
 
 }
 
+export interface TransitionTask extends Provider<void> {
+
+	readonly type: "transition";
+
+	readonly issue: string; // issue id
+	readonly state: State; // target state
+
+}
+
 export interface ClassifyTask extends Provider<void> {
 
 	readonly type: "classify";
@@ -146,16 +155,7 @@ export interface AnnotateTask extends Provider<void> {
 	readonly type: "annotate";
 
 	readonly issue: string; // issue id
-	readonly notes: string; // markdown annotations
-
-}
-
-export interface ResolveTask extends Provider<void> {
-
-	readonly type: "resolve";
-
-	readonly reopen?: boolean;
-	readonly issues: ReadonlyArray<string>; // issue ids
+	readonly annotations: string; // markdown annotations
 
 }
 

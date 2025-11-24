@@ -16,16 +16,16 @@
 
 import { useEffect, useState } from "react";
 import { isArray } from "../../shared";
-import { Issue } from "../../shared/issues";
+import { Issue, State } from "../../shared/issues";
 import { Status } from "../../shared/tasks";
 import { useCache } from "./cache";
 import { execute } from "./index";
 
 export interface IssuesActions {
 	refresh: () => void;
+	transition: (issue: string, state: State) => Promise<void>;
 	classify: (issue: string, severity: Issue["severity"]) => Promise<void>;
 	annotate: (issue: string, notes: string) => Promise<void>;
-	resolve: (issues: ReadonlyArray<string>, reopen?: boolean) => Promise<void>;
 }
 
 
@@ -33,14 +33,15 @@ export interface IssuesActions {
 
 export function useIssues(agreement: string): [Status<ReadonlyArray<Issue>>, IssuesActions] {
 
-	const { getCache, setCache }=useCache();
+	const { getCache, setCache } = useCache();
 
-	const key="issues";
-	const cached=getCache<ReadonlyArray<Issue>>(key);
+	const key = "issues";
+	const cached = getCache<ReadonlyArray<Issue>>(key);
 
-	const [issues, setIssues]=useState<Status<ReadonlyArray<Issue>>>(cached ?? []);
+	const [issues, setIssues] = useState<Status<ReadonlyArray<Issue>>>(cached ?? []);
 
-	const update=(issues: Status<ReadonlyArray<Issue>>) => {
+
+	function update(issues: Status<ReadonlyArray<Issue>>) {
 
 		setIssues(issues);
 
@@ -48,17 +49,53 @@ export function useIssues(agreement: string): [Status<ReadonlyArray<Issue>>, Iss
 			setCache(key, issues);
 		}
 
-	};
+	}
 
-	const refresh=() => {
+	function mutate(id: string, changes: Partial<Issue>) {
+
+		setIssues(current => {
+			if ( isArray<Issue>(current) ) {
+
+				const updated = current.map(issue => issue.id === id
+					? { ...issue, ...changes }
+					: issue
+				);
+
+				setCache(key, updated);
+
+				return updated;
+
+			} else {
+
+				return current;
+
+			}
+		});
+
+	}
+
+
+	function refresh() {
 		execute<ReadonlyArray<Issue>>(update, {
 			type: "issues",
 			refresh: true,
 			agreement
 		});
-	};
+	}
 
-	const classify=async (issue: string, severity: Issue["severity"]): Promise<void> => {
+	async function transition(issue: string, state: State): Promise<void> {
+
+		await execute<void>(() => { }, {
+			type: "transition",
+			issue,
+			state
+		});
+
+		mutate(issue, { state });
+
+	}
+
+	async function classify(issue: string, severity: Issue["severity"]): Promise<void> {
 
 		await execute<void>(() => { }, {
 			type: "classify",
@@ -66,48 +103,21 @@ export function useIssues(agreement: string): [Status<ReadonlyArray<Issue>>, Iss
 			severity
 		});
 
-		if ( isArray<Issue>(issues) ) {
-			update(issues.map(item => item.id === issue
-				? { ...item, severity }
-				: item
-			));
-		}
+		mutate(issue, { severity });
 
-	};
+	}
 
-	const annotate=async (issue: string, notes: string): Promise<void> => {
+	async function annotate(issue: string, annotations: string): Promise<void> {
 
 		await execute<void>(() => { }, {
 			type: "annotate",
 			issue,
-			notes
+			annotations
 		});
 
-		if ( isArray<Issue>(issues) ) {
-			update(issues.map(item => item.id === issue
-				? { ...item, annotations: notes }
-				: item
-			));
-		}
+		mutate(issue, { annotations });
 
-	};
-
-	const resolve=async (ids: ReadonlyArray<string>, reopen?: boolean): Promise<void> => {
-
-		await execute<void>(() => { }, {
-			type: "resolve",
-			issues: ids,
-			reopen
-		});
-
-		if ( isArray<Issue>(issues) ) {
-			update(issues.map(issue => ids.includes(issue.id)
-				? { ...issue, resolved: reopen ? undefined : new Date().toISOString() }
-				: issue
-			));
-		}
-
-	};
+	}
 
 
 	useEffect(() => {
@@ -139,9 +149,9 @@ export function useIssues(agreement: string): [Status<ReadonlyArray<Issue>>, Iss
 		issues,
 		{
 			refresh,
+			transition,
 			classify,
-			annotate,
-			resolve
+			annotate
 		}
 	];
 

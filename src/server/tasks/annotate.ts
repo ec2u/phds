@@ -22,7 +22,7 @@ import { issueKey, lock } from "../tools/cache";
 export async function annotate(job: string, page: string, {
 
 	issue,
-	notes
+	annotations
 
 }: Payload<AnnotateTask>): Promise<void> {
 
@@ -37,7 +37,7 @@ export async function annotate(job: string, page: string, {
 		const issue=await kvs.get(key);
 
 		if ( issue ) {
-			await kvs.set(key, { ...issue, annotations: notes });
+			await kvs.set(key, { ...issue, annotations, updated: new Date().toISOString() });
 		}
 
 		await setStatus(job, undefined);
