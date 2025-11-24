@@ -1,0 +1,39 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(forge variables set:*)",
+      "Bash(npx tsc:*)",
+      "Bash(find:*)",
+      "Bash(grep:*)",
+      "WebFetch(domain:unpkg.com)",
+      "WebFetch(domain:developer.atlassian.com)",
+      "WebFetch(domain:github.com)",
+      "Bash(npm install:*)",
+      "WebFetch(domain:www.npmjs.com)",
+      "Bash(npm run start:*)",
+      "Bash(rg:*)",
+      "Bash(touch:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm run:*)",
+      "Bash(rm:*)",
+      "mcp__ide__getDiagnostics",
+      "Bash(npm test)",
+      "Bash(npx jest:*)",
+      "Bash(node:*)",
+      "Bash(npx tsx:*)",
+      "Bash(ls:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(claude doctor)",
+      "Bash(claude --version)",
+      "WebSearch",
+      "WebFetch(domain:community.developer.atlassian.com)",
+      "WebFetch(domain:ai.google.dev)",
+      "WebFetch(domain:googleapis.github.io)",
+      "Bash(npx forge lint:*)",
+      "WebFetch(domain:atlassian.design)",
+      "WebFetch(domain:atlaskit.atlassian.com)"
+    ],
+    "defaultMode": "acceptEdits"
+  },
+  "enableAllProjectMcpServers": false
+}
