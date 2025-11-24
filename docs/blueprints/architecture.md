@@ -2,36 +2,75 @@
 title: System Architecture
 ---
 
-The EC2U PhD Agreements Tool is a **client-server Atlassian Forge application** for drafting cotutelle PhD
-agreements within Confluence. Here's the high-level architecture:
+The EC2U PhD Agreements Tool is a **client-server Atlassian Forge application** for drafting cotutelle PhD agreements
+within Confluence.
 
-# Main Components
+# Project Structure
 
-## 1. Client Layer (`src/client/`)
+## Key Components
+
+- `src/client/body.tsx`: Main React component with tabbed UI interface
+- `src/client/tool.tsx`: Configuration UI for the macro (currently disabled in manifest)
+- `src/server/ports/index.ts`: Forge resolver exposing task submission and monitoring endpoints
+- `src/server/tasks/index.ts`: Async task executor handling long-running background tasks
+- `src/shared/`: Shared type definitions and utilities used by both client and server
+- `manifest.yml`: Forge app configuration defining the macro, resolvers, and async consumers
+
+## Application Layers
+
+### 1. Client Layer (`src/client/`)
 
 - **Entry Points**: `body.tsx` and `tool.tsx` - different UI layouts for the macro
 - **View Components**: React components in `views/` providing Agreement, Policies, Issues, Chat interfaces
 - **Hooks**: Custom React hooks in `hooks/` for data management (cache, agreement, policies, issues)
 - **Cache System**: `ToolCache` context provider for client-side state management
 
-## 2. Server Layer (`src/server/`)
+### 2. Server Layer (`src/server/`)
 
-- **Resolver**: `index.ts` defines Forge resolver functions callable from client via `invoke()`
+- **Ports**: `ports/index.ts` defines Forge resolver functions callable from client via `invoke()`
 - **Task Dispatcher**: `tasks/index.ts` routes different task types to specific handlers
-- **Task Handlers**: Individual modules (policies, policy, issues, classify, annotate, resolve, clear)
+- **Task Handlers**: Individual modules (policies, policy, issues, classify, annotate, transition, clear)
 - **Tools**: Utilities for external integrations (Gemini AI, Langfuse tracing, Confluence pages, caching)
 
-## 3. Shared Layer (`src/shared/`)
+### 3. Shared Layer (`src/shared/`)
 
 - **Task System**: `tasks.ts` defines task types, status tracking, and activity states
 - **Type Definitions**: Common types for documents, issues, languages across client/server
+- **Utilities**: Type checking functions (`isString()`, `isDefined()`, etc.)
 
-## 4. External Systems
+### 4. External Systems
 
 - **Key-Value Store**: Forge's persistent storage for caching documents, issues, and task status
 - **Async Worker**: Background task execution system for long-running operations
 - **Langfuse**: Prompt management and tracing system for AI operations
 - **Gemini AI**: Google's AI service for document analysis and natural language processing
+
+# Forge Application Architecture
+
+## Application Structure
+
+The application follows Atlassian Forge architecture with async task execution:
+
+1. **Frontend Components**: React components using Forge UI library that render within Confluence
+2. **Resolver Functions**: Server-side functions that can be invoked from the client via `invoke()`
+3. **Async Task System**: Long-running tasks executed via queue consumers with job-based status tracking
+4. **Configuration System**: UI for macro configuration (currently disabled in manifest.yml)
+
+## Component Communication
+
+- Frontend components use `invoke()` from `@forge/bridge` to call resolver functions
+- Long-running tasks are submitted via `submitTask()` and monitored via `monitorTask()` resolvers
+- Task execution uses Forge queue consumers with job IDs for tracking
+- Configuration data is accessed through `useConfig()` hook
+- Macro body content is accessed via `useProductContext().extension.macro.body`
+
+## Key Patterns
+
+- All React components are wrapped in `React.StrictMode`
+- Resolver functions are defined using `Resolver.define()` and exported as `handler`
+- Tasks extend `Provider<T>` interface and include a `readonly type` discriminator
+- Task implementations use `setStatus(job, Activity.X)` for progress updates
+- Resource locking prevents concurrent task execution on the same resources
 
 # System Workflow
 

@@ -65,8 +65,7 @@ The AI highlights potential concerns for human review rather than making decisio
 
 # Getting Started
 
-Access the [PhD Agreements Workspace](https://your-confluence-site.atlassian.net/wiki/spaces/phd/overview) and follow
-these steps:
+Access the PhD Agreements Workspace in Confluence and follow these steps:
 
 1. **Create agreement** - Start a new agreement page using the PhD Agreements Tool macro
 2. **Attach policies** - Upload PDF policy documents from both institutions (national, institutional, department level)
@@ -76,4 +75,4 @@ these steps:
 6. **Track resolution** - Classify and annotate issues as you resolve them
 7. **Finalize** - Complete the agreement with confidence in its compliance
 
-See the [User Manual](manual/index.md) for detailed instructions.
+See the [User Manual](../manual/index.md) for detailed instructions.

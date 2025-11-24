@@ -73,13 +73,12 @@ Data types stored in the key-value store are defined in the shared layer:
 ## Issue Lifecycle
 
 ```
-Create → Store → [Classify] → [Annotate] → [Resolve] → [Reopen]
+Create → Store → [Classify] → [Annotate] → [Transition] → [Transition]
 ```
 
 - **Classify:** Update severity level
 - **Annotate:** Add markdown notes
-- **Resolve:** Add resolved timestamp
-- **Reopen:** Remove resolved timestamp
+- **Transition:** Change issue state (e.g., open, resolved, archived)
 
 ## Policy Document Lifecycle
 
@@ -159,7 +158,7 @@ locks for a page in a single KVS entry with optimistic concurrency control via v
 **Lock Identifiers:** `policy:{source}:{language?}` | `issue:{issueId}`
 
 - **Purpose**: Operations on specific resources
-- **Used by**: `policy`, `classify`, `annotate`, `resolve`
+- **Used by**: `policy`, `classify`, `annotate`, `transition`
 - **Blocks**: Conflicts with catalog operations of same type
 
 ### Conflict Detection Algorithm

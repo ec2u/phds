@@ -1,4 +1,6 @@
-# Management Guide
+---
+title: App Lifecycle Management
+---
 
 This guide covers the complete app lifecycle management for the EC2U PhD Agreements Tool using Atlassian Forge.
 
@@ -42,8 +44,6 @@ This guide covers the complete app lifecycle management for the EC2U PhD Agreeme
 
 2. **Start Development Tunnel**
    ```bash
-   npm run start
-   # OR
    forge tunnel
    ```
 
@@ -57,8 +57,6 @@ This guide covers the complete app lifecycle management for the EC2U PhD Agreeme
 
 1. **Deploy to Production**
    ```bash
-   npm run issue
-   # OR
    forge deploy
    ```
 
@@ -112,23 +110,22 @@ Forge provides encrypted environment variables for production deployments:
 
 ### Local Development with .env
 
-For local development with `forge tunnel`, use environment variables:
+For local development with `forge tunnel`, you can use environment variables from a `.env` file:
 
 1. **Create .env File**
    ```bash
-   # Create .env in project root
    touch .env
    ```
 
 2. **Add Variables to .env**
-   ```dotenv
-   # .env file format
+   ```bash
    FORGE_USER_VAR_GEMINI_KEY=your-local-gemini-key
    ```
 
 3. **Run Tunnel with Environment Variables**
    ```bash
-   npx dotenv -- forge tunnel
+   # Load .env and run tunnel (requires dotenv-cli or similar)
+   npx dotenv-cli -- forge tunnel
    ```
 
 4. **Access Variables in Code**
@@ -143,7 +140,7 @@ For local development with `forge tunnel`, use environment variables:
 
 1. **Setup Project**
    ```bash
-   npm run setup          # Install dependencies
+   npm install            # Install dependencies
    forge login            # Authenticate
    forge register         # Register app (first time)
    forge install          # Install in dev site
@@ -151,14 +148,14 @@ For local development with `forge tunnel`, use environment variables:
 
 2. **Daily Development**
    ```bash
-   npm run start          # Start tunnel for live development
+   forge tunnel           # Start tunnel for live development
    # Make changes, test in Confluence
    # Changes are reflected immediately via tunnel
    ```
 
 3. **Deploy Changes**
    ```bash
-   npm run issue          # Deploy to Forge
+   forge deploy           # Deploy to Forge
    forge install --upgrade # Upgrade installation
    ```
 
@@ -248,13 +245,13 @@ forge settings list            # Check app configuration
 
 ```bash
 # 1. Start tunnel for development
-npm run start
+forge tunnel
 
 # 2. Develop and test locally
 # (changes reflect immediately)
 
 # 3. Deploy when ready
-npm run issue
+forge deploy
 forge install --upgrade
 ```
 

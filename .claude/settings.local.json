@@ -31,7 +31,9 @@
       "WebFetch(domain:googleapis.github.io)",
       "Bash(npx forge lint:*)",
       "WebFetch(domain:atlassian.design)",
-      "WebFetch(domain:atlaskit.atlassian.com)"
+      "WebFetch(domain:atlaskit.atlassian.com)",
+      "Bash(cat:*)",
+      "Skill(markdown-writer)"
     ],
     "defaultMode": "acceptEdits"
   },

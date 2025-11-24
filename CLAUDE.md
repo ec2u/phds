@@ -1,19 +1,26 @@
-# CLAUDE.md
+---
+title: CLAUDE.md
+description: Development guidelines for Claude Code when working with this repository.
+---
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Project Overview
+# Project Overview
 
 The EC2U PhD Agreements Tool is an AI-based Confluence macro supporting drafting of cotutelle PhD agreements. It
 supports local PhD coordinators and other stakeholders in the agreement drafting process.
 
 This is an Atlassian Forge application built with React and TypeScript that runs as a macro within Confluence.
 
-## Extended Documentation
+# Extended Documentation
 
-For complete app lifecycle management, deployment, and environment setup instructions, see @MANAGEMENT.md
+- **Architecture**: See @docs/blueprints/architecture.md for system architecture and component details
+- **Storage**: See @docs/blueprints/storage.md for storage patterns and data lifecycle
+- **Adding Tasks**: See @docs/development/tasks.md for implementing new asynchronous task types
+- **Lifecycle Management**: See @docs/development/lifecycle.md for deployment and environment setup
+- **Development Resources**: See @docs/development/resources.md for Forge documentation and tools
 
-## Build Commands
+# Build Commands
 
 ```bash
 # Environment setup
@@ -21,41 +28,13 @@ npm run clean       # Remove node_modules
 npm run setup       # Install dependencies (with legacy peer deps)
 
 # Development
-npm run start       # Start Forge tunnel for local development
+npm run serve       # Start Forge tunnel for local development (requires .env file)
+
+# Deployment
+npm run issue       # Deploy and install to development/production environments (see @docs/development/lifecycle.md)
 ```
 
-## Project Structure
-
-This is a client-side only Forge application with the following key components:
-
-- `src/client/index.tsx`: Main React component with tabbed UI interface
-- `src/client/config.tsx`: Configuration UI for the macro with form submission
-- `src/server/index.ts`: Forge resolver that handles backend function calls
-- `manifest.yml`: Forge app configuration defining the macro registration and resources
-
-## Architecture
-
-### Forge Application Structure
-
-The application follows Atlassian Forge architecture:
-
-1. **Frontend Components**: React components using Forge UI library that render within Confluence
-2. **Resolver Functions**: Server-side functions that can be invoked from the client via `invoke()`
-3. **Configuration System**: Separate UI for macro configuration with form submission via `view.submit()`
-
-### Component Communication
-
-- Frontend components use `invoke()` from `@forge/bridge` to call resolver functions
-- Configuration data is managed through `useConfig()` hook
-- Macro body content is accessed via `useProductContext().extension.macro.body`
-
-### Key Patterns
-
-- All React components are wrapped in `React.StrictMode`
-- Configuration UI uses `useSubmit` custom hook for form handling
-- Resolver functions are defined using `Resolver.define()` and exported as `handler`
-
-## Development Notes
+# Development Notes
 
 - Uses `--legacy-peer-deps` flag for npm installation due to Forge dependency requirements
 - TypeScript configuration targets ES2020 with CommonJS modules
@@ -69,37 +48,14 @@ The application follows Atlassian Forge architecture:
 - Inline comments (`//`) must be lowercase and followed by an empty line for readability
 - Use functional programming style unless imperative style is specifically required
 
-## Adding New Task Types
+# Adding New Task Types
 
-To add a new task type to the system, follow these steps:
+For detailed instructions on implementing new asynchronous task types, see @docs/development/tasks.md
 
-1. **Define Task Interface** (`src/shared/tasks.ts`):
-    - Add new task interface extending `Provider<T>` where T is the return type
-    - Include `readonly type: "taskname"` property
-    - Add any task-specific parameters as readonly properties
-    - Update the `Task` union type to include the new task
+This guide covers:
 
-2. **Create Task Implementation** (`src/server/tasks/{name}.ts`):
-    - Include Apache 2.0 license header
-    - Import required types and utilities
-    - Export async function with signature: `taskname(job: string, page: string, params: TaskType)`
-    - Use `setStatus(job, Activity.X)` for progress updates
-    - Use `setStatus(job, result)` for completion
-   - Add stub functions for any new functionality requiring future implementation
-   - Use descriptive names ending with "Stub" suffix and proper TypeScript return types
-
-3. **Update Task Dispatcher** (`src/server/tasks/index.ts`):
-    - Import the new task function
-    - Add case to the switch statement in the execute resolver
-    - Follow pattern: `case "taskname": return await taskname(job, page, task);`
-
-Example task structure follows the existing patterns in `policies.ts` and `policy.ts`.
-
-## Documentation Guidelines
-
-When creating Markdown documents in the `docs/` folder:
-
-- Always include a title in the frontmatter section using `title: Document Title`
-- Use top-level headings (`#`) for main sections, then `##`, `###` for subsections
-- Keep line lengths under 120 characters by wrapping text appropriately
-- Do not duplicate the frontmatter title as a `# Title` heading in the document body
+- Task interface definition
+- Task implementation patterns
+- Resource locking strategies
+- Activity state management
+- Error handling best practices
