@@ -15,7 +15,7 @@
  */
 
 import { Button, EmptyState, Inline, Select, Stack, Text } from "@forge/react";
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import { isTrace } from "../../../shared";
 import { Document } from "../../../shared/documents";
 import { Issue, Severities, Severity, State, States } from "../../../shared/issues";
@@ -35,6 +35,7 @@ function isContent(value: Status<Document>): value is Document {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+
 export function ToolIssues({
 
 	language
@@ -48,40 +49,27 @@ export function ToolIssues({
 	const agreement = useAgreement(language);
 	const [issues, actions] = useIssues(isContent(agreement) ? agreement.content : "");
 
-	const [state, setState] = useState<readonly State[]>();
-	const [severity, setSeverity] = useState<readonly Severity[]>();
+	const [state, setState] = useState<readonly State[]>([]);
+	const [severity, setSeverity] = useState<readonly Severity[]>([]);
+
+	function includes<T>(values: readonly T[], value: T) {
+		return values.length === 0 || values.includes(value);
+	}
 
 
-	function hasSeverity(issue: Issue) { return !severity?.length || severity.includes(issue.severity); }
+	const sorted = !Array.isArray(issues) ? [] : [...(issues as readonly Issue[])]
+		.filter(issue => includes(state, issue.state))
+		.filter(issue => includes(severity, issue.severity))
+		.sort((x, y) => {
 
-	function hasState(issue: Issue) { return !state?.length || state.includes(issue.state); }
+			const xOrder = States.indexOf(x.state);
+			const yOrder = States.indexOf(y.state);
 
+			return xOrder !== yOrder ? xOrder-yOrder
+				: x.severity !== y.severity ? y.severity-x.severity
+					: x.title.localeCompare(y.title);
 
-	const sorted = useMemo(() => {
-
-		if ( Array.isArray(issues) ) {
-
-			return (issues as readonly Issue[])
-				.filter(hasState)
-				.filter(hasSeverity)
-				.sort((x, y) => {
-
-					const xOrder = States.indexOf(x.state);
-					const yOrder = States.indexOf(y.state);
-
-					return xOrder !== yOrder ? xOrder-yOrder
-						: x.severity !== y.severity ? y.severity-x.severity
-							: x.title.localeCompare(y.title);
-
-				});
-
-		} else {
-
-			return [];
-
-		}
-
-	}, [issues, state, severity]);
+		});
 
 
 	if ( isActivity(agreement) ) {
@@ -114,13 +102,13 @@ export function ToolIssues({
 		const states = States.map(value => ({
 			value,
 			label: stateLabel(value),
-			isDisabled: !issues.filter(hasSeverity).some(({ state }) => value === state)
+			isDisabled: !issues.filter(issue => includes(severity, issue.severity)).some(({ state }) => value === state)
 		}));
 
 		const severities = Severities.map(value => ({
 			value,
 			label: severityLabel(value),
-			isDisabled: !issues.filter(hasState).some(({ severity }) => value === severity)
+			isDisabled: !issues.filter(issue => includes(state, issue.state)).some(({ severity }) => value === severity)
 		}));
 
 
@@ -128,7 +116,7 @@ export function ToolIssues({
 
 			<Inline space={"space.200"} alignBlock="center" shouldWrap={false}>
 
-				<Inline space={"space.150"} grow={"fill"}>
+				<Inline space={"space.150"} alignBlock="center" grow={"fill"}>
 
 					<Select
 
@@ -142,7 +130,7 @@ export function ToolIssues({
 						options={states}
 
 						onChange={(options: undefined | typeof states[number][]) =>
-							setState(options?.map(option => option.value))
+							setState(options?.map(option => option.value) ?? [])
 						}
 
 					/>
@@ -159,7 +147,7 @@ export function ToolIssues({
 						options={severities}
 
 						onChange={(options: undefined | typeof severities[number][]) =>
-							setSeverity(options?.map(option => option.value))
+							setSeverity(options?.map(option => option.value) ?? [])
 						}
 
 					/>
@@ -176,7 +164,11 @@ export function ToolIssues({
 
 			</Inline>
 
-			{sorted.map(issue => <ToolIssue key={issue.id} issue={issue} actions={actions}/>)}
+			{sorted.map(issue => <ToolIssue
+				key={`${issue.id}-${issue.state}-${issue.severity}`} // ;( dom not reordered w/out state/severity
+				issue={issue}
+				actions={actions}
+			/>)}
 
 		</Stack>;
 
