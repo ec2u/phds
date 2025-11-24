@@ -22,36 +22,40 @@ import { ToolCache } from "./hooks/cache";
 import { ToolBar } from "./views/layouts/bar";
 import { ToolAgreement } from "./views/lenses/agreement";
 import { ToolClear } from "./views/lenses/clear";
+import { ToolDashboard } from "./views/lenses/dashboard";
 import { ToolIssues } from "./views/lenses/issues";
 import { ToolPolicies } from "./views/lenses/policies";
 import { ToolPolicy } from "./views/lenses/policy";
 
 
-const modes={
+const Modes = {
+
+	"Dashboard": false, // !!!
 	"Agreement": false,
 	"Policies": false,
+
 	"Issues": false
-	// !!! "Chat": true
+
 } as const;
 
 
 function ToolBody() {
 
-	const context=useProductContext();
-	const config=useConfig();
+	const context = useProductContext();
+	const config = useConfig();
 
-	const body=context?.extension?.macro?.body;
+	const body = context?.extension?.macro?.body;
 
 
-	const [mode, setMode]=useState<keyof typeof modes | Source>("Agreement");
-	const [language, setLanguage]=useState<Language>(defaultLanguage);
+	const [mode, setMode] = useState<keyof typeof Modes | Source>(Object.keys(Modes)[0]);
+	const [language, setLanguage] = useState<Language>(defaultLanguage);
 
 
 	return <>
 
 		<ToolBar
 
-			menu={<ButtonGroup>{Object.entries(modes).map(([name, disabled]) =>
+			menu={<ButtonGroup>{Object.entries(Modes).map(([name, disabled]) =>
 				<Button key={name} isSelected={mode === name} isDisabled={disabled}
 
 					onClick={() => setMode(name)}
@@ -72,11 +76,11 @@ function ToolBody() {
 
 		{
 
-			mode === "Agreement" ? <ToolAgreement language={language}/>
-				: mode === "Policies" ? <ToolPolicies onClick={setMode}/>
-					: mode === "Issues" ? <ToolIssues language={language}/>
-						// !!! : mode === "Chat" ? <ToolChat/>
-						: <ToolPolicy source={mode} language={language}/>
+			mode === "Dashboard" ? <ToolDashboard language={language}/>
+				: mode === "Agreement" ? <ToolAgreement language={language}/>
+					: mode === "Policies" ? <ToolPolicies onClick={setMode}/>
+						: mode === "Issues" ? <ToolIssues language={language}/>
+							: <ToolPolicy source={mode} language={language}/>
 
 		}
 

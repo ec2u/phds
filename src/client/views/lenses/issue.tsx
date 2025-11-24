@@ -21,9 +21,7 @@ import {
 	ButtonGroup,
 	DynamicTable,
 	Heading,
-	Icon,
 	Inline,
-	Pressable,
 	Select,
 	Stack,
 	Text,
@@ -36,34 +34,31 @@ import { isString } from "../../../shared";
 import { Issue, Reference, Severities, State, States } from "../../../shared/issues";
 import { IssuesActions } from "../../hooks/issues";
 import { adf } from "../../tools/text";
+import { ToolToggle } from "../components/toggle";
+import { toColors } from "../index";
 import { ToolReference } from "./reference";
 
 
-const StateColors = {
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+export const RedColors = toColors("red");
+export const BlueColors = toColors("blue");
+export const GrayColors = toColors("gray");
+
+
+export const StateColors = {
 	blocked: toColors("purple"),
 	active: toColors("red"),
 	pending: toColors("yellow"),
-	resolved: toColors("gray")
+	resolved: toColors("lime")
 } as const;
 
-const SeverityColors = {
+export const SeverityColors = {
 	3: toColors("purple"),
 	2: toColors("red"),
 	1: toColors("yellow")
 } as const;
 
-const GrayColors = toColors("gray");
-
-
-function toColors<T extends string>(color: T) {
-	return {
-		borderColor: `color.border.accent.${color}` as const,
-		backgroundColor: `color.background.accent.${color}.subtlest` as const
-	};
-}
-
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 export function stateLabel(value: string) {
 	return value.charAt(0).toUpperCase()+value.slice(1);
@@ -143,11 +138,8 @@ export default function ToolIssue({
 		borderStyle: "solid",
 		borderWidth: "border.width",
 		borderRadius: "border.radius",
-		borderColor: "color.border.accent.gray",
 
-		backgroundColor: issue.state === "resolved"
-			? "color.background.disabled"
-			: "color.background.accent.blue.subtlest",
+		...(issue.state === "resolved" ? GrayColors : BlueColors),
 
 		opacity: active ? "opacity.disabled" : undefined
 
@@ -155,102 +147,102 @@ export default function ToolIssue({
 
 		<Stack space={"space.100"}>
 
-			<Inline alignBlock={"center"} space={"space.050"}>
+			<Inline alignBlock={"center"} space={"space.100"} spread={"space-between"}>
 
-				<Heading size={"small"}>{issue.title}</Heading>
+				<Inline alignBlock={"center"}>
 
-				<Pressable onClick={toggle} xcss={xcss({
+					<Heading size={"small"}>{issue.title}</Heading>
 
-					padding: "space.025",
-					margin: "space.0",
+					<ToolToggle
 
-					backgroundColor: "color.background.neutral.subtle"
+						expanded={expanded}
+						label="references"
 
-				})}>
+						onToggle={toggle}
 
-					<Tooltip content={`${expanded ? "Hide" : "Show"} references`}>
+					/>
 
-						<Icon size={"medium"}
-							label={`${expanded ? "Hide" : "Show"} references`}
-							glyph={expanded ? "chevron-up" : "chevron-down"}
-						/>
+				</Inline>
 
-					</Tooltip>
+				<Box xcss={xcss({ minWidth: "25em" /* ;( prevent selects from shrinking */ })}>
 
-				</Pressable>
+					<Inline alignBlock={"center"} alignInline={"end"} space={"space.050"}>
 
-				<Box xcss={xcss({ flexGrow: 1 })}/>
+						{mode !== "annotating" && <Box xcss={xcss({
 
-				{mode !== "annotating" && <Box xcss={xcss({
+							borderStyle: "solid",
+							borderWidth: "border.width",
+							borderRadius: "border.radius",
 
-					borderStyle: "solid",
-					borderWidth: "border.width",
-					borderRadius: "border.radius",
+							...(StateColors[issue.state])
 
-					...(issue.state === "resolved" ? GrayColors : StateColors[issue.state])
+						})}>
 
-				})}>
+                            <Select isDisabled={active}
 
-                    <Select isDisabled={active}
+                                appearance={"subtle"}
+                                spacing={"compact"}
 
-                        appearance={"subtle"}
-                        spacing={"compact"}
+                                value={states.find(option => option.value === issue.state)}
+                                options={states}
 
-                        value={states.find(option => option.value === issue.state)}
-                        options={states}
+                                onChange={(option: typeof states[number]) => transition(option?.value)}
 
-                        onChange={(option: typeof states[number]) => transition(option?.value)}
+                            />
 
-                    />
+                        </Box>}
 
-                </Box>}
+						{mode !== "annotating" && <Box xcss={xcss({
 
-				{mode !== "annotating" && <Box xcss={xcss({
+							borderStyle: "solid",
+							borderWidth: "border.width",
+							borderRadius: "border.radius",
 
-					borderStyle: "solid",
-					borderWidth: "border.width",
-					borderRadius: "border.radius",
+							...(SeverityColors[issue.severity])
 
-					...(issue.state === "resolved" ? GrayColors : SeverityColors[issue.severity])
+						})}>
 
-				})}>
+                            <Select isDisabled={active}
 
-                    <Select isDisabled={active}
+                                appearance={"subtle"}
+                                spacing={"compact"}
 
-                        appearance={"subtle"}
-                        spacing={"compact"}
+                                value={severities.find(option => option.value === issue.severity)}
+                                options={severities}
 
-                        value={severities.find(option => option.value === issue.severity)}
-                        options={severities}
+                                onChange={(option: typeof severities[number]) => classify(option.value)}
 
-                        onChange={(option: typeof severities[number]) => classify(option.value)}
+                            />
 
-                    />
+                        </Box>}
 
-                </Box>}
+						<ButtonGroup>
 
-				<ButtonGroup>
+							{mode === "annotating"
 
-					{mode === "annotating"
+								? <>
+									<Tooltip content="Cancel editing annotations">
+										<Button appearance="subtle" onClick={cancel}>Cancel</Button>
+									</Tooltip>
+									<Tooltip content="Save annotations">
+										<Button appearance={"primary"} onClick={save}>Save</Button>
+									</Tooltip>
+								</>
 
-						? <>
-							<Tooltip content="Cancel editing annotations">
-								<Button appearance="subtle" onClick={cancel}>Cancel</Button>
-							</Tooltip>
-							<Tooltip content="Save annotations">
-								<Button appearance={"primary"} onClick={save}>Save</Button>
-							</Tooltip>
-						</>
+								: <Box xcss={xcss({ backgroundColor: "color.background.neutral" })}>
+									<Tooltip content="Add or edit annotations">
+										<Button isDisabled={active} onClick={annotate}>Annotate</Button>
+									</Tooltip>
+								</Box>
 
-						: <Box xcss={xcss({ backgroundColor: "color.background.neutral" })}>
-							<Tooltip content="Add or edit annotations">
-								<Button isDisabled={active} onClick={annotate}>Annotate</Button>
-							</Tooltip>
-						</Box>
+							}
 
-					}
+						</ButtonGroup>
 
-				</ButtonGroup>
+					</Inline>
+
+
+				</Box>
 
 			</Inline>
 

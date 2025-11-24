@@ -82,7 +82,6 @@ function ToolTool() {
 
 			<ToolPanel header={<ToolBar
 
-
 				menu={<>
 
 					<ButtonGroup>{Object.entries(modes).map(([name, label]) =>

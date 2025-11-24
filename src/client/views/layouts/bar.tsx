@@ -24,8 +24,8 @@ export function ToolBar({
 
 }: {
 
-	menu: ReactNode,
-	more?: ReactNode,
+	menu: ReactNode;
+	more?: ReactNode;
 
 }) {
 
@@ -40,7 +40,7 @@ export function ToolBar({
 
 	})}>
 
-		<Inline>
+		<Inline alignBlock={"center"}>
 
 			<Box xcss={{ flexGrow: 1 }}>{menu}</Box>
 			<Box>{more}</Box>
