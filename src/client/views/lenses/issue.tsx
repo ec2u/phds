@@ -40,16 +40,16 @@ import { ToolReference } from "./reference";
 
 
 const StateColors = {
-	pending: toColors("red"),
-	active: toColors("yellow"),
 	blocked: toColors("purple"),
+	active: toColors("red"),
+	pending: toColors("yellow"),
 	resolved: toColors("gray")
 } as const;
 
 const SeverityColors = {
-	1: toColors("teal"),
-	2: toColors("yellow"),
-	3: toColors("red")
+	3: toColors("purple"),
+	2: toColors("red"),
+	1: toColors("yellow")
 } as const;
 
 const GrayColors = toColors("gray");

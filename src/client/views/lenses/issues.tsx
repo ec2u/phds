@@ -49,10 +49,10 @@ export function ToolIssues({
 	const [issues, actions] = useIssues(isContent(agreement) ? agreement.content : "");
 
 	const [state, setState] = useState<readonly State[]>();
-	const [severity, setSeverity] = useState<Severity>();
+	const [severity, setSeverity] = useState<readonly Severity[]>();
 
 
-	function hasSeverity(issue: Issue) { return !severity || severity === issue.severity; }
+	function hasSeverity(issue: Issue) { return !severity?.length || severity.includes(issue.severity); }
 
 	function hasState(issue: Issue) { return !state?.length || state.includes(issue.state); }
 
@@ -111,24 +111,24 @@ export function ToolIssues({
 		const count = sorted.length;
 		const total = issues.length;
 
-		const states = Object.fromEntries(States.map(value => [value, {
+		const states = States.map(value => ({
 			value,
 			label: stateLabel(value),
 			isDisabled: !issues.filter(hasSeverity).some(({ state }) => value === state)
-		}]));
+		}));
 
-		const severities = Object.fromEntries(Severities.map(value => [value, {
+		const severities = Severities.map(value => ({
 			value,
 			label: severityLabel(value),
 			isDisabled: !issues.filter(hasState).some(({ severity }) => value === severity)
-		}]));
+		}));
 
 
 		return <Stack space="space.200">
 
-			<Inline spread={"space-between"} alignBlock="center">
+			<Inline space={"space.200"} alignBlock="center" shouldWrap={false}>
 
-				<Inline space="space.100" alignBlock="center">
+				<Inline space={"space.150"} grow={"fill"}>
 
 					<Select
 
@@ -139,36 +139,38 @@ export function ToolIssues({
 						spacing={"compact"}
 						placeholder={"State"}
 
-						value={state?.map(s => states[s])}
-						options={Object.values(states)}
+						value={state?.map(s => states.find(st => st.value === s))}
+						options={states}
 
-						onChange={(options: undefined | typeof states[State][]) =>
+						onChange={(options: undefined | typeof states[number][]) =>
 							setState(options?.map(option => option.value))
 						}
-
 
 					/>
 
 					<Select id={"severity"}
 
+						isMulti={true}
 						isSearchable={true}
 						isClearable={true}
 
 						spacing="compact"
 						placeholder={"Severity"}
 
-						value={severity ? severities[severity] : undefined}
-						options={Object.values(severities)}
+						value={severity?.map(s => severities.find(sev => sev.value === s))}
+						options={severities}
 
-						onChange={(option: undefined | typeof severities[Severity]) =>
-							setSeverity(option?.value)
+						onChange={(options: undefined | typeof severities[number][]) =>
+							setSeverity(options?.map(option => option.value))
 						}
 
 					/>
 
-					<Text>
-						{count}/{total} Issue{total === 1 ? "" : "s"}
-					</Text>
+					<Text weight={"bold"}>{
+						total === 0 ? "No Issues"
+							: state?.length || severity?.length ? `${count}/${total} Issue${total === 1 ? "" : "s"}`
+								: `${total} Issue${total === 1 ? "" : "s"}`
+					}</Text>
 
 				</Inline>
 
