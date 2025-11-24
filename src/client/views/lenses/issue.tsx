@@ -33,7 +33,7 @@ import {
 } from "@forge/react";
 import React, { useState } from "react";
 import { isString } from "../../../shared";
-import { Issue, Reference, Severities, Severity, State, States } from "../../../shared/issues";
+import { Issue, Reference, Severities, State, States } from "../../../shared/issues";
 import { IssuesActions } from "../../hooks/issues";
 import { adf } from "../../tools/text";
 import { ToolReference } from "./reference";
@@ -96,15 +96,15 @@ export default function ToolIssue({
 	const references = issue.description.filter((entry): entry is Reference => !isString(entry));
 
 
-	const states = Object.fromEntries(States.map(value => [value, {
+	const states = States.map(value => ({
 		value,
 		label: stateLabel(value)
-	}]));
+	}));
 
-	const severities = Object.fromEntries(Severities.map(value => [value, {
+	const severities = Severities.map(value => ({
 		value,
 		label: severityLabel(value)
-	}]));
+	}));
 
 
 	function toggle() {
@@ -196,10 +196,10 @@ export default function ToolIssue({
                         appearance={"subtle"}
                         spacing={"compact"}
 
-                        value={states[issue.state]}
-                        options={Object.values(states)}
+                        value={states.find(option => option.value === issue.state)}
+                        options={states}
 
-                        onChange={(option: typeof states[State]) => transition(option?.value)}
+                        onChange={(option: typeof states[number]) => transition(option?.value)}
 
                     />
 
@@ -220,10 +220,10 @@ export default function ToolIssue({
                         appearance={"subtle"}
                         spacing={"compact"}
 
-                        value={severities[issue.severity]}
-                        options={Object.values(severities)}
+                        value={severities.find(option => option.value === issue.severity)}
+                        options={severities}
 
-                        onChange={(option: typeof severities[Severity]) => classify(option.value)}
+                        onChange={(option: typeof severities[number]) => classify(option.value)}
 
                     />
 

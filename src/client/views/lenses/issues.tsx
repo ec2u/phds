@@ -133,13 +133,12 @@ export function ToolIssues({
 					<Select
 
 						isMulti={true}
-						isSearchable={true}
 						isClearable={true}
 
 						spacing={"compact"}
 						placeholder={"State"}
 
-						value={state?.map(s => states.find(st => st.value === s))}
+						value={state?.map(value => states.find(option => option.value === value))}
 						options={states}
 
 						onChange={(options: undefined | typeof states[number][]) =>
@@ -151,13 +150,12 @@ export function ToolIssues({
 					<Select id={"severity"}
 
 						isMulti={true}
-						isSearchable={true}
 						isClearable={true}
 
 						spacing="compact"
 						placeholder={"Severity"}
 
-						value={severity?.map(s => severities.find(sev => sev.value === s))}
+						value={severity?.map(value => severities.find(option => option.value === value))}
 						options={severities}
 
 						onChange={(options: undefined | typeof severities[number][]) =>
