@@ -28,26 +28,23 @@ import { ToolPolicies } from "./views/lenses/policies";
 import { ToolPolicy } from "./views/lenses/policy";
 
 
-const Modes = {
-
-	"Dashboard": false, // !!!
-	"Agreement": false,
-	"Policies": false,
-
-	"Issues": false
-
-} as const;
-
-
 function ToolBody() {
 
 	const context = useProductContext();
 	const config = useConfig();
-
 	const body = context?.extension?.macro?.body;
 
 
-	const [mode, setMode] = useState<keyof typeof Modes | Source>(Object.keys(Modes)[0]);
+	const modes = {
+
+		"Dashboard": () => <ToolDashboard language={language}/>,
+		"Agreement": () => <ToolAgreement language={language}/>,
+		"Policies": () => <ToolPolicies onClick={setMode}/>,
+		"Issues": () => <ToolIssues language={language}/>
+
+	};
+
+	const [mode, setMode] = useState<keyof typeof modes | Source>(Object.keys(modes)[0]);
 	const [language, setLanguage] = useState<Language>(defaultLanguage);
 
 
@@ -55,8 +52,8 @@ function ToolBody() {
 
 		<ToolBar
 
-			menu={<ButtonGroup>{Object.entries(Modes).map(([name, disabled]) =>
-				<Button key={name} isSelected={mode === name} isDisabled={disabled}
+			menu={<ButtonGroup>{Object.keys(modes).map((name) =>
+				<Button key={name} isSelected={mode === name}
 
 					onClick={() => setMode(name)}
 
@@ -76,11 +73,9 @@ function ToolBody() {
 
 		{
 
-			mode === "Dashboard" ? <ToolDashboard language={language}/>
-				: mode === "Agreement" ? <ToolAgreement language={language}/>
-					: mode === "Policies" ? <ToolPolicies onClick={setMode}/>
-						: mode === "Issues" ? <ToolIssues language={language}/>
-							: <ToolPolicy source={mode} language={language}/>
+			mode in modes
+				? modes[mode as keyof typeof modes]()
+				: <ToolPolicy source={mode} language={language}/>
 
 		}
 
