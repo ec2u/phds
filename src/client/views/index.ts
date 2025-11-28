@@ -14,8 +14,12 @@
  * limitations under the License.
  */
 
-import type { BackgroundColor, BorderColor } from "@atlaskit/primitives";
+import type {BackgroundColor, BorderColor} from "@atlaskit/primitives";
+import {xcss} from "@forge/react";
 
+
+export type XCSS =
+	Parameters<typeof xcss>[0];
 
 export type Colors = {
 	backgroundColor: BackgroundColor;
@@ -26,6 +30,17 @@ export type Colors = {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 export const NeutralColors = toColors("gray");
+
+export const Rule: XCSS = {
+
+	paddingBottom: "space.200",
+	marginBottom: "space.300",
+
+	borderWidth: "border.width",
+	borderColor: "color.border.accent.gray",
+	borderBottomStyle: "solid"
+
+};
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

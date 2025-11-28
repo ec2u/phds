@@ -14,24 +14,15 @@
  * limitations under the License.
  */
 
-import { EmptyState, List, ListItem, Pressable, xcss } from "@forge/react";
+import {EmptyState, List, ListItem, Pressable, xcss} from "@forge/react";
 import React from "react";
-import { isTrace } from "../../../shared";
-import { Source } from "../../../shared/documents";
-import { isActivity } from "../../../shared/tasks";
-import { usePolicies } from "../../hooks/policies";
-import { ToolActivity } from "./activity";
-import { ToolTrace } from "./trace";
+import {isTrace} from "../../../shared";
+import {isActivity} from "../../../shared/tasks";
+import {usePolicies} from "../../hooks/policies";
+import {ToolActivity} from "./activity";
+import {ToolTrace} from "./trace";
 
-export function ToolPolicies({
-
-	onClick
-
-}: {
-
-	onClick?: (source: Source) => void
-
-}) {
+export function ToolPolicies() {
 
 	const policies=usePolicies();
 
@@ -64,7 +55,7 @@ export function ToolPolicies({
 
 					})}
 
-						onClick={() => onClick?.(source)}
+						//  !!! onClick={() => select?.(source)}
 
 					>{
 

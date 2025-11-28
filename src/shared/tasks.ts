@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-import { Catalog, Source } from "./documents";
-import { isNumber, Trace } from "./index";
-import { Issue, State } from "./issues";
-import { Language } from "./languages";
+import {Catalog, Source} from "./documents";
+import {isNumber, Trace} from "./index";
+import {Issue, State} from "./issues";
+import {Language} from "./languages";
 
 
 export type Task =
@@ -128,7 +128,6 @@ export interface IssuesTask extends Provider<ReadonlyArray<Issue>> {
 	readonly type: "issues";
 
 	readonly refresh?: boolean;
-	readonly agreement: string;
 
 }
 

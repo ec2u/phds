@@ -14,18 +14,17 @@
  * limitations under the License.
  */
 
-import { Box, EmptyState, Popup, Pressable, Text, xcss } from "@forge/react";
-import React, { useState } from "react";
-import { isTrace } from "../../../shared";
-import { Document } from "../../../shared/documents";
-import { Issue, Severities, Severity, State, States } from "../../../shared/issues";
-import { isActivity, Status } from "../../../shared/tasks";
-import { useAgreement } from "../../hooks/agreement";
-import { IssuesActions, useIssues } from "../../hooks/issues";
-import ToolKanban, { Lane, toggle } from "../layouts/kanban";
-import { ToolActivity } from "./activity";
-import ToolIssue, { BlueColors, RedColors, SeverityColors, severityLabel, StateColors, stateLabel } from "./issue";
-import { ToolTrace } from "./trace";
+import {Box, Popup, Pressable, Text, xcss} from "@forge/react";
+import React, {useState} from "react";
+import {isTrace} from "../../../shared";
+import {Document} from "../../../shared/documents";
+import {Issue, Severities, Severity, State, States} from "../../../shared/issues";
+import {isActivity, Status} from "../../../shared/tasks";
+import {IssuesActions, useIssues} from "../../hooks/issues";
+import ToolKanban, {Lane, toggle} from "../layouts/kanban";
+import {ToolActivity} from "./activity";
+import ToolIssue, {BlueColors, RedColors, SeverityColors, severityLabel, StateColors, stateLabel} from "./issue";
+import {ToolTrace} from "./trace";
 
 
 function isContent(value: Status<Document>): value is Document {
@@ -41,8 +40,7 @@ export function ToolDashboard() {
 	// !!! empty swimlanes
 	// !!! instable focus on annotation textarea
 
-	const agreement = useAgreement();
-	const [issues, actions] = useIssues(isContent(agreement) ? agreement.content : "");
+	const [issues, actions] = useIssues();
 
 	const [states, setStates] = useState<readonly Lane<State>[]>(States.map(state => ({
 		value: state,
@@ -68,27 +66,13 @@ export function ToolDashboard() {
 	}
 
 
-	if ( isActivity(agreement) ) {
-
-		return <ToolActivity activity={agreement}/>;
-
-	} else if ( isTrace(agreement) ) {
-
-		return <ToolTrace trace={agreement}/>;
-
-	} else if ( isActivity(issues) ) {
+	if (isActivity(issues)) {
 
 		return <ToolActivity activity={issues}/>;
 
 	} else if ( isTrace(issues) ) {
 
 		return <ToolTrace trace={issues}/>;
-
-	} else if ( !agreement.content.trim() ) {
-
-		return <EmptyState header={"No Agreement Text"}
-			description={"Enter Confluence \"Edit\" mode to modify."}
-		/>;
 
 	} else {
 

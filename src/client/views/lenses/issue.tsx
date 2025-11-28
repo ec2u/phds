@@ -29,14 +29,14 @@ import {
 	Tooltip,
 	xcss
 } from "@forge/react";
-import React, { useState } from "react";
-import { isString } from "../../../shared";
-import { Issue, Reference, Severities, State, States } from "../../../shared/issues";
-import { IssuesActions } from "../../hooks/issues";
-import { adf } from "../../tools/text";
-import { ToolToggle } from "../elements/toggle";
-import { toColors } from "../index";
-import { ToolReference } from "./reference";
+import React, {useState} from "react";
+import {isString} from "../../../shared";
+import {Issue, Reference, Severities, State, States} from "../../../shared/issues";
+import {adf} from "../../../shared/tools/text";
+import {IssuesActions} from "../../hooks/issues";
+import {ToolToggle} from "../elements/toggle";
+import {toColors} from "../index";
+import {ToolReference} from "./reference";
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

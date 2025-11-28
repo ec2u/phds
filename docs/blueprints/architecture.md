@@ -61,7 +61,6 @@ The application follows Atlassian Forge architecture with async task execution:
 - Long-running tasks are submitted via `submitTask()` and monitored via `monitorTask()` resolvers
 - Task execution uses Forge queue consumers with job IDs for tracking
 - Configuration data is accessed through `useConfig()` hook
-- Macro body content is accessed via `useProductContext().extension.macro.body`
 
 ## Key Patterns
 

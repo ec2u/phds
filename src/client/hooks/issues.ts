@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-import { useEffect, useState } from "react";
-import { isArray } from "../../shared";
-import { Issue, State } from "../../shared/issues";
-import { Status } from "../../shared/tasks";
-import { useCache } from "./cache";
-import { execute } from "./index";
+import {useEffect, useState} from "react";
+import {isArray} from "../../shared";
+import {Issue, State} from "../../shared/issues";
+import {Status} from "../../shared/tasks";
+import {useCache} from "./cache";
+import {execute} from "./index";
 
 export interface IssuesActions {
-	refresh: () => void;
+	refresh: () => Promise<void>;
 	transition: (issue: string, state: State) => Promise<void>;
 	classify: (issue: string, severity: Issue["severity"]) => Promise<void>;
 	annotate: (issue: string, notes: string) => Promise<void>;
@@ -31,7 +31,7 @@ export interface IssuesActions {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-export function useIssues(agreement: string): [Status<ReadonlyArray<Issue>>, IssuesActions] {
+export function useIssues(): [Status<ReadonlyArray<Issue>>, IssuesActions] {
 
 	const { getCache, setCache } = useCache();
 
@@ -75,12 +75,13 @@ export function useIssues(agreement: string): [Status<ReadonlyArray<Issue>>, Iss
 	}
 
 
-	function refresh() {
-		execute<ReadonlyArray<Issue>>(update, {
+	async function refresh(): Promise<void> {
+
+		await execute<ReadonlyArray<Issue>>(update, {
 			type: "issues",
-			refresh: true,
-			agreement
+			refresh: true
 		});
+
 	}
 
 	async function transition(issue: string, state: State): Promise<void> {
@@ -126,23 +127,17 @@ export function useIssues(agreement: string): [Status<ReadonlyArray<Issue>>, Iss
 
 			setIssues(cached);
 
-		} else if ( agreement.trim() === "" ) {
-
-			setIssues([]);
-
 		} else {
 
 			execute<ReadonlyArray<Issue>>(update, {
 
-				type: "issues",
-
-				agreement
+				type: "issues"
 
 			});
 
 		}
 
-	}, [cached, agreement]);
+	}, [cached]);
 
 
 	return [

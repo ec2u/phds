@@ -14,17 +14,16 @@
  * limitations under the License.
  */
 
-import { Button, EmptyState, Inline, Select, Stack, Text } from "@forge/react";
-import React, { useState } from "react";
-import { isTrace } from "../../../shared";
-import { Document } from "../../../shared/documents";
-import { Issue, Severities, Severity, State, States } from "../../../shared/issues";
-import { isActivity, Status } from "../../../shared/tasks";
-import { useAgreement } from "../../hooks/agreement";
-import { useIssues } from "../../hooks/issues";
-import { ToolActivity } from "./activity";
-import ToolIssue, { severityLabel, stateLabel } from "./issue";
-import { ToolTrace } from "./trace";
+import {Button, Inline, Select, Stack, Text} from "@forge/react";
+import React, {useState} from "react";
+import {isTrace} from "../../../shared";
+import {Document} from "../../../shared/documents";
+import {Issue, Severities, Severity, State, States} from "../../../shared/issues";
+import {isActivity, Status} from "../../../shared/tasks";
+import {useIssues} from "../../hooks/issues";
+import {ToolActivity} from "./activity";
+import ToolIssue, {severityLabel, stateLabel} from "./issue";
+import {ToolTrace} from "./trace";
 
 
 function isContent(value: Status<Document>): value is Document {
@@ -37,8 +36,7 @@ function isContent(value: Status<Document>): value is Document {
 
 export function ToolIssues() {
 
-	const agreement = useAgreement();
-	const [issues, actions] = useIssues(isContent(agreement) ? agreement.content : "");
+	const [issues, actions] = useIssues();
 
 	const [state, setState] = useState<readonly State[]>([]);
 	const [severity, setSeverity] = useState<readonly Severity[]>([]);
@@ -63,27 +61,13 @@ export function ToolIssues() {
 		});
 
 
-	if ( isActivity(agreement) ) {
-
-		return <ToolActivity activity={agreement}/>;
-
-	} else if ( isTrace(agreement) ) {
-
-		return <ToolTrace trace={agreement}/>;
-
-	} else if ( isActivity(issues) ) {
+	if (isActivity(issues)) {
 
 		return <ToolActivity activity={issues}/>;
 
 	} else if ( isTrace(issues) ) {
 
 		return <ToolTrace trace={issues}/>;
-
-	} else if ( !agreement.content.trim() ) {
-
-		return <EmptyState header={"No Agreement Text"}
-			description={"Enter Confluence \"Edit\" mode to modify."}
-		/>;
 
 	} else {
 

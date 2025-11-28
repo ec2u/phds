@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-import { AdfRenderer } from "@forge/react";
+import {AdfRenderer} from "@forge/react";
 import React from "react";
-import { isTrace } from "../../../shared";
-import { Source } from "../../../shared/documents";
-import { isActivity } from "../../../shared/tasks";
-import { usePolicy } from "../../hooks/policy";
-import { adf } from "../../tools/text";
-import { ToolActivity } from "./activity";
-import { ToolTrace } from "./trace";
+import {isTrace} from "../../../shared";
+import {Source} from "../../../shared/documents";
+import {isActivity} from "../../../shared/tasks";
+import {adf} from "../../../shared/tools/text";
+import {usePolicy} from "../../hooks/policy";
+import {ToolActivity} from "./activity";
+import {ToolTrace} from "./trace";
 
 export function ToolPolicy({
 

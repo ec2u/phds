@@ -14,67 +14,70 @@
  * limitations under the License.
  */
 
-import ForgeReconciler, { Button, ButtonGroup, useProductContext } from "@forge/react";
-import React, { useState } from "react";
-import { Source } from "../shared/documents";
-import { ToolCache } from "./hooks/cache";
-import { ToolBar } from "./views/layouts/bar";
-import { ToolAgreement } from "./views/lenses/agreement";
-import { ToolClear } from "./views/lenses/clear";
-import { ToolDashboard } from "./views/lenses/dashboard";
-import { ToolIssues } from "./views/lenses/issues";
-import { ToolPolicies } from "./views/lenses/policies";
-import { ToolPolicy } from "./views/lenses/policy";
+import ForgeReconciler, {Box, Button, ButtonGroup, xcss} from "@forge/react";
+import React, {useState} from "react";
+import {ToolCache} from "./hooks/cache";
+import {Rule} from "./views";
+import {ToolBar} from "./views/layouts/bar";
+import {ToolClear} from "./views/lenses/clear";
+import {ToolDashboard} from "./views/lenses/dashboard";
+import {ToolIssues} from "./views/lenses/issues";
+import {ToolPolicies} from "./views/lenses/policies";
 
+
+const tabs = {
+
+    "Agreement": undefined,
+    "Dashboard": <ToolDashboard/>,
+    "Policies": <ToolPolicies/>,
+    "Issues": <ToolIssues/>
+
+};
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 function ToolBody() {
 
-	const context = useProductContext();
+    const labels = Object.keys(tabs) as readonly (keyof typeof tabs)[];
+
+    const [active, setActive] = useState(labels[0]);
+
+    const body = tabs[active];
 
 
-	const modes = {
+    return <Box xcss={xcss({
 
-		"Dashboard": () => <ToolDashboard/>,
-		"Agreement": () => <ToolAgreement/>,
-		"Policies": () => <ToolPolicies onClick={setMode}/>,
-		"Issues": () => <ToolIssues/>
+        ...(body ? Rule : {})
 
-	};
+    })}>
 
-	const [mode, setMode] = useState<keyof typeof modes | Source>(Object.keys(modes)[0]);
+        <ToolBar
 
+            menu={<ButtonGroup>{labels.map((tab) => <>
 
-	return <>
+                <Button key={tab}
+                        isSelected={active === tab}
+                        onClick={() => setActive(tab)}
+                >
 
-		<ToolBar
+                    {tab}
 
-			menu={<ButtonGroup>{Object.keys(modes).map((name) =>
-				<Button key={name} isSelected={mode === name}
-
-					onClick={() => setMode(name)}
-
-				>{name}</Button>
-			)}</ButtonGroup>}
+                </Button></>
+            )}</ButtonGroup>}
 
 
-			more={<ButtonGroup>
+            more={<ButtonGroup>
 
-				<ToolClear/>
+                <ToolClear/>
 
-			</ButtonGroup>}
+            </ButtonGroup>}
 
-		/>
+        />
 
+        {body}
 
-		{
-
-			mode in modes
-				? modes[mode as keyof typeof modes]()
-				: <ToolPolicy source={mode}/>
-
-		}
-
-	</>;
+    </Box>;
 
 }
 
@@ -82,11 +85,11 @@ function ToolBody() {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 ForgeReconciler.render(
-	<React.StrictMode>
+    <React.StrictMode>
 
-		<ToolCache>
-			<ToolBody/>
-		</ToolCache>
+        <ToolCache>
+            <ToolBody/>
+        </ToolCache>
 
-	</React.StrictMode>
+    </React.StrictMode>
 );
