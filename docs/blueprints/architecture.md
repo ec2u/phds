@@ -10,7 +10,6 @@ within Confluence.
 ## Key Components
 
 - `src/client/body.tsx`: Main React component with tabbed UI interface
-- `src/client/tool.tsx`: Configuration UI for the macro (currently disabled in manifest)
 - `src/server/ports/index.ts`: Forge resolver exposing task submission and monitoring endpoints
 - `src/server/tasks/index.ts`: Async task executor handling long-running background tasks
 - `src/shared/`: Shared type definitions and utilities used by both client and server
@@ -20,7 +19,7 @@ within Confluence.
 
 ### 1. Client Layer (`src/client/`)
 
-- **Entry Points**: `body.tsx` and `tool.tsx` - different UI layouts for the macro
+- **Entry Point**: `body.tsx` provides the main tabbed UI interface
 - **View Components**: React components in `views/` providing Agreement, Policies, Issues, Chat interfaces
 - **Hooks**: Custom React hooks in `hooks/` for data management (cache, agreement, policies, issues)
 - **Cache System**: `ToolCache` context provider for client-side state management

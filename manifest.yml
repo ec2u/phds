@@ -15,14 +15,6 @@ modules:
 
         function: resolver
 
-  #      config:
-  #
-  #        title: EC2U PhD Agreements Tool
-  #        resource: tool
-  #        render: native
-  #        viewportSize: max
-  #        openOnInsert: false
-
   consumer:
 
     - key: ec2u-phds-consumer
@@ -44,9 +36,6 @@ resources:
 
   - key: body
     path: src/client/body.tsx
-
-#  - key: tool
-#    path: src/client/tool.tsx
 
 app:
 
