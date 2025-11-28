@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { Box, Popup, Pressable, Text, xcss } from "@forge/react";
+import { Box, Button, EmptyState, Popup, Pressable, Text, xcss } from "@forge/react";
 import React, { useState } from "react";
 import { isTrace } from "../../../shared";
 import { Issue, Severities, Severity, State, States } from "../../../shared/items/issues";
@@ -60,6 +60,7 @@ export function ToolDashboard() {
 
 	// !!! sorting
 	// !!! empty swimlanes
+	// !!! all collapsed states
 	// !!! instable focus on annotation textarea
 
 	const [issues, actions] = useIssues();
@@ -90,7 +91,16 @@ export function ToolDashboard() {
 
 		return <ToolTrace trace={issues}/>;
 
-	} else if ( states && severities ) {
+	} else if ( issues.length === 0 ) {
+
+		return <EmptyState
+			header={"Analysis Not Performed"}
+			description={<Text>Check the agreement for compliance with policies.</Text>}
+			primaryAction={<Button appearance={"discovery"} onClick={actions.refresh}>Analyze</Button>}
+		/>;
+
+
+	} else {
 
 		return <ToolKanban
 
@@ -112,10 +122,6 @@ export function ToolDashboard() {
 			onToggleCol={toggleState}
 
 		/>;
-
-	} else {
-
-		return null;
 
 	}
 

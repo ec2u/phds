@@ -33,7 +33,7 @@ interface AsyncEventContext {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-export const handler=new Resolver()
+export const handler = new Resolver()
 
 	.define("execute", async function ({
 
@@ -87,6 +87,8 @@ export const handler=new Resolver()
 
 		} catch ( error ) {
 
+			console.error("async task failed:", error);
+
 			return await setStatus(job, asTrace(error));
 
 		} finally {
@@ -95,10 +97,10 @@ export const handler=new Resolver()
 
 			Promise.all([
 
-				purge(), // global cache purge
+				purge() // global cache purge
 
 			]).catch(error =>
-				console.error("background task failed:", asTrace(error))
+				console.error("background task failed:", error)
 			);
 
 		}
