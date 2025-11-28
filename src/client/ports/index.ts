@@ -14,6 +14,34 @@
  * limitations under the License.
  */
 
-import { Dispatch, SetStateAction } from "react";
+import { asTrace } from "../../shared/index";
+import { Activity, isActivity, Observer, Provider, Task } from "../../shared/tasks";
+import { monitorTask, submitTask } from "./tasks";
 
-export type State<T> = [T, Dispatch<SetStateAction<T>>];
+export async function execute<T>(observer: Observer<T>, task: Task & Provider<T>) {
+
+	try {
+
+		observer(Activity.Submitting);
+
+		const job = await submitTask(task);
+
+		const poll = setInterval(async () => {
+
+			const status = await monitorTask<T>(job);
+
+			if ( !isActivity(status) ) {
+				clearInterval(poll);
+			}
+
+			observer(status);
+
+		}, 1000);
+
+	} catch ( error ) {
+
+		observer(asTrace(error));
+
+	}
+
+}
