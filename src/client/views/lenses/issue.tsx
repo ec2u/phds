@@ -34,7 +34,7 @@ import { isString } from "../../../shared";
 import { Issue, Reference, Severities, State, States } from "../../../shared/issues";
 import { IssuesActions } from "../../hooks/issues";
 import { adf } from "../../tools/text";
-import { ToolToggle } from "../components/toggle";
+import { ToolToggle } from "../elements/toggle";
 import { toColors } from "../index";
 import { ToolReference } from "./reference";
 

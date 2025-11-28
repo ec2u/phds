@@ -17,24 +17,15 @@
 import { AdfRenderer, EmptyState } from "@forge/react";
 import React from "react";
 import { isTrace } from "../../../shared";
-import { Language } from "../../../shared/languages";
 import { isActivity } from "../../../shared/tasks";
 import { useAgreement } from "../../hooks/agreement";
 import { adf } from "../../tools/text";
 import { ToolActivity } from "./activity";
 import { ToolTrace } from "./trace";
 
-export function ToolAgreement({
+export function ToolAgreement() {
 
-	language
-
-}: {
-
-	language: Language
-
-}) {
-
-	const document=useAgreement(language);
+	const document = useAgreement();
 
 	if ( isActivity(document) ) {
 

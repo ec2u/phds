@@ -19,7 +19,6 @@ import React, { useState } from "react";
 import { isTrace } from "../../../shared";
 import { Document } from "../../../shared/documents";
 import { Issue, Severities, Severity, State, States } from "../../../shared/issues";
-import { Language } from "../../../shared/languages";
 import { isActivity, Status } from "../../../shared/tasks";
 import { useAgreement } from "../../hooks/agreement";
 import { IssuesActions, useIssues } from "../../hooks/issues";
@@ -36,21 +35,13 @@ function isContent(value: Status<Document>): value is Document {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-export function ToolDashboard({
-
-	language
-
-}: {
-
-	language: Language
-
-}) {
+export function ToolDashboard() {
 
 	// !!! sorting
 	// !!! empty swimlanes
 	// !!! instable focus on annotation textarea
 
-	const agreement = useAgreement(language);
+	const agreement = useAgreement();
 	const [issues, actions] = useIssues(isContent(agreement) ? agreement.content : "");
 
 	const [states, setStates] = useState<readonly Lane<State>[]>(States.map(state => ({

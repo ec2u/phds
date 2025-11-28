@@ -16,11 +16,11 @@
 
 import { useProductContext } from "@forge/react";
 import { Document } from "../../shared/documents";
-import { defaultLanguage, Language } from "../../shared/languages";
+import { defaultLanguage } from "../../shared/languages";
 import { Status } from "../../shared/tasks";
 import { markdown } from "../tools/text";
 
-export function useAgreement(language: Language): Status<Document> {
+export function useAgreement(): Status<Document> {
 
 	const context=useProductContext();
 

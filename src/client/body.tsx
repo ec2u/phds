@@ -14,10 +14,9 @@
  * limitations under the License.
  */
 
-import ForgeReconciler, { Button, ButtonGroup, useConfig, useProductContext } from "@forge/react";
+import ForgeReconciler, { Button, ButtonGroup, useProductContext } from "@forge/react";
 import React, { useState } from "react";
 import { Source } from "../shared/documents";
-import { defaultLanguage, Language } from "../shared/languages";
 import { ToolCache } from "./hooks/cache";
 import { ToolBar } from "./views/layouts/bar";
 import { ToolAgreement } from "./views/lenses/agreement";
@@ -31,21 +30,18 @@ import { ToolPolicy } from "./views/lenses/policy";
 function ToolBody() {
 
 	const context = useProductContext();
-	const config = useConfig();
-	const body = context?.extension?.macro?.body;
 
 
 	const modes = {
 
-		"Dashboard": () => <ToolDashboard language={language}/>,
-		"Agreement": () => <ToolAgreement language={language}/>,
+		"Dashboard": () => <ToolDashboard/>,
+		"Agreement": () => <ToolAgreement/>,
 		"Policies": () => <ToolPolicies onClick={setMode}/>,
-		"Issues": () => <ToolIssues language={language}/>
+		"Issues": () => <ToolIssues/>
 
 	};
 
 	const [mode, setMode] = useState<keyof typeof modes | Source>(Object.keys(modes)[0]);
-	const [language, setLanguage] = useState<Language>(defaultLanguage);
 
 
 	return <>
@@ -63,7 +59,6 @@ function ToolBody() {
 
 			more={<ButtonGroup>
 
-				{/* <ToolLanguage locale={language} onChange={setLanguage}/> */}
 				<ToolClear/>
 
 			</ButtonGroup>}
@@ -75,7 +70,7 @@ function ToolBody() {
 
 			mode in modes
 				? modes[mode as keyof typeof modes]()
-				: <ToolPolicy source={mode} language={language}/>
+				: <ToolPolicy source={mode}/>
 
 		}
 

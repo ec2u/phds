@@ -21,7 +21,7 @@ import { Activity, Status } from "../../shared/tasks";
 import { useCache } from "./cache";
 import { execute } from "./index";
 
-export function usePolicy(source: Source, language: Language): Status<Document> {
+export function usePolicy(source: Source, language: Language = "en"): Status<Document> {
 
 	const { getCache, setCache }=useCache();
 

@@ -19,7 +19,6 @@ import React, { useState } from "react";
 import { isTrace } from "../../../shared";
 import { Document } from "../../../shared/documents";
 import { Issue, Severities, Severity, State, States } from "../../../shared/issues";
-import { Language } from "../../../shared/languages";
 import { isActivity, Status } from "../../../shared/tasks";
 import { useAgreement } from "../../hooks/agreement";
 import { useIssues } from "../../hooks/issues";
@@ -36,17 +35,9 @@ function isContent(value: Status<Document>): value is Document {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-export function ToolIssues({
+export function ToolIssues() {
 
-	language
-
-}: {
-
-	language: Language
-
-}) {
-
-	const agreement = useAgreement(language);
+	const agreement = useAgreement();
 	const [issues, actions] = useIssues(isContent(agreement) ? agreement.content : "");
 
 	const [state, setState] = useState<readonly State[]>([]);

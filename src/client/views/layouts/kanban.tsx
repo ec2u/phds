@@ -17,7 +17,7 @@
 import { Box, Heading, Inline, Stack, Text, xcss } from "@forge/react";
 import type { Space } from "@forge/react/out/types/components";
 import React, { ReactNode } from "react";
-import { ToolToggle } from "../components/toggle";
+import { ToolToggle } from "../elements/toggle";
 import { Colors, NeutralColors } from "../index";
 
 

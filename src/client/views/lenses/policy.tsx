@@ -18,7 +18,6 @@ import { AdfRenderer } from "@forge/react";
 import React from "react";
 import { isTrace } from "../../../shared";
 import { Source } from "../../../shared/documents";
-import { Language } from "../../../shared/languages";
 import { isActivity } from "../../../shared/tasks";
 import { usePolicy } from "../../hooks/policy";
 import { adf } from "../../tools/text";
@@ -27,17 +26,15 @@ import { ToolTrace } from "./trace";
 
 export function ToolPolicy({
 
-	source,
-	language
+	source
 
 }: {
 
 	source: Source
-	language: Language
 
 }) {
 
-	const policy=usePolicy(source, language);
+	const policy = usePolicy(source);
 
 	if ( isActivity(policy) ) {
 
