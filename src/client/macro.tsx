@@ -38,7 +38,7 @@ const tabs = {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-function ToolBody() {
+function ToolMacro() {
 
     const labels = Object.keys(tabs) as readonly (keyof typeof tabs)[];
 
@@ -89,7 +89,7 @@ ForgeReconciler.render(
     <React.StrictMode>
 
         <ToolCache>
-            <ToolBody/>
+			<ToolMacro/>
         </ToolCache>
 
     </React.StrictMode>
