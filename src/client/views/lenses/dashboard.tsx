@@ -17,19 +17,41 @@
 import { Box, Popup, Pressable, Text, xcss } from "@forge/react";
 import React, { useState } from "react";
 import { isTrace } from "../../../shared";
-import { Document } from "../../../shared/items/documents";
 import { Issue, Severities, Severity, State, States } from "../../../shared/items/issues";
-import { isActivity, Status } from "../../../shared/tasks";
+import { isActivity } from "../../../shared/tasks";
 import { IssuesActions, useIssues } from "../../hooks/issues";
+import { useStorage } from "../../hooks/storage";
 import ToolKanban, { Lane, toggle } from "../layouts/kanban";
 import { ToolActivity } from "./activity";
 import ToolIssue, { BlueColors, RedColors, SeverityColors, severityLabel, StateColors, stateLabel } from "./issue";
 import { ToolTrace } from "./trace";
 
 
-function isContent(value: Status<Document>): value is Document {
-	return !isActivity(value) && !isTrace(value);
-}
+/**
+ * Initial lane configurations for dashboard kanban board states and severities.
+ *
+ * @remark **CRITICAL** / initial values must be defined outside the component as constants.
+ * If defined inside, they would be recreated on every render, causing useStorage's
+ * useEffect (which has 'initial' in its dependency array) to run repeatedly,
+ * interfering with the render cycle and preventing proper UI updates.
+ */
+const initial = {
+
+	states: States.map(state => ({
+		value: state,
+		collapsed: state === "resolved",
+		label: stateLabel(state),
+		colors: StateColors[state]
+	})),
+
+	severities: Severities.map(severity => ({
+		value: severity,
+		collapsed: false,
+		label: severityLabel(severity),
+		colors: SeverityColors[severity]
+	}))
+
+} as const;
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -42,19 +64,13 @@ export function ToolDashboard() {
 
 	const [issues, actions] = useIssues();
 
-	const [states, setStates] = useState<readonly Lane<State>[]>(States.map(state => ({
-		value: state,
-		collapsed: state === "resolved",
-		label: stateLabel(state),
-		colors: StateColors[state]
-	})));
+	const [states, setStates] = useStorage<readonly Lane<State>[]>("dashboard-states", {
+		initial: initial.states
+	});
 
-	const [severities, setSeverities] = useState<readonly Lane<Severity>[]>(Severities.map(severity => ({
-		value: severity,
-		collapsed: false,
-		label: severityLabel(severity),
-		colors: SeverityColors[severity]
-	})));
+	const [severities, setSeverities] = useStorage<readonly Lane<Severity>[]>("dashboard-severities", {
+		initial: initial.severities
+	});
 
 
 	function toggleState(state: State) {
@@ -74,7 +90,7 @@ export function ToolDashboard() {
 
 		return <ToolTrace trace={issues}/>;
 
-	} else {
+	} else if ( states && severities ) {
 
 		return <ToolKanban
 
@@ -96,6 +112,10 @@ export function ToolDashboard() {
 			onToggleCol={toggleState}
 
 		/>;
+
+	} else {
+
+		return null;
 
 	}
 

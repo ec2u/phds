@@ -107,7 +107,7 @@ export function ToolPolicies() {
         ) : !selected || !policies[selected] ? (
 
 			<EmptyState header="No Policy Selected" description={
-				<Text>Select one from the sidebar.</Text>
+				<Text>Choose one from the sidebar.</Text>
             }/>
 
         ) : (

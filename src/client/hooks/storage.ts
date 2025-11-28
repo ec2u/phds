@@ -16,6 +16,20 @@
 
 import { useProductContext } from "@forge/react";
 import { useEffect, useState } from "react";
+import { State } from "./index";
+
+export type Options<T> = {
+
+	readonly initial?: T;
+
+	readonly scope?: "page" | "macro";
+	readonly store?: "local" | "session";
+
+};
+
+
+export function useStorage<T>(name: string, options: Options<T> & { readonly initial: T }): State<T>;
+export function useStorage<T>(name: string, options?: Options<T>): State<T | undefined>;
 
 export function useStorage<T>(name: string, {
 
@@ -24,14 +38,7 @@ export function useStorage<T>(name: string, {
 	scope = "page",
 	store = "local"
 
-}: {
-
-	readonly initial?: T;
-
-	readonly scope?: "page" | "macro";
-	readonly store?: "local" | "session";
-
-} = {}): [T | undefined, (value: T | undefined) => void] {
+}: Options<T> = {}): State<T> | State<T | undefined> {
 
 	const context = useProductContext();
 	const storage = store === "session" ? sessionStorage : localStorage;
