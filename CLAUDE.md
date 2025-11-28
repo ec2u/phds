@@ -3,6 +3,11 @@ title: CLAUDE.md
 description: Development guidelines for Claude Code when working with this repository.
 ---
 
+> [!CAUTION]
+>
+> - **ONLY** modify code when explicitly requested or clearly required.
+> - **NEVER** make unsolicited changes or revert **unrelated** user edits.
+
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 # Project Overview
