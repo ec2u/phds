@@ -14,21 +14,16 @@
  * limitations under the License.
  */
 
-import {Button, Inline, Select, Stack, Text} from "@forge/react";
-import React, {useState} from "react";
-import {isTrace} from "../../../shared";
-import {Document} from "../../../shared/items/documents";
-import {Issue, Severities, Severity, State, States} from "../../../shared/items/issues";
-import {isActivity, Status} from "../../../shared/tasks";
-import {useIssues} from "../../hooks/issues";
-import {ToolActivity} from "./activity";
-import ToolIssue, {severityLabel, stateLabel} from "./issue";
-import {ToolTrace} from "./trace";
-
-
-function isContent(value: Status<Document>): value is Document {
-	return !isActivity(value) && !isTrace(value);
-}
+import { Button, EmptyState, Inline, Select, Stack, Text } from "@forge/react";
+import React, { useState } from "react";
+import { isTrace } from "../../../shared";
+import { Issue, Severities, Severity, State, States } from "../../../shared/items/issues";
+import { isActivity } from "../../../shared/tasks";
+import { useIssues } from "../../hooks/issues";
+import ToolSplit from "../layouts/split";
+import { ToolActivity } from "./activity";
+import ToolIssue, { severityLabel, stateLabel } from "./issue";
+import { ToolTrace } from "./trace";
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -41,10 +36,14 @@ export function ToolIssues() {
 	const [state, setState] = useState<readonly State[]>([]);
 	const [severity, setSeverity] = useState<readonly Severity[]>([]);
 
+
 	function includes<T>(values: readonly T[], value: T) {
 		return values.length === 0 || values.includes(value);
 	}
 
+
+	const activity = isActivity(issues);
+	const trace = isTrace(issues);
 
 	const sorted = !Array.isArray(issues) ? [] : [...(issues as readonly Issue[])]
 		.filter(issue => includes(state, issue.state))
@@ -60,93 +59,121 @@ export function ToolIssues() {
 
 		});
 
+	const count = sorted.length;
+	const total = Array.isArray(issues) ? issues.length : 0;
 
-	if (isActivity(issues)) {
+	const states = States.map(value => ({
+		value,
+		label: stateLabel(value),
+		isDisabled: !Array.isArray(issues) || !issues
+			.filter(issue => includes(severity, issue.severity))
+			.some(({ state }) => value === state)
+	}));
 
-		return <ToolActivity activity={issues}/>;
-
-	} else if ( isTrace(issues) ) {
-
-		return <ToolTrace trace={issues}/>;
-
-	} else {
-
-		const count = sorted.length;
-		const total = issues.length;
-
-		const states = States.map(value => ({
-			value,
-			label: stateLabel(value),
-			isDisabled: !issues.filter(issue => includes(severity, issue.severity)).some(({ state }) => value === state)
-		}));
-
-		const severities = Severities.map(value => ({
-			value,
-			label: severityLabel(value),
-			isDisabled: !issues.filter(issue => includes(state, issue.state)).some(({ severity }) => value === severity)
-		}));
+	const severities = Severities.map(value => ({
+		value,
+		label: severityLabel(value),
+		isDisabled: !Array.isArray(issues) || !issues
+			.filter(issue => includes(state, issue.state))
+			.some(({ severity }) => value === severity)
+	}));
 
 
-		return <Stack space="space.200">
+	function clear() {
+		setState([]);
+		setSeverity([]);
+	}
 
-			<Inline space={"space.200"} alignBlock="center" shouldWrap={false}>
 
-				<Inline space={"space.150"} alignBlock="center" grow={"fill"}>
+	return <ToolSplit
 
-					<Select
+		side={activity || trace ? undefined : <Stack space={"space.200"}>
 
-						isMulti={true}
-						isClearable={true}
+			<Select
 
-						spacing={"compact"}
-						placeholder={"State"}
+				isMulti={true}
+				isClearable={true}
+				isDisabled={total === 0}
 
-						value={state?.map(value => states.find(option => option.value === value))}
-						options={states}
+				spacing={"compact"}
+				placeholder={"State"}
 
-						onChange={(options: undefined | typeof states[number][]) =>
-							setState(options?.map(option => option.value) ?? [])
-						}
+				value={state?.map(value => states.find(option => option.value === value))}
+				options={states}
 
-					/>
+				onChange={(options: undefined | typeof states[number][]) =>
+					setState(options?.map(option => option.value) ?? [])
+				}
 
-					<Select id={"severity"}
+			/>
 
-						isMulti={true}
-						isClearable={true}
+			<Select
 
-						spacing="compact"
-						placeholder={"Severity"}
+				isMulti={true}
+				isClearable={true}
+				isDisabled={total === 0}
 
-						value={severity?.map(value => severities.find(option => option.value === value))}
-						options={severities}
+				spacing="compact"
+				placeholder={"Severity"}
 
-						onChange={(options: undefined | typeof severities[number][]) =>
-							setSeverity(options?.map(option => option.value) ?? [])
-						}
+				value={severity?.map(value => severities.find(option => option.value === value))}
+				options={severities}
 
-					/>
+				onChange={(options: undefined | typeof severities[number][]) =>
+					setSeverity(options?.map(option => option.value) ?? [])
+				}
 
-					<Text weight={"bold"}>{
-						total === 0 ? "No Issues"
-							: state?.length || severity?.length ? `${count}/${total} Issue${total === 1 ? "" : "s"}`
-								: `${total} Issue${total === 1 ? "" : "s"}`
-					}</Text>
+			/>
 
-				</Inline>
+			{total > 0 && <Inline space={"space.050"} spread={"space-between"}>
 
-				<Button appearance={"discovery"} onClick={actions.refresh}>Refresh Analysis</Button>
+                <Text weight={"bold"}>{
+					state?.length || severity?.length ? `${count}/${total} Issue${total === 1 ? "" : "s"}`
+						: `${total} Issue${total === 1 ? "" : "s"}`
+				}</Text>
 
-			</Inline>
+                <Button onClick={actions.refresh}>Refresh Analysis</Button>
 
-			{sorted.map(issue => <ToolIssue
+            </Inline>}
+
+		</Stack>}
+
+	>{
+
+		activity ? (
+
+			<ToolActivity activity={issues}/>
+
+		) : trace ? (
+
+			<ToolTrace trace={issues}/>
+
+		) : total === 0 ? (
+
+			<EmptyState
+				header={"Analysis Not Performed"}
+				description={<Text>Check the agreement for compliance with policies.</Text>}
+				primaryAction={<Button appearance={"discovery"} onClick={actions.refresh}>Analyze</Button>}
+			/>
+
+		) : sorted.length === 0 ? (
+
+			<EmptyState
+				header={"No Matching Issues"}
+				description={<Text>All issues are hidden by current filters.</Text>}
+				primaryAction={<Button appearance={"primary"} onClick={clear}>Clear</Button>}
+			/>
+
+		) : (
+
+			<Stack space="space.200">{sorted.map(issue => <ToolIssue
 				key={`${issue.id}-${issue.state}-${issue.severity}`} // ;( dom not reordered w/out state/severity
 				issue={issue}
 				actions={actions}
-			/>)}
+			/>)}</Stack>
 
-		</Stack>;
+		)
 
-	}
+	}</ToolSplit>;
 
 }

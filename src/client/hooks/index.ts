@@ -14,9 +14,12 @@
  * limitations under the License.
  */
 
+import { Dispatch, SetStateAction } from "react";
 import { asTrace } from "../../shared";
 import { Activity, isActivity, Observer, Provider, Task } from "../../shared/tasks";
 import { monitorTask, submitTask } from "../ports/tasks";
+
+export type State<T> = [T, Dispatch<SetStateAction<T>>];
 
 
 export async function execute<T>(observer: Observer<T>, task: Task & Provider<T>) {

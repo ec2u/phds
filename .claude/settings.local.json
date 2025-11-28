@@ -33,7 +33,9 @@
       "WebFetch(domain:atlassian.design)",
       "WebFetch(domain:atlaskit.atlassian.com)",
       "Bash(cat:*)",
-      "Skill(markdown-writer)"
+      "Skill(markdown-writer)",
+      "Skill(typedoc-writer)",
+      "Bash(npm view:*)"
     ],
     "defaultMode": "acceptEdits"
   },

@@ -14,23 +14,24 @@
  * limitations under the License.
  */
 
-import ForgeReconciler, {Box, Button, ButtonGroup, xcss} from "@forge/react";
-import React, {useState} from "react";
-import {ToolCache} from "./hooks/cache";
-import {Rule} from "./views";
-import {ToolBar} from "./views/layouts/bar";
-import {ToolClear} from "./views/lenses/clear";
-import {ToolDashboard} from "./views/lenses/dashboard";
-import {ToolIssues} from "./views/lenses/issues";
-import {ToolPolicies} from "./views/lenses/policies";
+import ForgeReconciler, { Box, Button, ButtonGroup, xcss } from "@forge/react";
+import React, { useState } from "react";
+import { ToolCache } from "./hooks/cache";
+import { Rule } from "./views";
+import { ToolBar } from "./views/layouts/bar";
+import { ToolClear } from "./views/lenses/clear";
+import { ToolDashboard } from "./views/lenses/dashboard";
+import { ToolIssues } from "./views/lenses/issues";
+import { ToolPolicies } from "./views/lenses/policies";
 
 
 const tabs = {
 
-    "Policies": <ToolPolicies/>,
-    "Agreement": undefined,
-    "Dashboard": <ToolDashboard/>,
-    "Issues": <ToolIssues/>
+	"Dashboard": <ToolDashboard/>,
+
+	"Agreement": undefined,
+	"Policies": <ToolPolicies/>,
+	"Issues": <ToolIssues/>
 
 };
 
@@ -64,7 +65,7 @@ function ToolBody() {
                     {tab}
 
                 </Button></>
-            )}</ButtonGroup>}
+			)}</ButtonGroup>}
 
 
             more={<ButtonGroup>
