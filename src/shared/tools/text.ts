@@ -15,28 +15,28 @@
  */
 
 import type {
-    BlockQuoteDefinition,
-    BodiedExtensionDefinition,
-    BulletListDefinition,
-    CodeBlockDefinition,
-    CodeDefinition,
-    DocNode,
-    EmDefinition,
-    ExtensionDefinition,
-    HeadingDefinition,
-    Inline,
-    LinkDefinition,
-    ListItemDefinition,
-    OrderedListDefinition,
-    ParagraphDefinition,
-    StrikeDefinition,
-    StrongDefinition,
-    UnderlineDefinition
+	BlockQuoteDefinition,
+	BodiedExtensionDefinition,
+	BulletListDefinition,
+	CodeBlockDefinition,
+	CodeDefinition,
+	DocNode,
+	EmDefinition,
+	ExtensionDefinition,
+	HeadingDefinition,
+	Inline,
+	LinkDefinition,
+	ListItemDefinition,
+	OrderedListDefinition,
+	ParagraphDefinition,
+	StrikeDefinition,
+	StrongDefinition,
+	UnderlineDefinition
 } from "@atlaskit/adf-schema";
-import type {Nodes as MdastNode, Root as MdastRoot} from "mdast";
+import type { Nodes as MdastNode, Root as MdastRoot } from "mdast";
 import remarkGfm from "remark-gfm";
 import remarkParse from "remark-parse";
-import {unified} from "unified";
+import { unified } from "unified";
 
 
 type AdfBlock =
@@ -284,6 +284,25 @@ export function adf(markdown: string): DocNode {
                     content: "children" in node && node.children ?
                         node.children.map((child: MdastNode) => remarkNodeToAdf(child)) : []
                 };
+
+			case "table":
+
+				return {
+					type: "table",
+					content: "children" in node && node.children ?
+						node.children.map((row: MdastNode, rowIndex: number) => ({
+							type: "tableRow",
+							content: "children" in row && row.children ?
+								row.children.map((cell: MdastNode) => ({
+									type: rowIndex === 0 ? "tableHeader" : "tableCell",
+									content: [{
+										type: "paragraph",
+										content: "children" in cell && cell.children ?
+											cell.children.map((child: MdastNode) => remarkInlineToAdf(child)) : []
+									}]
+								})) : []
+						})) : []
+				};
 
             case "thematicBreak":
 

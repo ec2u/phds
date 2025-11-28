@@ -14,39 +14,55 @@
  * limitations under the License.
  */
 
-import { Box, Stack, xcss } from "@forge/react";
-import React, { ReactNode } from "react";
+import {Box, Inline, Stack, xcss} from "@forge/react";
+import React, {ReactNode} from "react";
 
-export default function ToolPanel({
+const Width = 66; // %
+const Gap = "space.500";
 
-	header,
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+export default function ToolSplit({
+
+									  side,
 
 	children
 
 }: {
 
-	header: ReactNode
+	side: ReactNode
 
 	children: ReactNode
 
 }) {
 
-	return <Stack grow={"fill"} space={"space.100"} alignInline={"stretch"}>
-
-		<Box>{header}</Box>
+	return <Inline grow={"fill"}>
 
 		<Box xcss={xcss({
 
-			flexGrow: 1,
-			height: "60em", // !!! adapt to screen size
-			overflowY: "auto"
+			minWidth: `${100 - Width}%`,
+			maxWidth: `${100 - Width}%`
 
-		})}>{
+		})}>
 
-			children
+			<Box xcss={xcss({paddingRight: Gap})}>
+				<Stack>{side}</Stack>
+			</Box>
 
-		}</Box>
+		</Box>
 
-	</Stack>;
+		<Box xcss={xcss({
+
+			minWidth: `${Width}%`,
+			maxWidth: `${Width}%`
+
+		})}>
+
+			<Stack>{children}</Stack>
+
+		</Box>
+
+	</Inline>;
 
 }

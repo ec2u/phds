@@ -17,7 +17,7 @@
 import {Language} from "./languages";
 
 
-export type Catalog=Readonly<Record<Source, string>>;
+export type Catalog = Readonly<Record<Source, Title>>;
 
 export type Source = "" | string // source attachment id; empty for page body
 export type Instant=string // UTC ISO dateTime with ms precision
