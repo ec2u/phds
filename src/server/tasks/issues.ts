@@ -17,8 +17,8 @@
 import {kvs, WhereConditions} from "@forge/kvs";
 import {File, Schema, Type} from "@google/genai";
 import {isString} from "../../shared";
-import {Issue, Reference} from "../../shared/issues";
-import {defaultLanguage} from "../../shared/languages";
+import {Issue, Reference} from "../../shared/items/issues";
+import {defaultLanguage} from "../../shared/items/languages";
 import {Activity, IssuesTask, Payload} from "../../shared/tasks";
 import {markdown as adfToMarkdown} from "../../shared/tools/text";
 import {setStatus} from "../async";

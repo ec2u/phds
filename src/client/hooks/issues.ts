@@ -16,7 +16,7 @@
 
 import {useEffect, useState} from "react";
 import {isArray} from "../../shared";
-import {Issue, State} from "../../shared/issues";
+import {Issue, State} from "../../shared/items/issues";
 import {Status} from "../../shared/tasks";
 import {useCache} from "./cache";
 import {execute} from "./index";

@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import { Box, Heading, Icon, Popup, Pressable, Stack, Text, xcss } from "@forge/react";
-import React, { useState } from "react";
-import { Reference } from "../../../shared/issues";
+import {Box, Heading, Icon, Popup, Pressable, Stack, Text, xcss} from "@forge/react";
+import React, {useState} from "react";
+import {Reference} from "../../../shared/items/issues";
 
 export function ToolReference({
 

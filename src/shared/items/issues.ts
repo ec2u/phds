@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { Instant, Source } from "./documents";
+import {Instant, Source} from "./documents";
 
 
 export const States = ["blocked", "active", "pending", "resolved"] as const;

@@ -17,8 +17,8 @@
 import {Button, Inline, Select, Stack, Text} from "@forge/react";
 import React, {useState} from "react";
 import {isTrace} from "../../../shared";
-import {Document} from "../../../shared/documents";
-import {Issue, Severities, Severity, State, States} from "../../../shared/issues";
+import {Document} from "../../../shared/items/documents";
+import {Issue, Severities, Severity, State, States} from "../../../shared/items/issues";
 import {isActivity, Status} from "../../../shared/tasks";
 import {useIssues} from "../../hooks/issues";
 import {ToolActivity} from "./activity";

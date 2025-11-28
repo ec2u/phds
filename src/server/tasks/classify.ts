@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-import { kvs } from "@forge/kvs";
-import { Issue } from "../../shared/issues";
-import { Activity, ClassifyTask, Payload } from "../../shared/tasks";
-import { setStatus } from "../async";
-import { issueKey, lock } from "../tools/cache";
+import {kvs} from "@forge/kvs";
+import {Issue} from "../../shared/items/issues";
+import {Activity, ClassifyTask, Payload} from "../../shared/tasks";
+import {setStatus} from "../async";
+import {issueKey, lock} from "../tools/cache";
 
 export async function classify(job: string, page: string, {
 

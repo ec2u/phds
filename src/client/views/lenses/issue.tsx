@@ -31,7 +31,7 @@ import {
 } from "@forge/react";
 import React, {useState} from "react";
 import {isString} from "../../../shared";
-import {Issue, Reference, Severities, State, States} from "../../../shared/issues";
+import {Issue, Reference, Severities, State, States} from "../../../shared/items/issues";
 import {adf} from "../../../shared/tools/text";
 import {IssuesActions} from "../../hooks/issues";
 import {ToolToggle} from "../elements/toggle";

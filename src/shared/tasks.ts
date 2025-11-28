@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-import {Catalog, Source} from "./documents";
+import {Catalog, Source} from "./items/documents";
 import {isNumber, Trace} from "./index";
-import {Issue, State} from "./issues";
-import {Language} from "./languages";
+import {Issue, State} from "./items/issues";
+import {Language} from "./items/languages";
 
 
 export type Task =

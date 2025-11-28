@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-import { useEffect, useState } from "react";
-import { Catalog } from "../../shared/documents";
-import { Status } from "../../shared/tasks";
-import { useCache } from "./cache";
-import { execute } from "./index";
+import {useEffect, useState} from "react";
+import {Catalog} from "../../shared/items/documents";
+import {Status} from "../../shared/tasks";
+import {useCache} from "./cache";
+import {execute} from "./index";
 
 export function usePolicies(): Status<Catalog> {
 

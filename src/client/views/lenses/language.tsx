@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import { Select } from "@forge/react";
+import {Select} from "@forge/react";
 import React from "react";
-import { Language, languages } from "../../../shared/languages";
+import {Language, languages} from "../../../shared/items/languages";
 
 
 export function ToolLanguage({

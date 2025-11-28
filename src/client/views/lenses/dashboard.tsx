@@ -17,8 +17,8 @@
 import {Box, Popup, Pressable, Text, xcss} from "@forge/react";
 import React, {useState} from "react";
 import {isTrace} from "../../../shared";
-import {Document} from "../../../shared/documents";
-import {Issue, Severities, Severity, State, States} from "../../../shared/issues";
+import {Document} from "../../../shared/items/documents";
+import {Issue, Severities, Severity, State, States} from "../../../shared/items/issues";
 import {isActivity, Status} from "../../../shared/tasks";
 import {IssuesActions, useIssues} from "../../hooks/issues";
 import ToolKanban, {Lane, toggle} from "../layouts/kanban";

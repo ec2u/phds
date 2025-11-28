@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-import { Language } from "./languages";
+import {Language} from "./languages";
 
 
 export type Catalog=Readonly<Record<Source, string>>;
 
-export type Source="" | string // source attachment id; empty for macro body
+export type Source = "" | string // source attachment id; empty for page body
 export type Instant=string // UTC ISO dateTime with ms precision
 
 export type Title=string
