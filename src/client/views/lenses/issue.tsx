@@ -29,14 +29,14 @@ import {
 	Tooltip,
 	xcss
 } from "@forge/react";
-import React, {useState} from "react";
-import {isString} from "../../../shared";
-import {Issue, Reference, Severities, State, States} from "../../../shared/items/issues";
-import {adf} from "../../../shared/tools/text";
-import {IssuesActions} from "../../hooks/issues";
-import {ToolToggle} from "../elements/toggle";
-import {toColors} from "../index";
-import {ToolReference} from "./reference";
+import React, { useState } from "react";
+import { isString } from "../../../shared";
+import { Issue, Reference, Severities, State, States } from "../../../shared/items/issues";
+import { adf } from "../../../shared/tools/text";
+import { IssuesActions } from "../../hooks/issues";
+import { ToolToggle } from "../elements/toggle";
+import { toColors } from "../index";
+import { ToolReference } from "./reference";
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -253,32 +253,38 @@ export default function ToolIssue({
 				: <ToolReference key={`${item.source}:${item.offset}`} reference={item}/>
 			)}</Text>
 
-			{mode === "annotating" ?
+			{mode === "annotating" ? (
 
-				<TextArea
+				<TextArea autoFocus={true}
+
 					minimumRows={3}
 					resize="vertical"
+
 					value={notes}
+
 					onChange={(event) => setNotes(event.target.value)}
+
 				/>
 
-				: issue.annotations ?
+			) : issue.annotations ? (
 
-					<Box xcss={xcss({
-						borderWidth: "border.width",
-						borderColor: "color.border.accent.gray",
-						borderTopStyle: "solid",
-						marginTop: "space.100",
-						paddingTop: "space.100"
-					})}>
+				<Box xcss={xcss({
+					borderWidth: "border.width",
+					borderColor: "color.border.accent.gray",
+					borderTopStyle: "solid",
+					marginTop: "space.100",
+					paddingTop: "space.100"
+				})}>
 
-						<AdfRenderer document={adf(issue.annotations)}/>
+					<AdfRenderer document={adf(issue.annotations)}/>
 
-					</Box>
+				</Box>
 
-					: null
+			) : (
 
-			}
+				<></>
+
+			)}
 
 		</Stack>
 

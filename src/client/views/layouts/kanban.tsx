@@ -14,16 +14,14 @@
  * limitations under the License.
  */
 
-import {Box, Heading, Inline, Stack, Text, xcss} from "@forge/react";
-import type {Space} from "@forge/react/out/types/components";
-import React, {ReactNode} from "react";
-import {ToolToggle} from "../elements/toggle";
-import {Colors, NeutralColors} from "..";
+import { Box, Heading, Inline, Stack, Text, xcss } from "@forge/react";
+import type { Space } from "@forge/react/out/types/components";
+import React, { ReactNode } from "react";
+import { Colors, NeutralColors } from "..";
+import { ToolToggle } from "../elements/toggle";
 
 
-const PanelWidth = 25; // %
 const ColCollapsedWidth = 2.5; //%
-
 const RowGap = "space.200";
 
 const CellPaddingBlock = "space.050";
@@ -45,11 +43,15 @@ export interface Lane<T> {
 
 }
 
+
 export function toggle<T>(lanes: readonly Lane<T>[], value: T) {
 	return lanes.map(lane =>
 		lane.value === value ? { ...lane, collapsed: !lane.collapsed } : lane
 	);
 }
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 export default function ToolKanban<R, C, I>({
 
@@ -138,10 +140,9 @@ function Grid<R, C, I>({
 	const collapsed = cols.filter(lane => lane.collapsed).length;
 	const expanded = cols.length-collapsed;
 
-	const widths = cols.map(col =>
-		expanded === 0 ? 0
-			: col.collapsed ? ColCollapsedWidth
-				: (100-ColCollapsedWidth*collapsed)/expanded
+	const widths = cols.map(col => expanded === 0 || col.collapsed
+		? ColCollapsedWidth
+		: (100-ColCollapsedWidth*collapsed)/expanded
 	);
 
 	return <Stack space={RowGap}>
@@ -193,43 +194,49 @@ function Cols<G>({
 
 }) {
 
-	return <Inline space={CellPaddingBlock}>{cols.map(({ value, collapsed, label, colors }, index) => {
+	return <Inline space={CellPaddingBlock} alignBlock={"stretch"}>
 
-		return <>
+		{cols.map(({ value, collapsed, label, colors }, index) => {
 
-			<Box key={String(value)} xcss={xcss({
+			return <>
 
-				width: `${widths[index]}%`,
-				...(colors ?? {})
+				<Box key={String(value)} xcss={xcss({
 
-			})}>
+					width: `${widths[index]}%`,
+					...(colors ?? {})
 
-				<Col
+				})}>
 
-					padding={[
-						CellPaddingBlock,
-						"space.0",
-						CellPaddingBlock,
-						!collapsed ? CellPaddingInline : "space.0"
-					]}
+					<Col
 
-					label={!collapsed ? <Heading size="small">{label ?? String(value)}</Heading> : undefined}
+						padding={[
+							CellPaddingBlock,
+							"space.0",
+							CellPaddingBlock,
+							!collapsed ? CellPaddingInline : "space.0"
+						]}
 
-					action={<ToolToggle direction="horizontal"
+						label={!collapsed ? <Heading size="small">{label ?? String(value)}</Heading> : undefined}
 
-						label={`${String(value)} issues`}
-						expanded={!collapsed}
+						action={<ToolToggle direction="horizontal"
 
-						onToggle={() => onToggleCol(value)}
+							label={`${String(value)} issues`}
+							expanded={!collapsed}
 
-					/>}
+							onToggle={() => onToggleCol(value)}
 
-				/>
+						/>}
 
-			</Box>
+					/>
 
-		</>;
-	})}</Inline>;
+				</Box>
+
+			</>;
+		})}
+
+		{<Filler/>}
+
+	</Inline>;
 
 }
 
@@ -337,31 +344,38 @@ function Row<R, C, I>({
             space={CellPaddingBlock}
             alignBlock={"stretch"}
 
-        >{cols.map((col, index) => {
+        >
 
-			const isExpanded = widths[index] > ColCollapsedWidth;
+			{cols.map((col, index) => {
 
-			return <Box key={String(col.value)} xcss={xcss({
+				const isExpanded = widths[index] > ColCollapsedWidth;
 
-				width: `${widths[index]}%`,
+				return <Box key={String(col.value)} xcss={xcss({
 
-				backgroundColor: BackgroundColor,
+					width: `${widths[index]}%`,
 
-				...(isExpanded && {
-					paddingBlock: CellPaddingBlock,
-					paddingInline: CellPaddingInline
-				})
+					backgroundColor: BackgroundColor,
 
-			})}>
+					...(isExpanded && {
+						paddingBlock: CellPaddingBlock,
+						paddingInline: CellPaddingInline
+					})
 
-				{isExpanded && <Cell>{items
-					.filter(item => toCol(item) === col.value)
-					.map(toCard)
-				}</Cell>}
+				})}>
 
-			</Box>;
+					<Cell>{items
+						.filter(item => isExpanded)
+						.filter(item => toCol(item) === col.value)
+						.map(toCard)
+					}</Cell>
 
-		})}</Inline>}
+				</Box>;
+
+			})}
+
+			{<Filler/>}
+
+        </Inline>}
 
 	</Stack>;
 
@@ -387,6 +401,22 @@ function Cell({
 		<Stack space="space.100" alignInline={"stretch"}>
 			{children}
 		</Stack>
+
+	</Box>;
+
+}
+
+function Filler() {
+
+	return <Box xcss={xcss({
+
+		flexGrow: 1,
+
+		...NeutralColors
+
+	})}>
+
+		<Inline> </Inline>
 
 	</Box>;
 

@@ -58,9 +58,6 @@ const initial = {
 
 export function ToolDashboard() {
 
-	// !!! sorting
-	// !!! empty swimlanes
-	// !!! all collapsed states
 	// !!! instable focus on annotation textarea
 
 	const [issues, actions] = useIssues();
@@ -106,7 +103,7 @@ export function ToolDashboard() {
 
 			cols={states}
 			rows={severities}
-			items={issues}
+			items={[...issues].sort((x, y) => x.title.localeCompare(y.title))}
 
 			toCol={(issue) => issue.state}
 			toRow={(issue) => issue.severity}
@@ -153,9 +150,9 @@ function Card({
 	return <Popup
 
 		isOpen={isOpen}
+		shouldReturnFocus={false}
 
 		placement="bottom-start"
-		shouldReturnFocus={true}
 
 		trigger={() => <Pressable
 

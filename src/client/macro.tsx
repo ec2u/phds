@@ -27,10 +27,11 @@ import { ToolPolicies } from "./views/lenses/policies";
 
 const tabs = {
 
-	"Policies": <ToolPolicies/>,
-	"Dashboard": <ToolDashboard/>,
+	"Issues": <ToolIssues/>,
+
 	"Agreement": undefined,
-	"Issues": <ToolIssues/>
+	"Policies": <ToolPolicies/>,
+	"Dashboard": <ToolDashboard/>
 
 };
 
@@ -39,45 +40,45 @@ const tabs = {
 
 function ToolMacro() {
 
-    const labels = Object.keys(tabs) as readonly (keyof typeof tabs)[];
+	const labels = Object.keys(tabs) as readonly (keyof typeof tabs)[];
 
-    const [active, setActive] = useState(labels[0]);
+	const [active, setActive] = useState(labels[0]);
 
-    const body = tabs[active];
+	const body = tabs[active];
 
 
-    return <Box xcss={xcss({
+	return <Box xcss={xcss({
 
-        ...(body ? Rule : {})
+		...(body ? Rule : {})
 
-    })}>
+	})}>
 
-        <ToolBar
+		<ToolBar
 
-            menu={<ButtonGroup>{labels.map((tab) => <>
+			menu={<ButtonGroup>{labels.map((tab) => <>
 
-                <Button key={tab}
-                        isSelected={active === tab}
-                        onClick={() => setActive(tab)}
-                >
+				<Button key={tab}
+					isSelected={active === tab}
+					onClick={() => setActive(tab)}
+				>
 
-                    {tab}
+					{tab}
 
-                </Button></>
+				</Button></>
 			)}</ButtonGroup>}
 
 
-            more={<ButtonGroup>
+			more={<ButtonGroup>
 
-                <ToolClear/>
+				<ToolClear/>
 
-            </ButtonGroup>}
+			</ButtonGroup>}
 
-        />
+		/>
 
-        {body}
+		{body}
 
-    </Box>;
+	</Box>;
 
 }
 
@@ -85,11 +86,11 @@ function ToolMacro() {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 ForgeReconciler.render(
-    <React.StrictMode>
+	<React.StrictMode>
 
-        <ToolCache>
+		<ToolCache>
 			<ToolMacro/>
-        </ToolCache>
+		</ToolCache>
 
-    </React.StrictMode>
+	</React.StrictMode>
 );

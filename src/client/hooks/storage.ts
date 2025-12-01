@@ -23,7 +23,7 @@ export type Options<T> = {
 	readonly initial?: T;
 
 	readonly scope?: "page" | "macro";
-	readonly store?: "local" | "session";
+	readonly store?: Storage;
 
 };
 
@@ -36,12 +36,11 @@ export function useStorage<T>(name: string, {
 	initial,
 
 	scope = "page",
-	store = "local"
+	store = localStorage
 
 }: Options<T> = {}): State<T> | State<T | undefined> {
 
 	const context = useProductContext();
-	const storage = store === "session" ? sessionStorage : localStorage;
 
 	const id = context?.extension?.content?.id;
 	const key = scope === "macro" ? name : id ? `ec2u-phds-${id}-${name}` : null;
@@ -53,7 +52,7 @@ export function useStorage<T>(name: string, {
 
 		if ( key ) {
 
-			const value = storage.getItem(key);
+			const value = store.getItem(key);
 
 			try {
 
@@ -65,12 +64,12 @@ export function useStorage<T>(name: string, {
 
 				setValue(undefined);
 
-				storage.removeItem(key);
+				store.removeItem(key);
 			}
 
 		}
 
-	}, [key, storage, initial]);
+	}, [key, store, initial]);
 
 	useEffect(() => { // save to storage when value changes
 
@@ -79,9 +78,9 @@ export function useStorage<T>(name: string, {
 			try {
 
 				if ( value === undefined ) {
-					storage.removeItem(key);
+					store.removeItem(key);
 				} else {
-					storage.setItem(key, JSON.stringify(value));
+					store.setItem(key, JSON.stringify(value));
 				}
 
 			} catch ( error ) {
@@ -90,13 +89,13 @@ export function useStorage<T>(name: string, {
 
 		}
 
-	}, [value, storage]); // key not in deps - transitions only once from null to final value
+	}, [value, store]); // key not in deps - transitions only once from null to final value
 
 	useEffect(() => { // sync changes from other tabs
 
 		function handler(event: StorageEvent) {
 
-			if ( key && event.key === key && event.storageArea === storage ) {
+			if ( key && event.key === key && event.storageArea === store ) {
 
 				try {
 
@@ -116,7 +115,7 @@ export function useStorage<T>(name: string, {
 
 		return () => window.removeEventListener("storage", handler);
 
-	}, [key, storage, initial]);
+	}, [key, store, initial]);
 
 	return [value, setValue];
 }
