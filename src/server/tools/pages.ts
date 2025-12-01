@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import api, {route} from "@forge/api";
+import api, { route } from "@forge/api";
 
 export async function checkPage(page: string): Promise<boolean> {
 
@@ -50,13 +50,14 @@ export async function fetchPage(page: string): Promise<{ title: string; content:
 	});
 
 	if (!response.ok) {
-		throw new Error(`Failed to fetch page: ${response.status}`);
+		throw new Error(`failed to fetch page: ${response.status} ${response.statusText}`);
 	}
 
 	const data = await response.json();
+	const content = data.body?.atlas_doc_format?.value;
 
 	return {
 		title: data.title || "",
-		content: data.body?.atlas_doc_format?.value || {}
+		content: content ? JSON.parse(content) : {}
 	};
 }
