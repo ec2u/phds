@@ -46,6 +46,7 @@ permissions:
 
   scopes:
     - read:confluence-content.all
+    - read:page:confluence
     - write:confluence-file
     - read:attachment:confluence
     - delete:attachment:confluence
