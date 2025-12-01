@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-import {Catalog, Source} from "./items/documents";
-import {isNumber, Trace} from "./index";
-import {Issue, State} from "./items/issues";
-import {Language} from "./items/languages";
+import { isNumber, isTrace, Trace } from "./index";
+import { Catalog, Source } from "./items/documents";
+import { Issue, State } from "./items/issues";
+import { Language } from "./items/languages";
 
 
 export type Task =
@@ -100,6 +100,48 @@ export function isActivity(value: unknown): value is Activity {
  */
 export function asActivity(value: unknown): undefined | Activity {
 	return isActivity(value) ? value : undefined;
+}
+
+
+/**
+ * Pattern matches on a Status value and applies the appropriate handler.
+ *
+ * @template T the type of the result value
+ * @template R the return type of all handlers
+ *
+ * @param status the Status value to match on
+ * @param cases handlers for each possible Status variant
+ *
+ * @return the result of applying the appropriate handler
+ */
+export function on<T, R>(status: Status<T>, cases: {
+
+	state: R | ((state: Activity) => R),
+	value: R | ((value: T) => R),
+	trace: R | ((trace: Trace) => R),
+
+}): R {
+
+	function apply<S>(handler: R | ((arg: S) => R), arg: S): R {
+		return typeof handler === "function"
+			? (handler as (arg: S) => R)(arg)
+			: handler;
+	}
+
+	if ( isActivity(status) ) {
+
+		return apply(cases.state, status);
+
+	} else if ( isTrace(status) ) {
+
+		return apply(cases.trace, status);
+
+	} else {
+
+		return apply(cases.value, status);
+
+	}
+
 }
 
 

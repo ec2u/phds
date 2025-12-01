@@ -27,10 +27,9 @@ import { ToolPolicies } from "./views/lenses/policies";
 
 const tabs = {
 
-	"Dashboard": <ToolDashboard/>,
-
-	"Agreement": undefined,
 	"Policies": <ToolPolicies/>,
+	"Dashboard": <ToolDashboard/>,
+	"Agreement": undefined,
 	"Issues": <ToolIssues/>
 
 };

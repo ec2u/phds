@@ -18,7 +18,7 @@ import { EmptyState, Link, Pressable, Stack, Text, xcss } from "@forge/react";
 import React from "react";
 import { isTrace } from "../../../shared";
 import { Source } from "../../../shared/items/documents";
-import { isActivity } from "../../../shared/tasks";
+import { isActivity, on } from "../../../shared/tasks";
 import { usePolicies } from "../../hooks/policies";
 import { useStorage } from "../../hooks/storage";
 import ToolSplit from "../layouts/split";
@@ -28,27 +28,27 @@ import { ToolTrace } from "./trace";
 
 export function ToolPolicies() {
 
-    const policies = usePolicies();
+	const policies = usePolicies();
 
-    const [selected, setSelected] = useStorage<Source>("selected-policy");
-
-
-    const activity = isActivity(policies);
-    const trace = isTrace(policies);
+	const [selected, setSelected] = useStorage<Source>("selected-policy");
 
 
-    function select(source: string) {
-        setSelected(source === selected ? undefined : source);
-    }
+	const activity = isActivity(policies);
+	const trace = isTrace(policies);
 
 
-    return <ToolSplit
+	function select(source: string) {
+		setSelected(source === selected ? undefined : source);
+	}
 
-        side={
+
+	return <ToolSplit
+
+		side={<Stack space={"space.250"}>
 
 			<Stack space={"space.100"}>{(activity || trace ? [] : Object.entries(policies))
-                .sort(([, x], [, y]) => x.localeCompare(y))
-                .map(([source, title]) => <>
+				.sort(([, x], [, y]) => x.localeCompare(y))
+				.map(([source, title]) => <>
 
 					<Pressable key={source}
 
@@ -84,38 +84,41 @@ export function ToolPolicies() {
 
 
 				</>)
-            }</Stack>
+			}</Stack>
 
-        }
+			{on(selected, {
 
-    >{
+				state: undefined,
+				trace: undefined,
 
-        activity ? (
+				value: document => document && <ToolPolicy source={document} as={"toc"}/>
 
-            <ToolActivity activity={policies}/>
+			})}
 
-        ) : trace ? (
+		</Stack>}
 
-            <ToolTrace trace={policies}/>
+	>{on(policies, {
 
-        ) : !Object.keys(policies).length ? (
+		state: state => <ToolActivity activity={state}/>,
+		trace: trace => <ToolTrace trace={trace}/>,
 
-            <EmptyState header={"No Policy Documents"} description={
-                <Text>Upload PDF documents to the page <Link href={"#attachments"}>Attachments</Link> area.</Text>
-            }/>
+		value: policies => !Object.keys(policies).length ? (
 
-        ) : !selected || !policies[selected] ? (
+			<EmptyState header={"No Policy Documents"} description={
+				<Text>Upload PDF documents to the page <Link href={"#attachments"}>Attachments</Link> area.</Text>
+			}/>
+
+		) : !selected || !policies[selected] ? (
 
 			<EmptyState header="No Policy Selected" description={
 				<Text>Choose one from the sidebar.</Text>
-            }/>
+			}/>
 
-        ) : (
+		) : (
 
-            <ToolPolicy source={selected}/>
+			<ToolPolicy source={selected}/>
 
-        )
-
-    }</ToolSplit>;
+		)
+	})}</ToolSplit>;
 
 }
