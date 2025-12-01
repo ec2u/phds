@@ -19,7 +19,7 @@
     "clean": "rm -rf node_modules",
     "setup": "npm install --legacy-peer-deps",
     "issue": "forge deploy -e development && forge install --non-interactive --upgrade -s https://ec2u.atlassian.net/ -p confluence -e development",
-    "watch": "npx dotenv -- forge tunnel"
+    "watch": "npx dotenv -- forge tunnel --debug --debugStartingPort 9229 --debugFunctionHandlers server/ports/index.handler server/tasks/index.handler"
   },
   "dependencies": {
     "@forge/bridge": "^4.5.2",

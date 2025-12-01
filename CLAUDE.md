@@ -33,7 +33,7 @@ npm run clean       # Remove node_modules
 npm run setup       # Install dependencies (with legacy peer deps)
 
 # Development
-npm run serve       # Start Forge tunnel for local development (requires .env file)
+npm run watch       # Start Forge tunnel for local development (requires .env file)
 
 # Deployment
 npm run issue       # Deploy and install to development/production environments (see @docs/development/lifecycle.md)
