@@ -19,7 +19,7 @@
     "clean": "rm -rf node_modules",
     "setup": "npm install --legacy-peer-deps",
     "issue": "forge deploy -e development && forge install --non-interactive --upgrade -s https://ec2u.atlassian.net/ -p confluence -e development",
-    "serve": "npx dotenv -- forge tunnel"
+    "watch": "npx dotenv -- forge tunnel"
   },
   "dependencies": {
     "@forge/bridge": "^4.5.2",
@@ -39,6 +39,7 @@
     "@types/node": "^22.15.18",
     "@types/react": "^19.1.4",
     "dotenv-cli": "^8.0.0",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "supports-color": "^10.2.2"
   }
 }
