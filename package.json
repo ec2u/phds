@@ -16,7 +16,7 @@
   },
   "main": "index.js",
   "scripts": {
-    "clean": "rm -rf node_modules",
+    "clean": "rm -rf .forge node_modules",
     "setup": "npm install --legacy-peer-deps",
     "issue": "forge deploy -e development && forge install --non-interactive --upgrade -s https://ec2u.atlassian.net/ -p confluence -e development",
     "watch": "npx dotenv -- forge tunnel --debug --debugStartingPort 9229 --debugFunctionHandlers server/ports/index.handler server/tasks/index.handler"
@@ -27,7 +27,7 @@
     "@forge/kvs": "^1.0.4",
     "@forge/react": "^11.2.5",
     "@forge/resolver": "^1.6.10",
-    "@google/genai": "^1.15.0",
+    "@google/genai": "1.30.0",
     "langfuse": "^3.37.4",
     "react": "^18.2.0",
     "remark": "^15.0.1",
