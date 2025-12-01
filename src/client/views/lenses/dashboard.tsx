@@ -58,8 +58,6 @@ const initial = {
 
 export function ToolDashboard() {
 
-	// !!! instable focus on annotation textarea
-
 	const [issues, actions] = useIssues();
 
 	const [states, setStates] = useStorage<readonly Lane<State>[]>("dashboard-states", {

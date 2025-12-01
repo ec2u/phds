@@ -29,7 +29,7 @@ import {
 	Tooltip,
 	xcss
 } from "@forge/react";
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { isString } from "../../../shared";
 import { Issue, Reference, Severities, State, States } from "../../../shared/items/issues";
 import { adf } from "../../../shared/tools/text";
@@ -85,7 +85,7 @@ export default function ToolIssue({
 
 	const [mode, setMode] = useState<"reading" | "annotating" | "updating">("reading");
 	const [expanded, setExpanded] = useState<boolean>(false);
-	const [notes, setNotes] = useState<string>(issue.annotations || "");
+	const notes = useRef<string>(issue.annotations || "");
 
 	const active = mode === "updating";
 	const references = issue.description.filter((entry): entry is Reference => !isString(entry));
@@ -121,13 +121,13 @@ export default function ToolIssue({
 	}
 
 	function cancel() {
-		setNotes(issue.annotations || "");
 		setMode("reading");
+		notes.current = issue.annotations || "";
 	}
 
 	function save() {
 		setMode("updating");
-		actions.annotate(issue.id, notes).then(() => setMode("reading"));
+		actions.annotate(issue.id, notes.current).then(() => setMode("reading"));
 	}
 
 
@@ -255,14 +255,14 @@ export default function ToolIssue({
 
 			{mode === "annotating" ? (
 
-				<TextArea autoFocus={true}
+				<TextArea
 
 					minimumRows={3}
 					resize="vertical"
 
-					value={notes}
+					defaultValue={notes.current}
 
-					onChange={(event) => setNotes(event.target.value)}
+					onChange={(event) => { notes.current = event.target.value; }}
 
 				/>
 

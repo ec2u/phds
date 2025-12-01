@@ -27,10 +27,9 @@ import { ToolPolicies } from "./views/lenses/policies";
 
 const tabs = {
 
-	"Issues": <ToolIssues/>,
-
 	"Agreement": undefined,
 	"Policies": <ToolPolicies/>,
+	"Issues": <ToolIssues/>,
 	"Dashboard": <ToolDashboard/>
 
 };
@@ -70,7 +69,7 @@ function ToolMacro() {
 
 			more={<ButtonGroup>
 
-				<ToolClear/>
+				{active && <ToolClear/>}
 
 			</ButtonGroup>}
 
