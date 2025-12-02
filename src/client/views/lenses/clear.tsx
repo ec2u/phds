@@ -20,7 +20,16 @@ import { isActivity, Status } from "../../../shared/tasks";
 import { useCache } from "../../hooks/cache";
 import { execute } from "../../ports/index";
 
-export function ToolClear() {
+export function ToolClear({
+
+	isDisabled
+
+}: {
+
+	isDisabled?: boolean
+
+
+}) {
 
 	const { clearCache }=useCache();
 
@@ -41,9 +50,14 @@ export function ToolClear() {
 	return <>
 
 		<LoadingButton
+
+			isDisabled={isDisabled}
 			isLoading={isActivity(clearing)}
+
 			appearance={"default"}
+
 			onClick={() => setConfirming(true)}
+
 		>
 			{"Clear"}
 		</LoadingButton>

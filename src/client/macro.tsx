@@ -69,7 +69,7 @@ function ToolMacro() {
 
 			more={<ButtonGroup>
 
-				{active && <ToolClear/>}
+				<ToolClear isDisabled={active === "Agreement"}/>
 
 			</ButtonGroup>}
 
