@@ -14,68 +14,152 @@
  * limitations under the License.
  */
 
-import ForgeReconciler, { Box, Button, ButtonGroup, xcss } from "@forge/react";
+import ForgeReconciler, { Box, Button, ButtonGroup, Code, EmptyState, Icon, Text, xcss } from "@forge/react";
 import React, { useState } from "react";
+import { Activity, on } from "../shared/tasks";
 import { ToolCache } from "./hooks/cache";
-import { Rule } from "./views";
+import { useContent } from "./hooks/content";
+import { useIssues } from "./hooks/issues";
+import { usePolicies } from "./hooks/policies";
+import { Rule } from "./views/index";
 import { ToolBar } from "./views/layouts/bar";
+import { ToolActivity } from "./views/lenses/activity";
 import { ToolClear } from "./views/lenses/clear";
 import { ToolDashboard } from "./views/lenses/dashboard";
 import { ToolIssues } from "./views/lenses/issues";
 import { ToolPolicies } from "./views/lenses/policies";
+import { ToolTrace } from "./views/lenses/trace";
 
 
-const tabs = {
-
-	"Agreement": undefined,
-	"Policies": <ToolPolicies/>,
-	"Issues": <ToolIssues/>,
-	"Dashboard": <ToolDashboard/>
-
-};
+enum Tab {
+	Agreement = "Agreement",
+	Policies = "Policies",
+	Issues = "Issues",
+	Dashboard = "Dashboard"
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 function ToolMacro() {
 
-	const labels = Object.keys(tabs) as readonly (keyof typeof tabs)[];
+	const [agreement] = useContent();
 
-	const [active, setActive] = useState(labels[0]);
+	const policies = usePolicies();
+	const [issues, actions] = useIssues();
 
-	const body = tabs[active];
+	const [selected, setSelected] = useState(Tab.Agreement);
+
+
+	const ready = !!agreement && on(policies, {
+
+		state: false,
+		trace: false,
+		value: true
+
+	}) && on(issues, {
+
+		state: false,
+		trace: false,
+		value: true
+
+	});
+
+
+	function button(tab: Tab, disabled?: boolean) {
+		return <Button
+
+			isSelected={selected === tab}
+			isDisabled={disabled}
+
+			onClick={() => setSelected(tab)}
+
+		>{tab}</Button>;
+	}
 
 
 	return <Box xcss={xcss({
 
-		...(body ? Rule : {})
+		...(ready && selected === Tab.Agreement ? {} : Rule)
 
 	})}>
 
 		<ToolBar
 
-			menu={<ButtonGroup>{labels.map((tab) => <>
+			menu={<ButtonGroup>
 
-				<Button key={tab}
-					isSelected={active === tab}
-					onClick={() => setActive(tab)}
-				>
+				{button(Tab.Agreement)}
+				{button(Tab.Policies, !ready)}
+				{button(Tab.Issues, !ready)}
+				{button(Tab.Dashboard, !ready)}
 
-					{tab}
-
-				</Button></>
-			)}</ButtonGroup>}
-
+			</ButtonGroup>}
 
 			more={<ButtonGroup>
 
-				<ToolClear isDisabled={active === "Agreement"}/>
+				<ToolClear isDisabled={!ready || selected === Tab.Agreement}/>
 
 			</ButtonGroup>}
 
 		/>
 
-		{body}
+		{agreement === undefined ? (
+
+			<ToolActivity activity={Activity.Fetching}/>
+
+		) : agreement === null ? (
+
+			<EmptyState
+				header={"Corrupted Document"}
+				description={"The expected document structure was corrupted.\n"+
+					"Save content and attachments and recreate from scratch."
+				}
+				primaryAction={<Icon label={""} glyph={"error"} size={"large"} color={"color.icon.warning"}/>}
+			/>
+
+		) : !agreement ? (
+
+			<EmptyState
+				header={"No Agreement Text"}
+				description={<Text>Enter Confluence <Code>Edit</Code> mode to update.</Text>}
+			/>
+
+		) : on(policies, {
+
+			state: activity => <ToolActivity activity={activity}/>,
+			trace: trace => <ToolTrace trace={trace}/>,
+
+			value: policies => on(issues, {
+
+				state: activity => <ToolActivity activity={activity}/>,
+				trace: trace => <ToolTrace trace={trace}/>,
+
+				value: issues => {
+
+					return Object.keys(policies).length === 0 ? (
+
+						<EmptyState header={"No Policy Documents"}
+							description={<Text>Upload PDF documents to the <Code>Attachments</Code> area below.</Text>}
+						/>
+
+					) : selected === Tab.Policies ? (
+
+						<ToolPolicies policies={policies}/>
+
+					) : selected === Tab.Issues ? (
+
+						<ToolIssues issues={[issues, actions]}/>
+
+					) : selected === Tab.Dashboard ? (
+
+						<ToolDashboard issues={[issues, actions]}/>
+
+					) : null;
+
+				}
+
+			})
+		})}
 
 	</Box>;
 

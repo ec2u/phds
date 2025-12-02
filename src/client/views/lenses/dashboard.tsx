@@ -17,15 +17,10 @@
 import { Box, Popup, Pressable, Text, xcss } from "@forge/react";
 import React, { useState } from "react";
 import { Issue, Severities, Severity, State, States } from "../../../shared/items/issues";
-import { Activity, on } from "../../../shared/tasks";
-import { useContent } from "../../hooks/content";
-import { IssuesActions, useIssues } from "../../hooks/issues";
+import { on } from "../../../shared/tasks";
+import { IssuesActions } from "../../hooks/issues";
 import { useStorage } from "../../hooks/storage";
-import {
-	AnalysisNotPerformedPrompt,
-	CorruptedDocumentErrorState,
-	NoAgreementTextEmptyState
-} from "../elements/feedback";
+import { AnalysisNotPerformedPrompt } from "../elements/analyze";
 import ToolKanban, { Lane, toggle } from "../layouts/kanban";
 import { ToolActivity } from "./activity";
 import ToolIssue, { BlueColors, RedColors, SeverityColors, severityLabel, StateColors, stateLabel } from "./issue";
@@ -61,10 +56,15 @@ const initial = {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-export function ToolDashboard() {
+export function ToolDashboard({
 
-	const [agreement] = useContent();
-	const [issues, actions] = useIssues();
+	issues: [items, actions]
+
+}: {
+
+	issues: [ReadonlyArray<Issue>, IssuesActions]
+
+}) {
 
 	const [states, setStates] = useStorage<readonly Lane<State>[]>("dashboard-states", {
 		initial: initial.states
@@ -84,26 +84,14 @@ export function ToolDashboard() {
 	}
 
 
-	return on(issues, {
+	return on(items, {
 
 		state: activity => <ToolActivity activity={activity}/>,
 		trace: trace => <ToolTrace trace={trace}/>,
 
 		value: issues => {
 
-			return agreement === undefined ? (
-
-				<ToolActivity activity={Activity.Fetching}/>
-
-			) : agreement === null ? (
-
-				<CorruptedDocumentErrorState/>
-
-			) : issues.length === 0 && !agreement ? (
-
-				<NoAgreementTextEmptyState/>
-
-			) : issues.length === 0 ? (
+			return issues.length === 0 ? (
 
 				<AnalysisNotPerformedPrompt onAnalyze={actions.refresh}/>
 

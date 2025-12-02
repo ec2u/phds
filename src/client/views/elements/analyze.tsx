@@ -14,36 +14,16 @@
  * limitations under the License.
  */
 
-import { Button, Code, EmptyState, Icon, Text } from "@forge/react";
+import { Button, EmptyState, Text } from "@forge/react";
 import React from "react";
 
-export function CorruptedDocumentErrorState() {
-	return <EmptyState
-		header={"Corrupted Document"}
-		description={"The expected document structure was corrupted.\n"+
-			"Save your content and attachments and recreate it from scratch"
-		}
-		primaryAction={<Icon label={""} glyph={"error"} size={"large"} color={"color.icon.warning"}/>}
-	/>;
-}
-
-export function NoAgreementTextEmptyState() {
-	return <EmptyState
-		header={"No Agreement Text"}
-		description={<Text>Enter Confluence <Code>Edit</Code> mode to update.</Text>}
-	/>;
-}
-
-export function NoPolicyDocumentsEmptyState() {
-	return <EmptyState header={"No Policy Documents"} description={
-		<Text>Upload PDF documents to the page <Text weight={"bold"}>Attachments</Text> area.</Text>
-	}/>;
-}
 
 export function AnalysisNotPerformedPrompt({ onAnalyze }: { onAnalyze: () => void }) {
+
 	return <EmptyState
 		header={"Analysis Not Performed"}
 		description={<Text>Check the agreement for compliance with policies.</Text>}
 		primaryAction={<Button appearance={"discovery"} onClick={onAnalyze}>Analyze</Button>}
 	/>;
+
 }

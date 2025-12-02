@@ -17,23 +17,23 @@
 import { Button, EmptyState, Inline, Select, Stack, Text } from "@forge/react";
 import React, { useState } from "react";
 import { Issue, Severities, Severity, State, States } from "../../../shared/items/issues";
-import { Activity, on } from "../../../shared/tasks";
-import { useContent } from "../../hooks/content";
-import { useIssues } from "../../hooks/issues";
-import {
-	AnalysisNotPerformedPrompt,
-	CorruptedDocumentErrorState,
-	NoAgreementTextEmptyState
-} from "../elements/feedback";
+import { on } from "../../../shared/tasks";
+import { IssuesActions } from "../../hooks/issues";
+import { AnalysisNotPerformedPrompt } from "../elements/analyze";
 import ToolSplit from "../layouts/split";
 import { ToolActivity } from "./activity";
 import ToolIssue, { severityLabel, stateLabel } from "./issue";
 import { ToolTrace } from "./trace";
 
-export function ToolIssues() {
+export function ToolIssues({
 
-	const [agreement] = useContent();
-	const [issues, actions] = useIssues();
+	issues: [items, actions]
+
+}: {
+
+	issues: [ReadonlyArray<Issue>, IssuesActions]
+
+}) {
 
 	const [state, setState] = useState<readonly State[]>([]);
 	const [severity, setSeverity] = useState<readonly Severity[]>([]);
@@ -68,7 +68,7 @@ export function ToolIssues() {
 
 	return <ToolSplit
 
-		side={on(issues, {
+		side={on(items, {
 
 			state: undefined,
 			trace: undefined,
@@ -151,7 +151,7 @@ export function ToolIssues() {
 
 		})}
 
-	>{on(issues, {
+	>{on(items, {
 
 		state: activity => <ToolActivity activity={activity}/>,
 		trace: trace => <ToolTrace trace={trace}/>,
@@ -161,19 +161,7 @@ export function ToolIssues() {
 			const sorted = select(issues);
 			const total = issues.length;
 
-			return agreement === undefined ? (
-
-				<ToolActivity activity={Activity.Fetching}/>
-
-			) : agreement === null ? (
-
-				<CorruptedDocumentErrorState/>
-
-			) : total === 0 && !agreement ? (
-
-				<NoAgreementTextEmptyState/>
-
-			) : total === 0 ? (
+			return total === 0 ? (
 
 				<AnalysisNotPerformedPrompt onAnalyze={actions.refresh}/>
 

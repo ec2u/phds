@@ -17,19 +17,21 @@
 import { EmptyState, Pressable, Stack, Text, xcss } from "@forge/react";
 import React from "react";
 import { isTrace } from "../../../shared";
-import { Source } from "../../../shared/items/documents";
+import { Catalog, Source } from "../../../shared/items/documents";
 import { isActivity, on } from "../../../shared/tasks";
-import { usePolicies } from "../../hooks/policies";
 import { useStorage } from "../../hooks/storage";
-import { NoPolicyDocumentsEmptyState } from "../elements/feedback";
 import ToolSplit from "../layouts/split";
-import { ToolActivity } from "./activity";
 import { ToolPolicy } from "./policy";
-import { ToolTrace } from "./trace";
 
-export function ToolPolicies() {
+export function ToolPolicies({
 
-	const policies = usePolicies();
+	policies
+
+}: {
+
+	policies: Catalog
+
+}) {
 
 	const [selected, setSelected] = useStorage<Source>("selected-policy");
 
@@ -98,27 +100,16 @@ export function ToolPolicies() {
 
 		</Stack>}
 
-	>{on(policies, {
+	>{!selected || !policies[selected] ? (
 
-		state: state => <ToolActivity activity={state}/>,
-		trace: trace => <ToolTrace trace={trace}/>,
+		<EmptyState header="No Policy Selected" description={
+			<Text>Choose one from the sidebar.</Text>
+		}/>
 
-		value: policies => !Object.keys(policies).length ? (
+	) : (
 
-			<NoPolicyDocumentsEmptyState/>
+		<ToolPolicy source={selected}/>
 
-		) : !selected || !policies[selected] ? (
-
-			<EmptyState header="No Policy Selected" description={
-				<Text>Choose one from the sidebar.</Text>
-			}/>
-
-		) : (
-
-			<ToolPolicy source={selected}/>
-
-		)
-
-	})}</ToolSplit>;
+	)}</ToolSplit>;
 
 }
