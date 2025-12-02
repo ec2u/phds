@@ -14,88 +14,55 @@
  * limitations under the License.
  */
 
-import { useProductContext } from "@forge/react";
 import { useEffect, useState } from "react";
 import { State } from "./index";
 
-export type Options<T> = {
 
-	readonly initial?: T;
+export function useStorage<T>(page: string, name: string, initial: T): State<T> {
 
-	readonly scope?: "page" | "macro";
-	readonly store?: Storage;
+	const key = `ec2u-phds-${page}-${name}`;
 
-};
+	const [value, setValue] = useState<T>(() => {
 
+		const stored = localStorage.getItem(key);
 
-export function useStorage<T>(name: string, options: Options<T> & { readonly initial: T }): State<T>;
-export function useStorage<T>(name: string, options?: Options<T>): State<T | undefined>;
-
-export function useStorage<T>(name: string, {
-
-	initial,
-
-	scope = "page",
-	store = localStorage
-
-}: Options<T> = {}): State<T> | State<T | undefined> {
-
-	const context = useProductContext();
-
-	const id = context?.extension?.content?.id;
-	const key = scope === "macro" ? name : id ? `ec2u-phds-${id}-${name}` : null;
-
-	const [value, setValue] = useState<T | undefined>(initial);
-
-
-	useEffect(() => { // load from storage once context is ready
-
-		if ( key ) {
-
-			const value = store.getItem(key);
-
-			try {
-
-				setValue(value ? JSON.parse(value) : initial);
-
-			} catch ( error ) {
-
-				console.error(`Failed to parse storage for key <${key}>:`, error);
-
-				setValue(undefined);
-
-				store.removeItem(key);
-			}
-
+		if ( !stored ) {
+			return initial;
 		}
 
-	}, [key, store, initial]);
+		try {
+
+			return JSON.parse(stored);
+
+		} catch ( error ) {
+
+			console.error(`Failed to parse storage for key <${key}>:`, error);
+
+			localStorage.removeItem(key);
+
+			return initial;
+		}
+
+	});
 
 	useEffect(() => { // save to storage when value changes
 
-		if ( key ) {
+		try {
 
-			try {
+			localStorage.setItem(key, JSON.stringify(value));
 
-				if ( value === undefined ) {
-					store.removeItem(key);
-				} else {
-					store.setItem(key, JSON.stringify(value));
-				}
+		} catch ( error ) {
 
-			} catch ( error ) {
-				console.error(`Failed to update storage for key <${key}>:`, error);
-			}
-
+			console.error(`Failed to update storage for key <${key}>:`, error);
 		}
 
-	}, [value, store]); // key not in deps - transitions only once from null to final value
+	}, [key, value]);
 
 	useEffect(() => { // sync changes from other tabs
 
 		function handler(event: StorageEvent) {
 
-			if ( key && event.key === key && event.storageArea === store ) {
+			if ( event.key === key && event.storageArea === localStorage ) {
 
 				try {
 
@@ -105,7 +72,7 @@ export function useStorage<T>(name: string, {
 
 					console.error(`failed to sync storage for key <${key}>:`, error);
 
-					setValue(undefined);
+					setValue(initial);
 				}
 
 			}
@@ -115,7 +82,7 @@ export function useStorage<T>(name: string, {
 
 		return () => window.removeEventListener("storage", handler);
 
-	}, [key, store, initial]);
+	}, [key, initial]);
 
 	return [value, setValue];
 }

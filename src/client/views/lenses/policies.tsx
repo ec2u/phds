@@ -17,7 +17,7 @@
 import { EmptyState, Pressable, Stack, Text, xcss } from "@forge/react";
 import React from "react";
 import { isTrace } from "../../../shared";
-import { Catalog, Source } from "../../../shared/items/documents";
+import { Catalog } from "../../../shared/items/documents";
 import { isActivity, on } from "../../../shared/tasks";
 import { useStorage } from "../../hooks/storage";
 import ToolSplit from "../layouts/split";
@@ -25,15 +25,17 @@ import { ToolPolicy } from "./policy";
 
 export function ToolPolicies({
 
+	page,
 	policies
 
 }: {
 
+	page: string
 	policies: Catalog
 
 }) {
 
-	const [selected, setSelected] = useStorage<Source>("selected-policy");
+	const [selected, setSelected] = useStorage<undefined | string>(page, "selected-policy", undefined);
 
 
 	const activity = isActivity(policies);

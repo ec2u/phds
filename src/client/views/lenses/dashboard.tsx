@@ -58,21 +58,23 @@ const initial = {
 
 export function ToolDashboard({
 
+	page,
 	issues: [items, actions]
 
 }: {
 
+	page: string,
 	issues: [ReadonlyArray<Issue>, IssuesActions]
 
 }) {
 
-	const [states, setStates] = useStorage<readonly Lane<State>[]>("dashboard-states", {
-		initial: initial.states
-	});
+	const [states, setStates] = useStorage<readonly Lane<State>[]>(
+		page, "dashboard-states", initial.states
+	);
 
-	const [severities, setSeverities] = useStorage<readonly Lane<Severity>[]>("dashboard-severities", {
-		initial: initial.severities
-	});
+	const [severities, setSeverities] = useStorage<readonly Lane<Severity>[]>(
+		page, "dashboard-severities", initial.severities
+	);
 
 
 	function toggleState(state: State) {

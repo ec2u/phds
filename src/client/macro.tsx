@@ -14,7 +14,17 @@
  * limitations under the License.
  */
 
-import ForgeReconciler, { Box, Button, ButtonGroup, Code, EmptyState, Icon, Text, xcss } from "@forge/react";
+import ForgeReconciler, {
+	Box,
+	Button,
+	ButtonGroup,
+	Code,
+	EmptyState,
+	Icon,
+	Text,
+	useProductContext,
+	xcss
+} from "@forge/react";
 import React, { useState } from "react";
 import { Activity, on } from "../shared/tasks";
 import { ToolCache } from "./hooks/cache";
@@ -43,15 +53,18 @@ enum Tab {
 
 function ToolMacro() {
 
-	const [agreement] = useContent();
+	const context = useProductContext();
 
+	const [agreement] = useContent();
 	const policies = usePolicies();
 	const [issues, actions] = useIssues();
 
 	const [selected, setSelected] = useState(Tab.Agreement);
 
 
-	const ready = !!agreement && on(policies, {
+	const page: string = context?.extension?.content?.id ?? "";
+
+	const ready = !!context && !!agreement && on(policies, {
 
 		state: false,
 		trace: false,
@@ -144,15 +157,15 @@ function ToolMacro() {
 
 					) : selected === Tab.Policies ? (
 
-						<ToolPolicies policies={policies}/>
+						<ToolPolicies page={page} policies={policies}/>
 
 					) : selected === Tab.Issues ? (
 
-						<ToolIssues issues={[issues, actions]}/>
+						<ToolIssues page={page} issues={[issues, actions]}/>
 
 					) : selected === Tab.Dashboard ? (
 
-						<ToolDashboard issues={[issues, actions]}/>
+						<ToolDashboard page={page} issues={[issues, actions]}/>
 
 					) : null;
 

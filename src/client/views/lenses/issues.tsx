@@ -15,10 +15,11 @@
  */
 
 import { Button, EmptyState, Inline, Select, Stack, Text } from "@forge/react";
-import React, { useState } from "react";
+import React from "react";
 import { Issue, Severities, Severity, State, States } from "../../../shared/items/issues";
 import { on } from "../../../shared/tasks";
 import { IssuesActions } from "../../hooks/issues";
+import { useStorage } from "../../hooks/storage";
 import { AnalysisNotPerformedPrompt } from "../elements/analyze";
 import ToolSplit from "../layouts/split";
 import { ToolActivity } from "./activity";
@@ -27,16 +28,18 @@ import { ToolTrace } from "./trace";
 
 export function ToolIssues({
 
+	page,
 	issues: [items, actions]
 
 }: {
 
+	page: string,
 	issues: [ReadonlyArray<Issue>, IssuesActions]
 
 }) {
 
-	const [state, setState] = useState<readonly State[]>([]);
-	const [severity, setSeverity] = useState<readonly Severity[]>([]);
+	const [state, setState] = useStorage<readonly State[]>(page, "issues-states", []);
+	const [severity, setSeverity] = useStorage<readonly Severity[]>(page, "issues-severities", []);
 
 
 	function select(issues: readonly Issue[]): readonly Issue[] {
