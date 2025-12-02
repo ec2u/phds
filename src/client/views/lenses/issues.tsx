@@ -104,7 +104,7 @@ export function ToolIssues({
 					<Select
 
 						isMulti={true}
-						isClearable={true}
+						isClearable={false}
 						isDisabled={total === 0}
 
 						spacing={"compact"}
@@ -122,7 +122,7 @@ export function ToolIssues({
 					<Select
 
 						isMulti={true}
-						isClearable={true}
+						isClearable={false}
 						isDisabled={total === 0}
 
 						spacing="compact"
@@ -144,7 +144,16 @@ export function ToolIssues({
 								: `${total} Issue${total === 1 ? "" : "s"}`
 						}</Text>
 
-                        <Button onClick={actions.refresh}>Refresh Analysis</Button>
+                        <Button
+
+                            isDisabled={!(state.length > 0 || severity.length > 0)}
+
+                            appearance={"subtle"}
+                            iconAfter="cross-circle"
+
+                            onClick={clear}
+
+                        >Clear</Button>
 
                     </Inline>}
 

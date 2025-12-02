@@ -78,6 +78,14 @@ function ToolMacro() {
 
 	});
 
+	const active = !ready || selected !== Tab.Agreement || on(policies, {
+
+		state: false,
+		trace: false,
+		value: policies => Object.keys(policies).length === 0
+
+	});
+
 
 	function button(tab: Tab, disabled?: boolean) {
 		return <Button
@@ -93,7 +101,7 @@ function ToolMacro() {
 
 	return <Box xcss={xcss({
 
-		...(ready && selected === Tab.Agreement ? {} : Rule)
+		...(active ? Rule : {})
 
 	})}>
 
@@ -109,6 +117,14 @@ function ToolMacro() {
 			</ButtonGroup>}
 
 			more={<ButtonGroup>
+
+				<Button
+
+					isDisabled={selected !== Tab.Issues && selected !== Tab.Dashboard}
+
+					onClick={actions.refresh}
+
+				>Refresh Analysis</Button>
 
 				<ToolClear isDisabled={!ready || selected === Tab.Agreement}/>
 
