@@ -14,17 +14,21 @@
  * limitations under the License.
  */
 
-import { Button, Code, EmptyState, Icon, Inline, Select, Stack, Text } from "@forge/react";
+import { Button, EmptyState, Inline, Select, Stack, Text } from "@forge/react";
 import React, { useState } from "react";
 import { Issue, Severities, Severity, State, States } from "../../../shared/items/issues";
 import { Activity, on } from "../../../shared/tasks";
 import { useContent } from "../../hooks/content";
 import { useIssues } from "../../hooks/issues";
+import {
+	AnalysisNotPerformedPrompt,
+	CorruptedDocumentErrorState,
+	NoAgreementTextEmptyState
+} from "../elements/feedback";
 import ToolSplit from "../layouts/split";
 import { ToolActivity } from "./activity";
 import ToolIssue, { severityLabel, stateLabel } from "./issue";
 import { ToolTrace } from "./trace";
-
 
 export function ToolIssues() {
 
@@ -163,28 +167,15 @@ export function ToolIssues() {
 
 			) : agreement === null ? (
 
-				<EmptyState
-					header={"Corrupted Document"}
-					description={"The expected document structure was corrupted.\n"+
-						"Save your content and attachments and recreate it from scratch"
-					}
-					primaryAction={<Icon label={""} glyph={"error"} size={"large"} color={"color.icon.warning"}/>}
-				/>
+				<CorruptedDocumentErrorState/>
 
 			) : total === 0 && !agreement ? (
 
-				<EmptyState
-					header={"No Agreement Text"}
-					description={<Text>Enter Confluence <Code>Edit</Code> mode to update.</Text>}
-				/>
+				<NoAgreementTextEmptyState/>
 
 			) : total === 0 ? (
 
-				<EmptyState
-					header={"Analysis Not Performed"}
-					description={<Text>Check the agreement for compliance with policies.</Text>}
-					primaryAction={<Button appearance={"discovery"} onClick={actions.refresh}>Analyze</Button>}
-				/>
+				<AnalysisNotPerformedPrompt onAnalyze={actions.refresh}/>
 
 			) : sorted.length === 0 ? (
 

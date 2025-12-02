@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
-import { EmptyState, Link, Pressable, Stack, Text, xcss } from "@forge/react";
+import { EmptyState, Pressable, Stack, Text, xcss } from "@forge/react";
 import React from "react";
 import { isTrace } from "../../../shared";
 import { Source } from "../../../shared/items/documents";
 import { isActivity, on } from "../../../shared/tasks";
 import { usePolicies } from "../../hooks/policies";
 import { useStorage } from "../../hooks/storage";
+import { NoPolicyDocumentsEmptyState } from "../elements/feedback";
 import ToolSplit from "../layouts/split";
 import { ToolActivity } from "./activity";
 import { ToolPolicy } from "./policy";
@@ -104,9 +105,7 @@ export function ToolPolicies() {
 
 		value: policies => !Object.keys(policies).length ? (
 
-			<EmptyState header={"No Policy Documents"} description={
-				<Text>Upload PDF documents to the page <Link href={"#attachments"}>Attachments</Link> area.</Text>
-			}/>
+			<NoPolicyDocumentsEmptyState/>
 
 		) : !selected || !policies[selected] ? (
 
@@ -119,6 +118,7 @@ export function ToolPolicies() {
 			<ToolPolicy source={selected}/>
 
 		)
+
 	})}</ToolSplit>;
 
 }
