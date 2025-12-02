@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-import { Button, EmptyState, Inline, Select, Stack, Text } from "@forge/react";
+import { Button, Code, EmptyState, Icon, Inline, Select, Stack, Text } from "@forge/react";
 import React, { useState } from "react";
-import { isTrace } from "../../../shared";
 import { Issue, Severities, Severity, State, States } from "../../../shared/items/issues";
-import { isActivity } from "../../../shared/tasks";
+import { Activity, on } from "../../../shared/tasks";
+import { useContent } from "../../hooks/content";
 import { useIssues } from "../../hooks/issues";
 import ToolSplit from "../layouts/split";
 import { ToolActivity } from "./activity";
@@ -26,57 +26,34 @@ import ToolIssue, { severityLabel, stateLabel } from "./issue";
 import { ToolTrace } from "./trace";
 
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
 export function ToolIssues() {
 
+	const [agreement] = useContent();
 	const [issues, actions] = useIssues();
 
 	const [state, setState] = useState<readonly State[]>([]);
 	const [severity, setSeverity] = useState<readonly Severity[]>([]);
 
 
+	function select(issues: readonly Issue[]): readonly Issue[] {
+		return [...issues]
+			.filter(issue => includes(state, issue.state))
+			.filter(issue => includes(severity, issue.severity))
+			.sort((x, y) => {
+
+				const xOrder = States.indexOf(x.state);
+				const yOrder = States.indexOf(y.state);
+
+				return xOrder !== yOrder ? xOrder-yOrder
+					: x.severity !== y.severity ? y.severity-x.severity
+						: x.title.localeCompare(y.title);
+
+			});
+	}
+
 	function includes<T>(values: readonly T[], value: T) {
 		return values.length === 0 || values.includes(value);
 	}
-
-
-	const activity = isActivity(issues);
-	const trace = isTrace(issues);
-
-	const sorted = !Array.isArray(issues) ? [] : [...(issues as readonly Issue[])]
-		.filter(issue => includes(state, issue.state))
-		.filter(issue => includes(severity, issue.severity))
-		.sort((x, y) => {
-
-			const xOrder = States.indexOf(x.state);
-			const yOrder = States.indexOf(y.state);
-
-			return xOrder !== yOrder ? xOrder-yOrder
-				: x.severity !== y.severity ? y.severity-x.severity
-					: x.title.localeCompare(y.title);
-
-		});
-
-	const count = sorted.length;
-	const total = Array.isArray(issues) ? issues.length : 0;
-
-	const states = States.map(value => ({
-		value,
-		label: stateLabel(value),
-		isDisabled: !Array.isArray(issues) || !issues
-			.filter(issue => includes(severity, issue.severity))
-			.some(({ state }) => value === state)
-	}));
-
-	const severities = Severities.map(value => ({
-		value,
-		label: severityLabel(value),
-		isDisabled: !Array.isArray(issues) || !issues
-			.filter(issue => includes(state, issue.state))
-			.some(({ severity }) => value === severity)
-	}));
 
 
 	function clear() {
@@ -87,93 +64,146 @@ export function ToolIssues() {
 
 	return <ToolSplit
 
-		side={activity || trace ? undefined : <Stack space={"space.200"}>
+		side={on(issues, {
 
-			<Select
+			state: undefined,
+			trace: undefined,
 
-				isMulti={true}
-				isClearable={true}
-				isDisabled={total === 0}
+			value: issues => {
 
-				spacing={"compact"}
-				placeholder={"State"}
+				const sorted = select(issues);
 
-				value={state?.map(value => states.find(option => option.value === value))}
-				options={states}
+				const count = sorted.length;
+				const total = issues.length;
 
-				onChange={(options: undefined | typeof states[number][]) =>
-					setState(options?.map(option => option.value) ?? [])
-				}
+				const states = States.map(value => ({
+					value,
+					label: stateLabel(value),
+					isDisabled: !issues
+						.filter(issue => includes(severity, issue.severity))
+						.some(({ state }) => value === state)
+				}));
 
-			/>
+				const severities = Severities.map(value => ({
+					value,
+					label: severityLabel(value),
+					isDisabled: !issues
+						.filter(issue => includes(state, issue.state))
+						.some(({ severity }) => value === severity)
+				}));
 
-			<Select
+				return <Stack space={"space.200"}>
 
-				isMulti={true}
-				isClearable={true}
-				isDisabled={total === 0}
+					<Select
 
-				spacing="compact"
-				placeholder={"Severity"}
+						isMulti={true}
+						isClearable={true}
+						isDisabled={total === 0}
 
-				value={severity?.map(value => severities.find(option => option.value === value))}
-				options={severities}
+						spacing={"compact"}
+						placeholder={"State"}
 
-				onChange={(options: undefined | typeof severities[number][]) =>
-					setSeverity(options?.map(option => option.value) ?? [])
-				}
+						value={state?.map(value => states.find(option => option.value === value))}
+						options={states}
 
-			/>
+						onChange={(options: undefined | typeof states[number][]) =>
+							setState(options?.map(option => option.value) ?? [])
+						}
 
-			{total > 0 && <Inline space={"space.050"} spread={"space-between"}>
+					/>
 
-                <Text weight={"bold"}>{
-					state?.length || severity?.length ? `${count}/${total} Issue${total === 1 ? "" : "s"}`
-						: `${total} Issue${total === 1 ? "" : "s"}`
-				}</Text>
+					<Select
 
-                <Button onClick={actions.refresh}>Refresh Analysis</Button>
+						isMulti={true}
+						isClearable={true}
+						isDisabled={total === 0}
 
-            </Inline>}
+						spacing="compact"
+						placeholder={"Severity"}
 
-		</Stack>}
+						value={severity?.map(value => severities.find(option => option.value === value))}
+						options={severities}
 
-	>{
+						onChange={(options: undefined | typeof severities[number][]) =>
+							setSeverity(options?.map(option => option.value) ?? [])
+						}
 
-		activity ? (
+					/>
 
-			<ToolActivity activity={issues}/>
+					{total > 0 && <Inline space={"space.050"} spread={"space-between"}>
 
-		) : trace ? (
+                        <Text weight={"bold"}>{
+							state?.length || severity?.length ? `${count}/${total} Issue${total === 1 ? "" : "s"}`
+								: `${total} Issue${total === 1 ? "" : "s"}`
+						}</Text>
 
-			<ToolTrace trace={issues}/>
+                        <Button onClick={actions.refresh}>Refresh Analysis</Button>
 
-		) : total === 0 ? (
+                    </Inline>}
 
-			<EmptyState
-				header={"Analysis Not Performed"}
-				description={<Text>Check the agreement for compliance with policies.</Text>}
-				primaryAction={<Button appearance={"discovery"} onClick={actions.refresh}>Analyze</Button>}
-			/>
+				</Stack>;
 
-		) : sorted.length === 0 ? (
+			}
 
-			<EmptyState
-				header={"No Matching Issues"}
-				description={<Text>All issues are hidden by current filters.</Text>}
-				primaryAction={<Button appearance={"primary"} onClick={clear}>Clear</Button>}
-			/>
+		})}
 
-		) : (
+	>{on(issues, {
 
-			<Stack space="space.200">{sorted.map(issue => <ToolIssue
-				key={`${issue.id}-${issue.state}-${issue.severity}`} // ;( dom not reordered w/out state/severity
-				issue={issue}
-				actions={actions}
-			/>)}</Stack>
+		state: activity => <ToolActivity activity={activity}/>,
+		trace: trace => <ToolTrace trace={trace}/>,
 
-		)
+		value: issues => {
 
-	}</ToolSplit>;
+			const sorted = select(issues);
+			const total = issues.length;
+
+			return agreement === undefined ? (
+
+				<ToolActivity activity={Activity.Fetching}/>
+
+			) : agreement === null ? (
+
+				<EmptyState
+					header={"Corrupted Document"}
+					description={"The expected document structure was corrupted.\n"+
+						"Save your content and attachments and recreate it from scratch"
+					}
+					primaryAction={<Icon label={""} glyph={"error"} size={"large"} color={"color.icon.warning"}/>}
+				/>
+
+			) : total === 0 && !agreement ? (
+
+				<EmptyState
+					header={"No Agreement Text"}
+					description={<Text>Enter Confluence <Code>Edit</Code> mode to update.</Text>}
+				/>
+
+			) : total === 0 ? (
+
+				<EmptyState
+					header={"Analysis Not Performed"}
+					description={<Text>Check the agreement for compliance with policies.</Text>}
+					primaryAction={<Button appearance={"discovery"} onClick={actions.refresh}>Analyze</Button>}
+				/>
+
+			) : sorted.length === 0 ? (
+
+				<EmptyState
+					header={"No Matching Issues"}
+					description={<Text>All issues are hidden by current filters.</Text>}
+					primaryAction={<Button appearance={"primary"} onClick={clear}>Clear</Button>}
+				/>
+
+			) : (
+
+				<Stack space="space.200">{sorted.map(issue => <ToolIssue
+					key={`${issue.id}-${issue.state}-${issue.severity}`} /* ;( dom not reordered w/out state/severity */
+					issue={issue} actions={actions}/>)
+				}</Stack>
+
+			);
+		}
+
+	})}</ToolSplit>;
 
 }

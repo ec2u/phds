@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-import { Box, Button, EmptyState, Popup, Pressable, Text, xcss } from "@forge/react";
+import { Box, Button, Code, EmptyState, Icon, Popup, Pressable, Text, xcss } from "@forge/react";
 import React, { useState } from "react";
-import { isTrace } from "../../../shared";
 import { Issue, Severities, Severity, State, States } from "../../../shared/items/issues";
-import { isActivity } from "../../../shared/tasks";
+import { Activity, on } from "../../../shared/tasks";
+import { useContent } from "../../hooks/content";
 import { IssuesActions, useIssues } from "../../hooks/issues";
 import { useStorage } from "../../hooks/storage";
 import ToolKanban, { Lane, toggle } from "../layouts/kanban";
@@ -58,6 +58,7 @@ const initial = {
 
 export function ToolDashboard() {
 
+	const [agreement] = useContent();
 	const [issues, actions] = useIssues();
 
 	const [states, setStates] = useStorage<readonly Lane<State>[]>("dashboard-states", {
@@ -78,47 +79,69 @@ export function ToolDashboard() {
 	}
 
 
-	if ( isActivity(issues) ) {
+	return on(issues, {
 
-		return <ToolActivity activity={issues}/>;
+		state: activity => <ToolActivity activity={activity}/>,
+		trace: trace => <ToolTrace trace={trace}/>,
 
-	} else if ( isTrace(issues) ) {
+		value: issues => {
 
-		return <ToolTrace trace={issues}/>;
+			return agreement === undefined ? (
 
-	} else if ( issues.length === 0 ) {
+				<ToolActivity activity={Activity.Fetching}/>
 
-		return <EmptyState
-			header={"Analysis Not Performed"}
-			description={<Text>Check the agreement for compliance with policies.</Text>}
-			primaryAction={<Button appearance={"discovery"} onClick={actions.refresh}>Analyze</Button>}
-		/>;
+			) : agreement === null ? (
 
+				<EmptyState
+					header={"Corrupted Document"}
+					description={"The expected document structure was corrupted.\n"+
+						"Save your content and attachments and recreate it from scratch"
+					}
+					primaryAction={<Icon label={""} glyph={"error"} size={"large"} color={"color.icon.warning"}/>}
+				/>
 
-	} else {
+			) : issues.length === 0 && !agreement ? (
 
-		return <ToolKanban
+				<EmptyState
+					header={"No Agreement Text"}
+					description={<Text>Enter Confluence <Code>Edit</Code> mode to update.</Text>}
+				/>
 
-			cols={states}
-			rows={severities}
-			items={[...issues].sort((x, y) => x.title.localeCompare(y.title))}
+			) : issues.length === 0 ? (
 
-			toCol={(issue) => issue.state}
-			toRow={(issue) => issue.severity}
+				<EmptyState
+					header={"Analysis Not Performed"}
+					description={<Text>Check the agreement for compliance with policies.</Text>}
+					primaryAction={<Button appearance={"discovery"} onClick={actions.refresh}>Analyze</Button>}
+				/>
 
-			toCard={(item: Issue) => <Card key={item.id}
+			) : (
 
-				issue={item}
-				actions={actions}
+				<ToolKanban
 
-			/>}
+					cols={states}
+					rows={severities}
+					items={[...issues].sort((x, y) => x.title.localeCompare(y.title))}
 
-			onToggleRow={toggleSeverity}
-			onToggleCol={toggleState}
+					toCol={(issue) => issue.state}
+					toRow={(issue) => issue.severity}
 
-		/>;
+					toCard={(item: Issue) => <Card key={item.id}
 
-	}
+						issue={item}
+						actions={actions}
+
+					/>}
+
+					onToggleRow={toggleSeverity}
+					onToggleCol={toggleState}
+
+				/>
+
+			);
+		}
+
+	});
 
 }
 

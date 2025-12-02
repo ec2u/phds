@@ -47,10 +47,10 @@ import { Root } from "remark-parse/lib";
 import { unified } from "unified";
 
 
-type AdfBlock =
+export type AdfBlock =
 	| DocNode["content"][number];
 
-type AdfMark =
+export type AdfMark =
 	| LinkDefinition
 	| StrongDefinition
 	| EmDefinition
@@ -145,7 +145,6 @@ export function markdown(doc: DocNode): string {
 		});
 	}
 
-
 	function headingToMarkdown(node: HeadingDefinition): string {
 		return `${"#".repeat(node.attrs.level)} ${node.content
 			?.map(inline => inlineToMarkdown(inline))
@@ -153,13 +152,11 @@ export function markdown(doc: DocNode): string {
 		}`;
 	}
 
-
 	function paragraphToMarkdown(node: ParagraphDefinition): string {
 		return node.content
 			?.map(inline => inlineToMarkdown(inline))
 			.join("") ?? "";
 	}
-
 
 	function bulletListToMarkdown(node: BulletListDefinition): string {
 		return node.content
@@ -167,13 +164,11 @@ export function markdown(doc: DocNode): string {
 			.join("\n");
 	}
 
-
 	function orderedListToMarkdown(node: OrderedListDefinition): string {
 		return node.content
 			.map((item, index) => `${index+1}. ${listItemToMarkdown(item)}`)
 			.join("\n");
 	}
-
 
 	function listItemToMarkdown(node: ListItemDefinition): string {
 		return node.content
@@ -186,7 +181,6 @@ export function markdown(doc: DocNode): string {
 			}))
 			.join("");
 	}
-
 
 	function taskListToMarkdown(node: TaskListDefinition): string {
 		return node.content
@@ -205,7 +199,6 @@ export function markdown(doc: DocNode): string {
 			.join("\n");
 	}
 
-
 	function decisionListToMarkdown(node: DecisionListDefinition): string {
 		return node.content
 			.map(item => {
@@ -219,7 +212,6 @@ export function markdown(doc: DocNode): string {
 			})
 			.join("\n");
 	}
-
 
 	function blockquoteToMarkdown(node: BlockQuoteDefinition): string {
 		return node.content
@@ -237,7 +229,6 @@ export function markdown(doc: DocNode): string {
 			.join("\n");
 	}
 
-
 	function codeBlockToMarkdown(node: CodeBlockDefinition): string {
 		return `\`\`\`${node.attrs?.language || ""}\n${node.content
 			?.map(textNode => textNode.text)
@@ -245,13 +236,11 @@ export function markdown(doc: DocNode): string {
 		}\n\`\`\``;
 	}
 
-
 	function layoutSectionToMarkdown(node: LayoutSectionDefinition): string {
 		return node.content
 			.map(column => layoutColumnToMarkdown(column))
 			.join("\n\n---\n\n");
 	}
-
 
 	function layoutColumnToMarkdown(node: LayoutColumnDefinition): string {
 		return node.content
@@ -259,14 +248,12 @@ export function markdown(doc: DocNode): string {
 			.join("\n\n");
 	}
 
-
 	function panelToMarkdown(node: PanelDefinition): string {
 		const content = node.content
 			.map(item => blockToMarkdown(item))
 			.join("\n\n");
 		return `> **Panel**\n> \n${content.split("\n").map(line => `> ${line}`).join("\n")}`;
 	}
-
 
 	function expandToMarkdown(node: ExpandDefinition): string {
 		const title = node.attrs.title || "Details";
@@ -276,18 +263,15 @@ export function markdown(doc: DocNode): string {
 		return `**${title}**\n\n${content}`;
 	}
 
-
 	function bodiedExtensionToMarkdown(node: BodiedExtensionDefinition): string {
 		return node.content
 			?.map(item => blockToMarkdown(item))
 			.join("\n\n") ?? "";
 	}
 
-
 	function ruleToMarkdown(): string {
 		return "---";
 	}
-
 
 	function tableToMarkdown(node: TableDefinition): string {
 
