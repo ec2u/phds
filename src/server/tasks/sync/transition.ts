@@ -14,31 +14,33 @@
  * limitations under the License.
  */
 
-import {kvs} from "@forge/kvs";
-import {Issue} from "../../shared/items/issues";
-import {Activity, ClassifyTask, Payload} from "../../shared/tasks";
-import {setStatus} from "../async";
-import {issueKey, lock} from "../tools/cache";
+import { kvs } from "@forge/kvs";
+import { Activity, Payload, TransitionTask } from "../../../shared/tasks";
+import { setStatus } from "../../async";
+import { issueKey, issuesKey, lock } from "../../tools/cache";
 
-export async function classify(job: string, page: string, {
+export async function transition(job: string, page: string, {
 
-	issue,
-	severity
+	issue: issueId,
+	state: newState
 
-}: Payload<ClassifyTask>): Promise<void> {
+}: Payload<TransitionTask>): Promise<void> {
 
-	const key=issueKey(page, issue);
+	await lock(job, issuesKey(page), async () => {
 
-	await lock(job, key, async () => {
+		await setStatus(job, Activity.Purging);
 
-		await setStatus(job, Activity.Caching);
-
-		// update severity for the specific issue
-
-		const issue=await kvs.get<Issue>(key);
+		const key = issueKey(page, issueId);
+		const issue = await kvs.get(key);
 
 		if ( issue ) {
-			await kvs.set<Issue>(key, { ...issue, severity, updated: new Date().toISOString() });
+
+			await kvs.set(key, {
+				...issue,
+				state: newState,
+				updated: new Date().toISOString()
+			});
+
 		}
 
 		await setStatus(job, undefined);

@@ -22,7 +22,7 @@ This is an Atlassian Forge application built with React and TypeScript that runs
 - **Architecture**: See @docs/blueprints/architecture.md for system architecture and component details
 - **Storage**: See @docs/blueprints/storage.md for storage patterns and data lifecycle
 - **Adding Tasks**: See @docs/development/tasks.md for implementing new asynchronous task types
-- **Lifecycle Management**: See @docs/development/lifecycle.md for deployment and environment setup
+- **Forge Lifecycle**: See @docs/development/forge.md for deployment, authentication, and environment management
 - **Development Resources**: See @docs/development/resources.md for Forge documentation and tools
 
 # Build Commands
@@ -33,10 +33,10 @@ npm run clean       # Remove node_modules
 npm run setup       # Install dependencies (with legacy peer deps)
 
 # Development
-npm run watch       # Start Forge tunnel for local development (requires .env file)
+npm run serve       # Start Forge tunnel for local development (requires .env file)
 
 # Deployment
-npm run issue       # Deploy and install to development/production environments (see @docs/development/lifecycle.md)
+npm run issue       # Deploy and install to development/production environments (see @docs/development/forge.md)
 ```
 
 # Development Notes

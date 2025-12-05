@@ -20,19 +20,22 @@ import { Issue, State } from "./items/issues";
 import { Language } from "./items/languages";
 
 
-export type Task =
+export interface Task<T = unknown> {
 
-	| PoliciesTask
-	| PolicyTask
+	readonly type:
 
-	| IssuesTask
-	| ClassifyTask
-	| AnnotateTask
-	| TransitionTask
+		| "policies"
+		| "policy"
 
-	| ClearTask
+		| "issues"
+		| "analyze"
+		| "transition"
+		| "classify"
+		| "annotate"
 
-	;
+		| "clear";
+
+}
 
 export type Payload<T extends Task> = Omit<T, "type">
 
@@ -70,10 +73,6 @@ export enum Activity {
 export interface Observer<T> {
 
 	(status: Status<T>): void;
-
-}
-
-export interface Provider<T> {
 
 }
 
@@ -147,13 +146,13 @@ export function on<T, R>(status: Status<T>, cases: {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-export interface PoliciesTask extends Provider<Catalog> {
+export interface PoliciesTask extends Task<Catalog> {
 
 	readonly type: "policies";
 
 }
 
-export interface PolicyTask extends Provider<Document> {
+export interface PolicyTask extends Task<Document> {
 
 	readonly type: "policy";
 
@@ -165,15 +164,19 @@ export interface PolicyTask extends Provider<Document> {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-export interface IssuesTask extends Provider<ReadonlyArray<Issue>> {
+export interface IssuesTask extends Task<ReadonlyArray<Issue>> {
 
 	readonly type: "issues";
 
-	readonly refresh?: boolean;
+}
+
+export interface AnalyzeTask extends Task<ReadonlyArray<Issue>> {
+
+	readonly type: "analyze";
 
 }
 
-export interface TransitionTask extends Provider<void> {
+export interface TransitionTask extends Task<void> {
 
 	readonly type: "transition";
 
@@ -182,7 +185,7 @@ export interface TransitionTask extends Provider<void> {
 
 }
 
-export interface ClassifyTask extends Provider<void> {
+export interface ClassifyTask extends Task<void> {
 
 	readonly type: "classify";
 
@@ -191,7 +194,7 @@ export interface ClassifyTask extends Provider<void> {
 
 }
 
-export interface AnnotateTask extends Provider<void> {
+export interface AnnotateTask extends Task<void> {
 
 	readonly type: "annotate";
 
@@ -203,7 +206,7 @@ export interface AnnotateTask extends Provider<void> {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-export interface ClearTask extends Provider<void> {
+export interface ClearTask extends Task<void> {
 
 	readonly type: "clear";
 

@@ -14,29 +14,41 @@
  * limitations under the License.
  */
 
-import { asTrace } from "../../shared/index";
-import { Activity, isActivity, Observer, Provider, Task } from "../../shared/tasks";
+import { asTrace, isString } from "../../shared/index";
+import { Activity, isActivity, Observer, Status, Task } from "../../shared/tasks";
 import { monitorTask, submitTask } from "./tasks";
 
-export async function execute<T>(observer: Observer<T>, task: Task & Provider<T>) {
+export async function execute<T>(observer: Observer<T>, task: Task<T> & Record<string, any>) {
 
 	try {
 
 		observer(Activity.Submitting);
 
-		const job = await submitTask(task);
+		const response = await submitTask(task);
 
-		const poll = setInterval(async () => {
+		if ( isString(response) ) {
 
-			const status = await monitorTask<T>(job);
+			// async task: poll for status updates
 
-			if ( !isActivity(status) ) {
-				clearInterval(poll);
-			}
+			const poll = setInterval(async () => {
 
-			observer(status);
+				const status = await monitorTask<T>(response);
 
-		}, 1000);
+				if ( !isActivity(status) ) {
+					clearInterval(poll);
+				}
+
+				observer(status);
+
+			}, 1000);
+
+		} else {
+
+			// sync task: immediate result
+
+			observer(response as Status<T>);
+
+		}
 
 	} catch ( error ) {
 

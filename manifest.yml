@@ -28,7 +28,7 @@ modules:
       handler: server/ports/index.handler
 
     - key: executor
-      handler: server/tasks/index.handler
+      handler: server/tasks/async/index.handler
       timeoutSeconds: 600
 
 resources:

@@ -11,6 +11,30 @@ This guide covers the complete app lifecycle management for the EC2U PhD Agreeme
 - Access to Confluence Cloud site for development/testing
 - Access to Atlassian Developer Console: https://developer.atlassian.com/console/myapps/
 
+## Authentication
+
+### Forge CLI Credentials
+
+The Forge CLI uses **separate** authentication from your application's runtime variables:
+
+- **CLI Authentication**: Stored in `~/.forge/` directory
+  - Used by `forge` commands (deploy, tunnel, install, etc.)
+  - Managed via `forge login` command
+  - Must be refreshed when token expires
+
+- **Application Runtime Variables**: Stored in `.env` file or Forge variables
+  - Used by your application code at runtime
+  - Accessed via `process.env.VARIABLE_NAME`
+  - Not used by Forge CLI
+
+**Token Expiration**: If you get "API token is no longer valid" error, run:
+
+```bash
+forge login
+```
+
+This will prompt for re-authentication and update the CLI credentials in `~/.forge/`.
+
 ## App Registration
 
 ### Initial Setup

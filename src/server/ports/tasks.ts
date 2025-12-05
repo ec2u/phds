@@ -18,22 +18,43 @@ import { Queue } from "@forge/events";
 import { Activity, isActivity, Status, Task } from "../../shared/tasks";
 import { getStatus, setStatus } from "../async";
 import { Request } from "../index";
+import { sync } from "../tasks/sync/index";
 
 
 const queue=new Queue({ key: "executor-queue" });
 
+const isSync = new Set<Task["type"]>([
+
+	"policies",
+
+	"issues",
+	"transition",
+	"classify",
+	"annotate",
+
+	"clear"
+]);
+
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-export async function submitTask({ payload: task, context }: Request<Task>): Promise<string> {
+export async function submitTask<T>({ payload: task, context }: Request<Task<T>>): Promise<string | Status<T>> {
 
 	const page: string=context.extension.content.id;
 
-	const job=await queue.push({ page, task } as any); // !!! typing errors
+	if ( isSync.has(task.type) ) { // execute synchronously for sync-capable tasks
 
-	await setStatus(job, Activity.Scheduling); // create storage entry
+		return await sync(task, page);
 
-	return job;
+	} else { // fallback to async execution for long-running tasks
+
+		const job = await queue.push({ page, task } as any); // !!! typing errors
+
+		await setStatus(job, Activity.Scheduling); // create storage entry
+
+		return job;
+
+	}
 }
 
 export async function monitorTask<T>({ payload: { id } }: Request<{ id: string }>): Promise<Status<T>> {

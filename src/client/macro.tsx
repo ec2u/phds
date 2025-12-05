@@ -26,6 +26,7 @@ import ForgeReconciler, {
 	xcss
 } from "@forge/react";
 import React, { useState } from "react";
+import { isArray } from "../shared/index";
 import { Activity, on } from "../shared/tasks";
 import { ToolCache } from "./hooks/cache";
 import { useContent } from "./hooks/content";
@@ -120,7 +121,9 @@ function ToolMacro() {
 
 				<Button
 
-					isDisabled={selected !== Tab.Issues && selected !== Tab.Dashboard}
+					isDisabled={isArray(issues) && issues.length === 0
+						|| selected !== Tab.Issues && selected !== Tab.Dashboard
+					}
 
 					onClick={actions.refresh}
 

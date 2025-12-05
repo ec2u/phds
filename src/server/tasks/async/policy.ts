@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
-import {kvs} from "@forge/kvs";
-import {Type} from "@google/genai";
-import {isUndefined} from "../../shared";
-import {Document} from "../../shared/items/documents";
-import {Language} from "../../shared/items/languages";
-import {Activity, Payload, PolicyTask} from "../../shared/tasks";
-import {setStatus} from "../async";
-import {fetchAttachment, getAttachment} from "../tools/attachments";
-import {lock, policyKey} from "../tools/cache";
-import {process, upload} from "../tools/gemini";
-import {retrievePrompt} from "../tools/langfuse";
-import {pdf} from "../tools/mime";
+import { kvs } from "@forge/kvs";
+import { Type } from "@google/genai";
+import { isUndefined } from "../../../shared/index";
+import { Document } from "../../../shared/items/documents";
+import { Language } from "../../../shared/items/languages";
+import { Activity, Payload, PolicyTask } from "../../../shared/tasks";
+import { setStatus } from "../../async";
+import { fetchAttachment, getAttachment } from "../../tools/attachments";
+import { lock, policyKey } from "../../tools/cache";
+import { process, upload } from "../../tools/gemini";
+import { retrievePrompt } from "../../tools/langfuse";
+import { pdf } from "../../tools/mime";
 
 export async function policy(job: string, page: string, {
 

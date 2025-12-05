@@ -15,32 +15,30 @@
  */
 
 import { kvs } from "@forge/kvs";
-import { Activity, Payload, TransitionTask } from "../../shared/tasks";
-import { setStatus } from "../async";
-import { issueKey, issuesKey, lock } from "../tools/cache";
+import { Issue } from "../../../shared/items/issues";
+import { Activity, ClassifyTask, Payload } from "../../../shared/tasks";
+import { setStatus } from "../../async";
+import { issueKey, lock } from "../../tools/cache";
 
-export async function transition(job: string, page: string, {
+export async function classify(job: string, page: string, {
 
-	issue: issueId,
-	state: newState
+	issue,
+	severity
 
-}: Payload<TransitionTask>): Promise<void> {
+}: Payload<ClassifyTask>): Promise<void> {
 
-	await lock(job, issuesKey(page), async () => {
+	const key=issueKey(page, issue);
 
-		await setStatus(job, Activity.Purging);
+	await lock(job, key, async () => {
 
-		const key = issueKey(page, issueId);
-		const issue = await kvs.get(key);
+		await setStatus(job, Activity.Caching);
+
+		// update severity for the specific issue
+
+		const issue=await kvs.get<Issue>(key);
 
 		if ( issue ) {
-
-			await kvs.set(key, {
-				...issue,
-				state: newState,
-				updated: new Date().toISOString()
-			});
-
+			await kvs.set<Issue>(key, { ...issue, severity, updated: new Date().toISOString() });
 		}
 
 		await setStatus(job, undefined);

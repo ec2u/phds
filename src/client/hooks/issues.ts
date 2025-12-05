@@ -78,8 +78,7 @@ export function useIssues(): [Status<ReadonlyArray<Issue>>, IssuesActions] {
 	async function refresh(): Promise<void> {
 
 		await execute<ReadonlyArray<Issue>>(update, {
-			type: "issues",
-			refresh: true
+			type: "analyze"
 		});
 
 	}

@@ -14,17 +14,31 @@
  * limitations under the License.
  */
 
-import { Activity, ClearTask, Payload } from "../../shared/tasks";
-import { setStatus } from "../async";
-import { lock, pageKey, purge } from "../tools/cache";
+import { kvs } from "@forge/kvs";
+import { Activity, AnnotateTask, Payload } from "../../../shared/tasks";
+import { setStatus } from "../../async";
+import { issueKey, lock } from "../../tools/cache";
 
-export async function clear(job: string, page: string, {}: Payload<ClearTask>): Promise<void> {
+export async function annotate(job: string, page: string, {
 
-	await lock(job, pageKey(page), async () => {
+	issue,
+	annotations
 
-		await setStatus(job, Activity.Purging);
+}: Payload<AnnotateTask>): Promise<void> {
 
-		await purge(page);
+	const key=issueKey(page, issue);
+
+	await lock(job, key, async () => {
+
+		await setStatus(job, Activity.Caching);
+
+		// add annotations to the specific issue
+
+		const issue=await kvs.get(key);
+
+		if ( issue ) {
+			await kvs.set(key, { ...issue, annotations, updated: new Date().toISOString() });
+		}
 
 		await setStatus(job, undefined);
 
