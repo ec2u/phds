@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-import { Box, Heading, Inline, Stack, Text, xcss } from "@forge/react";
+import { Box, Heading, Inline, Stack, xcss } from "@forge/react";
 import type { Space } from "@forge/react/out/types/components";
 import React, { ReactNode } from "react";
 import { Colors, NeutralColors } from "..";
@@ -152,6 +152,7 @@ function Grid<R, C, I>({
 			cols={cols}
 
 			widths={widths}
+			counts={cols.map(col => items.filter(item => toCol(item) === col.value).length)}
 
 			onToggleCol={onToggleCol}
 
@@ -181,6 +182,7 @@ function Cols<G>({
 	cols,
 
 	widths,
+	counts,
 
 	onToggleCol
 
@@ -189,6 +191,7 @@ function Cols<G>({
 	cols: readonly Lane<G>[];
 
 	widths: number[];
+	counts: readonly number[];
 
 	onToggleCol: (key: G) => void;
 
@@ -207,7 +210,7 @@ function Cols<G>({
 
 				})}>
 
-					<Col
+					<Label
 
 						padding={[
 							CellPaddingBlock,
@@ -216,7 +219,8 @@ function Cols<G>({
 							!collapsed ? CellPaddingInline : "space.0"
 						]}
 
-						label={!collapsed ? <Heading size="small">{label ?? String(value)}</Heading> : undefined}
+						label={!collapsed ? label ?? String(value) : undefined}
+						count={!collapsed ? counts[index] : undefined}
 
 						action={<ToolToggle direction="horizontal"
 
@@ -237,47 +241,6 @@ function Cols<G>({
 		{<Filler/>}
 
 	</Inline>;
-
-}
-
-function Col({
-
-	padding = "space.0",
-
-	label,
-	action
-
-}: {
-
-	padding?: Space | readonly [Space, Space] | readonly [Space, Space, Space, Space];
-
-	label: ReactNode;
-	action?: ReactNode;
-
-}) {
-
-	const [paddingTop, paddingRight, paddingBottom, paddingLeft] =
-		!Array.isArray(padding) ? [padding, padding, padding, padding]
-			: padding.length === 2 ? [padding[0], padding[1], padding[0], padding[1]]
-				: padding;
-
-	return <Box xcss={xcss({
-
-		paddingTop,
-		paddingRight,
-		paddingBottom,
-		paddingLeft
-
-	})}>
-
-		<Inline alignBlock={"center"}>
-
-			<Box xcss={{ flexGrow: 1 }}>{label}</Box>
-			<Box>{action}</Box>
-
-		</Inline>
-
-	</Box>;
 
 }
 
@@ -315,9 +278,10 @@ function Row<R, C, I>({
 			...(row.colors ?? NeutralColors)
 		})}>
 
-			<Col
+			<Label
 
-				label={<Text size="small">{row.label ?? String(row.value)}</Text>}
+				label={row.label ?? String(row.value)}
+				count={items.length}
 
 				action={<ToolToggle
 
@@ -378,6 +342,50 @@ function Row<R, C, I>({
         </Inline>}
 
 	</Stack>;
+
+}
+
+function Label({
+
+	padding = "space.0",
+
+	label,
+	count,
+	action
+
+}: {
+
+	padding?: Space | readonly [Space, Space] | readonly [Space, Space, Space, Space];
+
+	label: ReactNode;
+	count?: number;
+	action?: ReactNode;
+
+}) {
+
+	const [paddingTop, paddingRight, paddingBottom, paddingLeft] =
+		!Array.isArray(padding) ? [padding, padding, padding, padding]
+			: padding.length === 2 ? [padding[0], padding[1], padding[0], padding[1]]
+				: padding;
+
+	return <Box xcss={xcss({
+
+		paddingTop,
+		paddingRight,
+		paddingBottom,
+		paddingLeft
+
+	})}>
+
+		<Heading size={"small"}>
+			<Inline alignBlock={"center"}>
+				<Box xcss={{ flexGrow: 1 }}>{label}</Box>
+				{count ? count : null}
+				{action}
+			</Inline>
+		</Heading>
+
+	</Box>;
 
 }
 

@@ -39,8 +39,6 @@ export function ToolAction({
 	return <Pressable
 
 		xcss={xcss({
-			padding: "space.0",
-			margin: "space.0",
 			backgroundColor: "color.background.neutral.subtle"
 		})}
 
