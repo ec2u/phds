@@ -68,7 +68,7 @@ export async function upload({
 	try {
 
 		return await client.files.upload({
-			file: new Blob([data], { type: mime }),
+			file: new Blob([new Uint8Array(data)], { type: mime }),
 			config: {
 				displayName: name,
 				mimeType: mime

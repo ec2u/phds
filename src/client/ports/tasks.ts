@@ -17,8 +17,8 @@
 import { invoke } from "@forge/bridge";
 import { Status, Task } from "../../shared/tasks";
 
-export function submitTask(task: Task) {
-	return invoke<string>("submitTask", task);
+export function submitTask<T>(task: Task<T> & Record<string, any>) {
+	return invoke<string | Status<T>>("submitTask", task);
 }
 
 export function monitorTask<T>(id: string) {

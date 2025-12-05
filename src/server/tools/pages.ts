@@ -38,3 +38,26 @@ export async function checkPage(page: string): Promise<boolean> {
 
 	}
 }
+
+export async function fetchPage(page: string): Promise<{ title: string; content: any }> {
+
+	const url = route`/wiki/api/v2/pages/${page}?body-format=atlas_doc_format`;
+
+	const response = await api.asApp().requestConfluence(url, {
+
+		headers: {"Accept": "application/json"}
+
+	});
+
+	if (!response.ok) {
+		throw new Error(`failed to fetch page: ${response.status} ${response.statusText}`);
+	}
+
+	const data = await response.json();
+	const content = data.body?.atlas_doc_format?.value;
+
+	return {
+		title: data.title || "",
+		content: content ? JSON.parse(content) : {}
+	};
+}

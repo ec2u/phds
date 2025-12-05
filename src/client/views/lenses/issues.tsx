@@ -15,113 +15,97 @@
  */
 
 import { Button, EmptyState, Inline, Select, Stack, Text } from "@forge/react";
-import React, { useState } from "react";
-import { isTrace } from "../../../shared";
-import { Document } from "../../../shared/documents";
-import { Issue, Severities, Severity, State, States } from "../../../shared/issues";
-import { Language } from "../../../shared/languages";
-import { isActivity, Status } from "../../../shared/tasks";
-import { useAgreement } from "../../hooks/agreement";
-import { useIssues } from "../../hooks/issues";
+import React from "react";
+import { Issue, Severities, Severity, State, States } from "../../../shared/items/issues";
+import { on } from "../../../shared/tasks";
+import { IssuesActions } from "../../hooks/issues";
+import { useStorage } from "../../hooks/storage";
+import { AnalysisNotPerformedPrompt } from "../elements/analyze";
+import ToolSplit from "../layouts/split";
 import { ToolActivity } from "./activity";
 import ToolIssue, { severityLabel, stateLabel } from "./issue";
 import { ToolTrace } from "./trace";
 
-
-function isContent(value: Status<Document>): value is Document {
-	return !isActivity(value) && !isTrace(value);
-}
-
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
 export function ToolIssues({
 
-	language
+	page,
+	issues: [items, actions]
 
 }: {
 
-	language: Language
+	page: string,
+	issues: [ReadonlyArray<Issue>, IssuesActions]
 
 }) {
 
-	const agreement = useAgreement(language);
-	const [issues, actions] = useIssues(isContent(agreement) ? agreement.content : "");
+	const [state, setState] = useStorage<readonly State[]>(page, "issues-states", []);
+	const [severity, setSeverity] = useStorage<readonly Severity[]>(page, "issues-severities", []);
 
-	const [state, setState] = useState<readonly State[]>([]);
-	const [severity, setSeverity] = useState<readonly Severity[]>([]);
+
+	function select(issues: readonly Issue[]): readonly Issue[] {
+		return [...issues]
+			.filter(issue => includes(state, issue.state))
+			.filter(issue => includes(severity, issue.severity))
+			.sort((x, y) => {
+
+				const xOrder = States.indexOf(x.state);
+				const yOrder = States.indexOf(y.state);
+
+				return xOrder !== yOrder ? xOrder-yOrder
+					: x.severity !== y.severity ? y.severity-x.severity
+						: x.title.localeCompare(y.title);
+
+			});
+	}
 
 	function includes<T>(values: readonly T[], value: T) {
 		return values.length === 0 || values.includes(value);
 	}
 
 
-	const sorted = !Array.isArray(issues) ? [] : [...(issues as readonly Issue[])]
-		.filter(issue => includes(state, issue.state))
-		.filter(issue => includes(severity, issue.severity))
-		.sort((x, y) => {
-
-			const xOrder = States.indexOf(x.state);
-			const yOrder = States.indexOf(y.state);
-
-			return xOrder !== yOrder ? xOrder-yOrder
-				: x.severity !== y.severity ? y.severity-x.severity
-					: x.title.localeCompare(y.title);
-
-		});
+	function clear() {
+		setState([]);
+		setSeverity([]);
+	}
 
 
-	if ( isActivity(agreement) ) {
+	return <ToolSplit
 
-		return <ToolActivity activity={agreement}/>;
+		side={on(items, {
 
-	} else if ( isTrace(agreement) ) {
+			state: undefined,
+			trace: undefined,
 
-		return <ToolTrace trace={agreement}/>;
+			value: issues => {
 
-	} else if ( isActivity(issues) ) {
+				const sorted = select(issues);
 
-		return <ToolActivity activity={issues}/>;
+				const count = sorted.length;
+				const total = issues.length;
 
-	} else if ( isTrace(issues) ) {
+				const states = States.map(value => ({
+					value,
+					label: stateLabel(value),
+					isDisabled: !issues
+						.filter(issue => includes(severity, issue.severity))
+						.some(({ state }) => value === state)
+				}));
 
-		return <ToolTrace trace={issues}/>;
+				const severities = Severities.map(value => ({
+					value,
+					label: severityLabel(value),
+					isDisabled: !issues
+						.filter(issue => includes(state, issue.state))
+						.some(({ severity }) => value === severity)
+				}));
 
-	} else if ( !agreement.content.trim() ) {
-
-		return <EmptyState header={"No Agreement Text"}
-			description={"Enter Confluence \"Edit\" mode to modify."}
-		/>;
-
-	} else {
-
-		const count = sorted.length;
-		const total = issues.length;
-
-		const states = States.map(value => ({
-			value,
-			label: stateLabel(value),
-			isDisabled: !issues.filter(issue => includes(severity, issue.severity)).some(({ state }) => value === state)
-		}));
-
-		const severities = Severities.map(value => ({
-			value,
-			label: severityLabel(value),
-			isDisabled: !issues.filter(issue => includes(state, issue.state)).some(({ severity }) => value === severity)
-		}));
-
-
-		return <Stack space="space.200">
-
-			<Inline space={"space.200"} alignBlock="center" shouldWrap={false}>
-
-				<Inline space={"space.150"} alignBlock="center" grow={"fill"}>
+				return <Stack space={"space.200"}>
 
 					<Select
 
 						isMulti={true}
-						isClearable={true}
+						isClearable={false}
+						isDisabled={total === 0}
 
 						spacing={"compact"}
 						placeholder={"State"}
@@ -135,10 +119,11 @@ export function ToolIssues({
 
 					/>
 
-					<Select id={"severity"}
+					<Select
 
 						isMulti={true}
-						isClearable={true}
+						isClearable={false}
+						isDisabled={total === 0}
 
 						spacing="compact"
 						placeholder={"Severity"}
@@ -152,26 +137,64 @@ export function ToolIssues({
 
 					/>
 
-					<Text weight={"bold"}>{
-						total === 0 ? "No Issues"
-							: state?.length || severity?.length ? `${count}/${total} Issue${total === 1 ? "" : "s"}`
+					{total > 0 && <Inline space={"space.050"} spread={"space-between"}>
+
+                        <Text weight={"bold"}>{
+							state?.length || severity?.length ? `${count}/${total} Issue${total === 1 ? "" : "s"}`
 								: `${total} Issue${total === 1 ? "" : "s"}`
-					}</Text>
+						}</Text>
 
-				</Inline>
+                        <Button
 
-				<Button appearance={"discovery"} onClick={actions.refresh}>Refresh Analysis</Button>
+                            isDisabled={!(state.length > 0 || severity.length > 0)}
 
-			</Inline>
+                            appearance={"subtle"}
+                            iconAfter="cross-circle"
 
-			{sorted.map(issue => <ToolIssue
-				key={`${issue.id}-${issue.state}-${issue.severity}`} // ;( dom not reordered w/out state/severity
-				issue={issue}
-				actions={actions}
-			/>)}
+                            onClick={clear}
 
-		</Stack>;
+                        >Clear</Button>
 
-	}
+                    </Inline>}
+
+				</Stack>;
+
+			}
+
+		})}
+
+	>{on(items, {
+
+		state: activity => <ToolActivity activity={activity}/>,
+		trace: trace => <ToolTrace trace={trace}/>,
+
+		value: issues => {
+
+			const sorted = select(issues);
+			const total = issues.length;
+
+			return total === 0 ? (
+
+				<AnalysisNotPerformedPrompt onAnalyze={actions.refresh}/>
+
+			) : sorted.length === 0 ? (
+
+				<EmptyState
+					header={"No Matching Issues"}
+					description={<Text>All issues are hidden by current filters.</Text>}
+					primaryAction={<Button appearance={"primary"} onClick={clear}>Clear</Button>}
+				/>
+
+			) : (
+
+				<Stack space="space.200">{sorted.map(issue => <ToolIssue
+					key={`${issue.id}-${issue.state}-${issue.severity}`} /* ;( dom not reordered w/out state/severity */
+					issue={issue} actions={actions}/>)
+				}</Stack>
+
+			);
+		}
+
+	})}</ToolSplit>;
 
 }

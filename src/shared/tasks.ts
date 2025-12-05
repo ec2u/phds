@@ -14,25 +14,28 @@
  * limitations under the License.
  */
 
-import { Catalog, Source } from "./documents";
-import { isNumber, Trace } from "./index";
-import { Issue, State } from "./issues";
-import { Language } from "./languages";
+import { isNumber, isTrace, Trace } from "./index";
+import { Catalog, Source } from "./items/documents";
+import { Issue, State } from "./items/issues";
+import { Language } from "./items/languages";
 
 
-export type Task =
+export interface Task<T = unknown> {
 
-	| PoliciesTask
-	| PolicyTask
+	readonly type:
 
-	| IssuesTask
-	| ClassifyTask
-	| AnnotateTask
-	| TransitionTask
+		| "policies"
+		| "policy"
 
-	| ClearTask
+		| "issues"
+		| "analyze"
+		| "transition"
+		| "classify"
+		| "annotate"
 
-	;
+		| "clear";
+
+}
 
 export type Payload<T extends Task> = Omit<T, "type">
 
@@ -73,10 +76,6 @@ export interface Observer<T> {
 
 }
 
-export interface Provider<T> {
-
-}
-
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -103,15 +102,57 @@ export function asActivity(value: unknown): undefined | Activity {
 }
 
 
+/**
+ * Pattern matches on a Status value and applies the appropriate handler.
+ *
+ * @template T the type of the result value
+ * @template R the return type of all handlers
+ *
+ * @param status the Status value to match on
+ * @param cases handlers for each possible Status variant
+ *
+ * @return the result of applying the appropriate handler
+ */
+export function on<T, R>(status: Status<T>, cases: {
+
+	state: R | ((state: Activity) => R),
+	value: R | ((value: T) => R),
+	trace: R | ((trace: Trace) => R),
+
+}): R {
+
+	function apply<S>(handler: R | ((arg: S) => R), arg: S): R {
+		return typeof handler === "function"
+			? (handler as (arg: S) => R)(arg)
+			: handler;
+	}
+
+	if ( isActivity(status) ) {
+
+		return apply(cases.state, status);
+
+	} else if ( isTrace(status) ) {
+
+		return apply(cases.trace, status);
+
+	} else {
+
+		return apply(cases.value, status);
+
+	}
+
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-export interface PoliciesTask extends Provider<Catalog> {
+export interface PoliciesTask extends Task<Catalog> {
 
 	readonly type: "policies";
 
 }
 
-export interface PolicyTask extends Provider<Document> {
+export interface PolicyTask extends Task<Document> {
 
 	readonly type: "policy";
 
@@ -123,16 +164,19 @@ export interface PolicyTask extends Provider<Document> {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-export interface IssuesTask extends Provider<ReadonlyArray<Issue>> {
+export interface IssuesTask extends Task<ReadonlyArray<Issue>> {
 
 	readonly type: "issues";
 
-	readonly refresh?: boolean;
-	readonly agreement: string;
+}
+
+export interface AnalyzeTask extends Task<ReadonlyArray<Issue>> {
+
+	readonly type: "analyze";
 
 }
 
-export interface TransitionTask extends Provider<void> {
+export interface TransitionTask extends Task<void> {
 
 	readonly type: "transition";
 
@@ -141,7 +185,7 @@ export interface TransitionTask extends Provider<void> {
 
 }
 
-export interface ClassifyTask extends Provider<void> {
+export interface ClassifyTask extends Task<void> {
 
 	readonly type: "classify";
 
@@ -150,7 +194,7 @@ export interface ClassifyTask extends Provider<void> {
 
 }
 
-export interface AnnotateTask extends Provider<void> {
+export interface AnnotateTask extends Task<void> {
 
 	readonly type: "annotate";
 
@@ -162,7 +206,7 @@ export interface AnnotateTask extends Provider<void> {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-export interface ClearTask extends Provider<void> {
+export interface ClearTask extends Task<void> {
 
 	readonly type: "clear";
 

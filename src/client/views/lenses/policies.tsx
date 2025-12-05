@@ -14,69 +14,104 @@
  * limitations under the License.
  */
 
-import { EmptyState, List, ListItem, Pressable, xcss } from "@forge/react";
+import { EmptyState, Pressable, Stack, Text, xcss } from "@forge/react";
 import React from "react";
 import { isTrace } from "../../../shared";
-import { Source } from "../../../shared/documents";
-import { isActivity } from "../../../shared/tasks";
-import { usePolicies } from "../../hooks/policies";
-import { ToolActivity } from "./activity";
-import { ToolTrace } from "./trace";
+import { Catalog } from "../../../shared/items/documents";
+import { isActivity, on } from "../../../shared/tasks";
+import { useStorage } from "../../hooks/storage";
+import ToolSplit from "../layouts/split";
+import { ToolPolicy } from "./policy";
 
 export function ToolPolicies({
 
-	onClick
+	page,
+	policies
 
 }: {
 
-	onClick?: (source: Source) => void
+	page: string
+	policies: Catalog
 
 }) {
 
-	const policies=usePolicies();
+	const [selected, setSelected] = useStorage<undefined | string>(page, "selected-policy", undefined);
 
-	if ( isActivity(policies) ) {
 
-		return <ToolActivity activity={policies}/>;
+	const activity = isActivity(policies);
+	const trace = isTrace(policies);
 
-	} else if ( isTrace(policies) ) {
 
-		return <ToolTrace trace={policies}/>;
-
-	} else if ( !Object.keys(policies).length ) {
-
-		return <EmptyState header={"No Policy Documents"}
-			description={"Upload PDF documents to the page \"Attachments\" area."}
-		/>;
-
-	} else {
-
-		return <List type={"unordered"}>{Object.entries(policies)
-			.sort(([, x], [, y]) => x.localeCompare(y))
-			.map(([source, title]) => <>
-
-				<ListItem key={source}>
-
-					<Pressable xcss={xcss({
-
-						color: "color.link",
-						backgroundColor: "color.background.neutral.subtle"
-
-					})}
-
-						onClick={() => onClick?.(source)}
-
-					>{
-
-						title
-
-					}</Pressable>
-
-				</ListItem>
-
-			</>)
-		}</List>;
-
+	function select(source: string) {
+		setSelected(source === selected ? undefined : source);
 	}
+
+
+	return <ToolSplit
+
+		side={<Stack space={"space.250"}>
+
+			<Stack space={"space.100"}>{(activity || trace ? [] : Object.entries(policies))
+				.sort(([, x], [, y]) => x.localeCompare(y))
+				.map(([source, title]) => <>
+
+					<Pressable key={source}
+
+						xcss={xcss(({
+
+							padding: "space.050",
+
+							borderWidth: "border.width",
+							borderStyle: "solid",
+							borderRadius: "border.radius",
+
+							color: source === selected
+								? "color.text.selected"
+								: "color.text",
+
+							borderColor: source === selected
+								? "color.border.selected"
+								: "color.border",
+
+							backgroundColor: source === selected
+								? "color.background.selected"
+								: "color.background.neutral.subtle"
+
+						}))}
+
+						onClick={() => select(source)}
+
+					>
+
+						<Text size={"large"} weight={"bold"}>{title}</Text>
+
+					</Pressable>
+
+
+				</>)
+			}</Stack>
+
+			{on(selected, {
+
+				state: undefined,
+				trace: undefined,
+
+				value: document => document && <ToolPolicy source={document} as={"toc"}/>
+
+			})}
+
+		</Stack>}
+
+	>{!selected || !policies[selected] ? (
+
+		<EmptyState header="No Policy Selected" description={
+			<Text>Choose one from the sidebar.</Text>
+		}/>
+
+	) : (
+
+		<ToolPolicy source={selected}/>
+
+	)}</ToolSplit>;
 
 }

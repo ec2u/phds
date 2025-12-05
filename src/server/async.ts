@@ -19,7 +19,7 @@ import { isDefined, isString } from "../shared";
 import { Activity, isActivity, Status, Task } from "../shared/tasks";
 
 const statusTimeout=30 * 1000;
-const statusClipping=20;
+const statusClipping = 80;
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

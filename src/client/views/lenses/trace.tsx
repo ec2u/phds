@@ -36,6 +36,6 @@ export function ToolTrace({
 	return <EmptyState width={"narrow"}
 		header={"Processing Error"}
 		description={`${text} (${code})`}
-		primaryAction={<Icon label={""} glyph={"error"} size={"large"} primaryColor={"color.icon.warning"}/>}
+		primaryAction={<Icon label={""} glyph={"error"} size={"large"} color={"color.icon.warning"}/>}
 	/>;
 }

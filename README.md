@@ -12,3 +12,9 @@ relevant stakeholders in the process of drafting cotutelle PhD agreements.
 
 This project is licensed under the Apache 2.0 License – see [LICENSE](https://github.com/ec2u/gate/blob/main/LICENSE)
 file for details.
+
+# Acknowledgements
+
+Development of the *EC2U PhD Agreements Tool* is funded by the European Commission under
+the [EC2U](https://education.ec.europa.eu/sites/default/files/document-library-docs/european-universities-factsheet-ec2u.pdf)
+project.

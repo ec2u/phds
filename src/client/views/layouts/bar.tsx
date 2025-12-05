@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
-import { Box, Inline, xcss } from "@forge/react";
-import React, { ReactNode } from "react";
+import {Box, Inline, xcss} from "@forge/react";
+import React, {ReactNode} from "react";
+import {Rule} from "..";
+
 
 export function ToolBar({
 
@@ -24,23 +26,17 @@ export function ToolBar({
 
 }: {
 
-	menu: ReactNode,
-	more?: ReactNode,
+	menu: ReactNode;
+	more?: ReactNode;
 
 }) {
-
 	return <Box xcss={xcss({
 
-		paddingBottom: "space.200",
-		marginBottom: "space.300",
-
-		borderWidth: "border.width",
-		borderColor: "color.border.accent.gray",
-		borderBottomStyle: "solid"
+		...Rule
 
 	})}>
 
-		<Inline>
+		<Inline alignBlock={"center"}>
 
 			<Box xcss={{ flexGrow: 1 }}>{menu}</Box>
 			<Box>{more}</Box>

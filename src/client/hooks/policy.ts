@@ -15,13 +15,13 @@
  */
 
 import { useEffect, useState } from "react";
-import { Document, Source } from "../../shared/documents";
-import { Language } from "../../shared/languages";
+import { Document, Source } from "../../shared/items/documents";
+import { Language } from "../../shared/items/languages";
 import { Activity, Status } from "../../shared/tasks";
+import { execute } from "../ports/index";
 import { useCache } from "./cache";
-import { execute } from "./index";
 
-export function usePolicy(source: Source, language: Language): Status<Document> {
+export function usePolicy(source: Source, language: Language = "en"): Status<Document> {
 
 	const { getCache, setCache }=useCache();
 

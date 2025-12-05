@@ -16,41 +16,38 @@
 
 import { AdfRenderer } from "@forge/react";
 import React from "react";
-import { isTrace } from "../../../shared";
-import { Source } from "../../../shared/documents";
-import { Language } from "../../../shared/languages";
-import { isActivity } from "../../../shared/tasks";
+import { Source } from "../../../shared/items/documents";
+import { on } from "../../../shared/tasks";
+import { adf } from "../../../shared/tools/text";
 import { usePolicy } from "../../hooks/policy";
-import { adf } from "../../tools/text";
 import { ToolActivity } from "./activity";
 import { ToolTrace } from "./trace";
 
 export function ToolPolicy({
 
 	source,
-	language
+	as
 
 }: {
 
 	source: Source
-	language: Language
+	as?: Parameters<typeof adf>[1]
 
 }) {
 
-	const policy=usePolicy(source, language);
+	const policy = usePolicy(source);
 
-	if ( isActivity(policy) ) {
 
-		return <ToolActivity activity={policy}/>;
 
-	} else if ( isTrace(policy) ) {
+	return on(policy, {
 
-		return <ToolTrace trace={policy}/>;
+		// report only on the manin view
 
-	} else {
+		state: activity => as === undefined ? <ToolActivity activity={activity}/> : null,
+		trace: trace => as === undefined ? <ToolTrace trace={trace}/> : null,
 
-		return <AdfRenderer document={adf(policy.content)}/>;
+		value: document => <AdfRenderer document={adf(document.content, as)}/>
 
-	}
+	});
 
 }
