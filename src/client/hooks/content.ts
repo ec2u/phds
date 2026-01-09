@@ -15,6 +15,7 @@
  */
 
 import type { DocNode, LayoutSectionDefinition } from "@atlaskit/adf-schema";
+import { ParagraphDefinition as Paragraph } from "@atlaskit/adf-schema/dist/types/schema/nodes/paragraph.js";
 import { requestConfluence } from "@forge/bridge";
 import { useProductContext } from "@forge/react";
 import { useEffect, useState } from "react";
@@ -97,7 +98,28 @@ function content(adf: DocNode): DocNode | null;
 function content(adf: DocNode, content: DocNode["content"]): DocNode;
 function content(adf: DocNode, content?: DocNode["content"]): DocNode | null {
 
-	const lastElement = adf.content?.[adf.content.length-1];
+	// find last meaningful element, ignoring trailing empty paragraphs
+
+	function findLastElement(elements: AdfBlock[]): [number, AdfBlock | undefined] {
+
+		for (let i = elements.length-1; i >= 0; i--) {
+
+			const element = elements[i];
+
+			if ( element.type !== "paragraph" || ((element as Paragraph).content ?? []).some(node =>
+				node.type !== "text" || node.text.trim()
+			) ) {
+				return [i, element];
+			}
+
+		}
+
+		return [-1, undefined];
+
+	}
+
+
+	const [lastIndex, lastElement] = findLastElement((adf.content ?? []) as AdfBlock[]);
 
 	const found = lastElement && lastElement?.type === "layoutSection"
 		&& (lastElement as LayoutSectionDefinition)?.content?.length === 2
@@ -122,62 +144,57 @@ function content(adf: DocNode, content?: DocNode["content"]): DocNode | null {
 			return null;
 		}
 
+	} else if ( found ) {
+
+		// update existing layout
+
+		const layout = lastElement as LayoutSectionDefinition;
+
+		const updatedLayoutSection = {
+			...layout,
+			content: [
+				layout.content![0],
+				{
+					...layout.content![1],
+					content: content
+				}
+			]
+		};
+
+		return {
+			...adf,
+			content: [
+				...adf.content.slice(0, lastIndex),
+				updatedLayoutSection as AdfBlock
+			]
+		};
+
 	} else {
 
-		// replace or create 2-column layout with content in right column
+		// create new 2-column layout and append
 
-		if ( found ) {
+		const newLayoutSection = {
+			type: "layoutSection" as const,
+			content: [
+				{
+					type: "layoutColumn" as const,
+					attrs: { width: 50 },
+					content: []
+				},
+				{
+					type: "layoutColumn" as const,
+					attrs: { width: 50 },
+					content: content
+				}
+			]
+		};
 
-			// update existing layout
-
-			const layout = lastElement as LayoutSectionDefinition;
-
-			const updatedLayoutSection = {
-				...layout,
-				content: [
-					layout.content![0],
-					{
-						...layout.content![1],
-						content: content
-					}
-				]
-			};
-
-			return {
-				...adf,
-				content: [
-					...adf.content.slice(0, -1),
-					updatedLayoutSection as AdfBlock
-				]
-			};
-
-		} else {
-
-			// create new 2-column layout and append
-
-			const newLayoutSection = {
-				type: "layoutSection" as const,
-				content: [
-					{
-						type: "layoutColumn" as const,
-						attrs: { width: 50 },
-						content: []
-					},
-					{
-						type: "layoutColumn" as const,
-						attrs: { width: 50 },
-						content: content
-					}
-				]
-			};
-
-			return {
-				...adf,
-				content: [
-					...(adf.content || []),
-					newLayoutSection as AdfBlock
-				]
-			};
-		}
+		return {
+			...adf,
+			content: [
+				...(adf.content || []),
+				newLayoutSection as AdfBlock
+			]
+		};
 	}
 }
