@@ -35,7 +35,10 @@
       "Bash(cat:*)",
       "Skill(markdown-writer)",
       "Skill(typedoc-writer)",
-      "Bash(npm view:*)"
+      "Bash(npm view:*)",
+      "Skill(issue-debugger)",
+      "Skill(sw-developer)",
+      "Skill(typescript-developer)"
     ],
     "defaultMode": "acceptEdits"
   },
