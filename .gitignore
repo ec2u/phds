@@ -2,6 +2,7 @@
 /.idea/
 /.vscode/
 /.forge/
+/.claude/settings.local.json
 
 /@
 /phds.*
@@ -10,4 +11,3 @@
 
 *~
 ~*
-.claude/settings.local.json
