@@ -3,11 +3,10 @@
 /.vscode/
 /.forge/
 
-/@
+/@*
 /phds.*
 
 /node_modules/
 
 *~
 ~*
-.claude/settings.local.json
