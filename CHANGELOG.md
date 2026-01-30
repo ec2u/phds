@@ -9,6 +9,11 @@ adapted for continuous deployment with date-based releases.
 
 Changes deployed to development, pending production promotion.
 
+### Changed
+
+- Reassign state colors: pending=red, active=yellow
+- Use catalog-specific state ordering (blocked < active < pending < resolved) in issues list
+
 ## [2026-01-09]
 
 ### Added

@@ -26,6 +26,19 @@ import { ToolActivity } from "./activity";
 import ToolIssue, { severityLabel, stateLabel } from "./issue";
 import { ToolTrace } from "./trace";
 
+/**
+ * Catalog-specific state ordering: blocked < active < pending < resolved.
+ */
+const CatalogStateOrder: Record<State, number> = {
+	blocked: 0,
+	active: 1,
+	pending: 2,
+	resolved: 3
+};
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 export function ToolIssues({
 
 	page,
@@ -48,8 +61,8 @@ export function ToolIssues({
 			.filter(issue => includes(severity, issue.severity))
 			.sort((x, y) => {
 
-				const xOrder = States.indexOf(x.state);
-				const yOrder = States.indexOf(y.state);
+				const xOrder = CatalogStateOrder[x.state] ?? -1;
+				const yOrder = CatalogStateOrder[y.state] ?? -1;
 
 				return xOrder !== yOrder ? xOrder-yOrder
 					: x.severity !== y.severity ? y.severity-x.severity

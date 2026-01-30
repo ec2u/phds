@@ -47,9 +47,9 @@ export const GrayColors = toColors("gray");
 
 
 export const StateColors = {
+	pending: toColors("red"),
+	active: toColors("yellow"),
 	blocked: toColors("purple"),
-	active: toColors("red"),
-	pending: toColors("yellow"),
 	resolved: toColors("lime")
 } as const;
 

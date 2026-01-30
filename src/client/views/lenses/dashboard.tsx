@@ -21,37 +21,24 @@ import { on } from "../../../shared/tasks";
 import { IssuesActions } from "../../hooks/issues";
 import { useStorage } from "../../hooks/storage";
 import { AnalysisNotPerformedPrompt } from "../elements/analyze";
-import ToolKanban, { Lane, toggle } from "../layouts/kanban";
+import ToolKanban, { Lane } from "../layouts/kanban";
 import { ToolActivity } from "./activity";
 import ToolIssue, { BlueColors, RedColors, SeverityColors, severityLabel, StateColors, stateLabel } from "./issue";
 import { ToolTrace } from "./trace";
 
 
 /**
- * Initial lane configurations for dashboard kanban board states and severities.
+ * Stable references for useStorage initial values (used in useEffect dependency arrays).
  *
  * @remark **CRITICAL** / initial values must be defined outside the component as constants.
  * If defined inside, they would be recreated on every render, causing useStorage's
  * useEffect (which has 'initial' in its dependency array) to run repeatedly,
  * interfering with the render cycle and preventing proper UI updates.
  */
-const initial = {
-
-	states: States.map(state => ({
-		value: state,
-		collapsed: state === "resolved",
-		label: stateLabel(state),
-		colors: StateColors[state]
-	})),
-
-	severities: Severities.map(severity => ({
-		value: severity,
-		collapsed: false,
-		label: severityLabel(severity),
-		colors: SeverityColors[severity]
-	}))
-
-} as const;
+const initialCollapsed = {
+	states: { resolved: true } as Record<string, boolean>,
+	severities: {} as Record<string, boolean>
+};
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -68,21 +55,35 @@ export function ToolDashboard({
 
 }) {
 
-	const [states, setStates] = useStorage<readonly Lane<State>[]>(
-		page, "dashboard-states", initial.states
+	const [stateCollapsed, setStateCollapsed] = useStorage<Record<string, boolean>>(
+		page, "dashboard-states", initialCollapsed.states
 	);
 
-	const [severities, setSeverities] = useStorage<readonly Lane<Severity>[]>(
-		page, "dashboard-severities", initial.severities
+	const [severityCollapsed, setSeverityCollapsed] = useStorage<Record<string, boolean>>(
+		page, "dashboard-severities", initialCollapsed.severities
 	);
+
+	const states: readonly Lane<State>[] = States.map(state => ({
+		value: state,
+		collapsed: stateCollapsed[state],
+		label: stateLabel(state),
+		colors: StateColors[state]
+	}));
+
+	const severities: readonly Lane<Severity>[] = Severities.map(severity => ({
+		value: severity,
+		collapsed: severityCollapsed[severity],
+		label: severityLabel(severity),
+		colors: SeverityColors[severity]
+	}));
 
 
 	function toggleState(state: State) {
-		setStates(current => toggle(current, state));
+		setStateCollapsed(current => ({ ...current, [state]: !current[state] }));
 	}
 
 	function toggleSeverity(severity: Severity) {
-		setSeverities(current => toggle(current, severity));
+		setSeverityCollapsed(current => ({ ...current, [severity]: !current[severity] }));
 	}
 
 
