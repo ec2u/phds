@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 EC2U Alliance
+ * Copyright © 2025-2026 EC2U Alliance
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -103,7 +103,7 @@ export function isObject(value: unknown): value is Record<any, any> & ({ bind?: 
  *
  * @return `true` if the value is an array (optionally with elements matching the type guard); `false` otherwise
  */
-export function isArray<T=unknown>(value: unknown, is?: (value: unknown) => value is T): value is T[] {
+export function isArray<T = unknown>(value: unknown, is?: (value: unknown) => value is T): value is T[] {
 	return Array.isArray(value) && (is === undefined || value.every(is));
 }
 
@@ -187,12 +187,12 @@ export function asTrace(value: unknown): Trace {
  *
  * @return a deeply immutable clone of `value`
  */
-export function immutable<T=any>(value: T): Readonly<typeof value> {
+export function immutable<T = any>(value: T): Readonly<typeof value> {
 	if ( Array.isArray(value) || isObject(value) ) {
 
 		return Object.freeze(Reflect.ownKeys(value as any).reduce((object: any, key) => {
 
-			object[key]=isSymbol(key) ? (value as any)[key] : immutable((value as any)[key]);
+			object[key] = isSymbol(key) ? (value as any)[key] : immutable((value as any)[key]);
 
 			return object;
 

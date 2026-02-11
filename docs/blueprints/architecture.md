@@ -128,5 +128,5 @@ Parallel to background processing:
 - **Key-Value Store**: Serves as both cache and persistent state store with timestamp-based validation
 - **Async Worker**: Ensures long-running AI operations don't block user interface interactions
 
-This architecture enables responsive user experience while handling computationally intensive AI operations,
-with comprehensive status tracking and robust error handling throughout the execution pipeline.
+This architecture enables responsive user experience while handling computationally intensive AI operations, with
+comprehensive status tracking and robust error handling throughout the execution pipeline.

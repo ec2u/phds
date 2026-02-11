@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 EC2U Alliance
+ * Copyright © 2025-2026 EC2U Alliance
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,10 +31,10 @@ export function ToolClear({
 
 }) {
 
-	const { clearCache }=useCache();
+	const { clearCache } = useCache();
 
-	const [confirming, setConfirming]=useState(false);
-	const [clearing, setClearing]=useState<Status<void>>();
+	const [confirming, setConfirming] = useState(false);
+	const [clearing, setClearing] = useState<Status<void>>();
 
 
 	function cancel() {

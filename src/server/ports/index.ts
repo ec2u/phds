@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 EC2U Alliance
+ * Copyright © 2025-2026 EC2U Alliance
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@
 import Resolver from "@forge/resolver";
 import { monitorTask, submitTask } from "./tasks";
 
-export const handler=new Resolver()
+export const handler = new Resolver()
 
 	.define(submitTask.name, submitTask as any)
 	.define(monitorTask.name, monitorTask as any)

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 EC2U Alliance
+ * Copyright © 2025-2026 EC2U Alliance
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,11 +14,10 @@
  * limitations under the License.
  */
 
-export type Language=keyof typeof languages;
 
-export const defaultLanguage="en" as const;
+export const defaultLanguage = "en" as const;
 
-export const languages={
+export const languages = {
 	de: "Deutsch",
 	en: "English",
 	es: "Español",
@@ -29,3 +28,8 @@ export const languages={
 	fi: "Suomi",
 	sv: "Svenska"
 } as const;
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+export type Language = keyof typeof languages;

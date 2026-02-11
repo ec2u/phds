@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 EC2U Alliance
+ * Copyright © 2025-2026 EC2U Alliance
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-import api, {route} from "@forge/api";
-import {asTrace} from "../../shared";
-import {Document} from "../../shared/items/documents";
-import {query} from "../index";
+import api, { route } from "@forge/api";
+import { asTrace } from "../../shared";
+import { Document } from "../../shared/items/documents";
+import { query } from "../index";
 
 
 export interface Attachment {
@@ -66,7 +66,7 @@ interface AttachmentsResponse {
 
 export async function listAttachments(page: string, mime?: string): Promise<Attachment[]> {
 
-	const response=await api.asApp().requestConfluence(route`/wiki/api/v2/pages/${page}/attachments?${query({
+	const response = await api.asApp().requestConfluence(route`/wiki/api/v2/pages/${page}/attachments?${query({
 
 		status: "current"
 
@@ -78,7 +78,7 @@ export async function listAttachments(page: string, mime?: string): Promise<Atta
 
 	if ( response.ok ) {
 
-		const data: AttachmentsResponse=await response.json();
+		const data: AttachmentsResponse = await response.json();
 
 		return data.results.filter(attachment =>
 			!mime || attachment.mediaType === mime
@@ -99,9 +99,9 @@ export async function listAttachments(page: string, mime?: string): Promise<Atta
 
 export async function getAttachment(page: string, id: string): Promise<Attachment> {
 
-	const url=route`/wiki/api/v2/attachments/${id}`;
+	const url = route`/wiki/api/v2/attachments/${id}`;
 
-	const response=await api.asApp().requestConfluence(url, {
+	const response = await api.asApp().requestConfluence(url, {
 
 		headers: { "Accept": "application/json" }
 
@@ -125,9 +125,9 @@ export async function getAttachment(page: string, id: string): Promise<Attachmen
 
 export async function fetchAttachment(page: string, id: string): Promise<Buffer> {
 
-	const url=route`/wiki/rest/api/content/${page}/child/attachment/${id}/download`;
+	const url = route`/wiki/rest/api/content/${page}/child/attachment/${id}/download`;
 
-	const response=await api.asApp().requestConfluence(url, {
+	const response = await api.asApp().requestConfluence(url, {
 
 		headers: { Accept: "*/*" }
 
@@ -151,9 +151,9 @@ export async function fetchAttachment(page: string, id: string): Promise<Buffer>
 
 export async function uploadAttachment(page: string, document: Document): Promise<Attachment> {
 
-	const { body, boundary }=multipart("test.json", document);
+	const { body, boundary } = multipart("test.json", document);
 
-	const response=await api.asApp().requestConfluence(
+	const response = await api.asApp().requestConfluence(
 		route`/rest/api/content/${page}/child/attachment`,
 		{
 			method: "POST",
@@ -183,9 +183,9 @@ export async function uploadAttachment(page: string, document: Document): Promis
 
 	function multipart(name: string, json: object) {
 
-		const boundary="----ForgeBoundary" + Math.random().toString(36).slice(2);
+		const boundary = "----ForgeBoundary"+Math.random().toString(36).slice(2);
 
-		const parts=[
+		const parts = [
 			`--${boundary}`,
 			`Content-Disposition: form-data; name="file"; filename="${name}"`,
 			`Content-Type: application/json`,
@@ -195,7 +195,7 @@ export async function uploadAttachment(page: string, document: Document): Promis
 			``
 		];
 
-		const body=parts.join("\r\n");
+		const body = parts.join("\r\n");
 
 		return { body, boundary };
 	}
@@ -204,9 +204,9 @@ export async function uploadAttachment(page: string, document: Document): Promis
 
 export async function deleteAttachment(page: string, id: string): Promise<void> {
 
-	const url=route`/wiki/rest/api/content/${page}/child/attachment/${id}`;
+	const url = route`/wiki/rest/api/content/${page}/child/attachment/${id}`;
 
-	const response=await api.asApp().requestConfluence(url, {
+	const response = await api.asApp().requestConfluence(url, {
 
 		method: "DELETE",
 		headers: { "Accept": "application/json" }

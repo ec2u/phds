@@ -2,8 +2,8 @@
 
 All notable changes to this project are documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/),
-adapted for continuous deployment with date-based releases.
+The format is based on [Keep a Changelog](https://keepachangelog.com/), adapted for continuous deployment with
+date-based releases.
 
 ## [Unreleased]
 

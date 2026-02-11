@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 EC2U Alliance
+ * Copyright © 2025-2026 EC2U Alliance
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,16 +14,16 @@
  * limitations under the License.
  */
 
-import {Language} from "./languages";
+import { Language } from "./languages";
 
 
 export type Catalog = Readonly<Record<Source, Title>>;
 
 export type Source = "" | string // source attachment id; empty for page body
-export type Instant=string // UTC ISO dateTime with ms precision
+export type Instant = string // UTC ISO dateTime with ms precision
 
-export type Title=string
-export type Markdown=string
+export type Title = string
+export type Markdown = string
 
 export interface Document {
 

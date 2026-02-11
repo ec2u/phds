@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 EC2U Alliance
+ * Copyright © 2025-2026 EC2U Alliance
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ export async function annotate(job: string, page: string, {
 
 }: Payload<AnnotateTask>): Promise<void> {
 
-	const key=issueKey(page, issue);
+	const key = issueKey(page, issue);
 
 	await lock(job, key, async () => {
 
@@ -34,7 +34,7 @@ export async function annotate(job: string, page: string, {
 
 		// add annotations to the specific issue
 
-		const issue=await kvs.get(key);
+		const issue = await kvs.get(key);
 
 		if ( issue ) {
 			await kvs.set(key, { ...issue, annotations, updated: new Date().toISOString() });

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 EC2U Alliance
+ * Copyright © 2025-2026 EC2U Alliance
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@ export interface Request<T extends NativeRequest["payload"]> {
 
 export function secret(key: string) {
 
-	const value=process.env[key];
+	const value = process.env[key];
 
 	if ( !value ) {
 		throw new Error(`undefined environment variable <${key}>`);

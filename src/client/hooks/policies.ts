@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 EC2U Alliance
+ * Copyright © 2025-2026 EC2U Alliance
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,15 +22,15 @@ import { useCache } from "./cache";
 
 export function usePolicies(): Status<Catalog> {
 
-	const { getCache, setCache }=useCache();
+	const { getCache, setCache } = useCache();
 
-	const key="policies";
-	const cached=getCache<Catalog>(key);
+	const key = "policies";
+	const cached = getCache<Catalog>(key);
 
-	const [policies, setPolicies]=useState<Status<Catalog>>(cached ?? {});
+	const [policies, setPolicies] = useState<Status<Catalog>>(cached ?? {});
 
 
-	const update=(policies: Status<Catalog>) => {
+	const update = (policies: Status<Catalog>) => {
 		setPolicies(policies);
 		setCache(key, policies);
 	};

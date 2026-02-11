@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 EC2U Alliance
+ * Copyright © 2025-2026 EC2U Alliance
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-import {Box, Inline, Stack, xcss} from "@forge/react";
-import React, {ReactNode} from "react";
+import { Box, Inline, Stack, xcss } from "@forge/react";
+import React, { ReactNode } from "react";
 
 const Width = 66; // %
 const Gap = "space.500";
@@ -25,7 +25,7 @@ const Gap = "space.500";
 
 export default function ToolSplit({
 
-									  side,
+	side,
 
 	children
 
@@ -41,12 +41,12 @@ export default function ToolSplit({
 
 		<Box xcss={xcss({
 
-			minWidth: `${100 - Width}%`,
-			maxWidth: `${100 - Width}%`
+			minWidth: `${100-Width}%`,
+			maxWidth: `${100-Width}%`
 
 		})}>
 
-			<Box xcss={xcss({paddingRight: Gap})}>
+			<Box xcss={xcss({ paddingRight: Gap })}>
 				<Stack>{side}</Stack>
 			</Box>
 

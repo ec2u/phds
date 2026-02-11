@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 EC2U Alliance
+ * Copyright © 2025-2026 EC2U Alliance
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,20 +20,20 @@ import { setStatus } from "../async";
 import { checkPage } from "./pages";
 
 
-const policiesTag="policies";
-const issuesTag="issues";
+const policiesTag = "policies";
+const issuesTag = "issues";
 
-const purgeKey="system:purged";
-const purgePeriod=24 * 60 * 60 * 1000; // purge period in ms
+const purgeKey = "system:purged";
+const purgePeriod = 24*60*60*1000; // purge period in ms
 
-const lockAttempts=15; // ~5 minutes max with exponential backoff
-const lockDelay=30 * 1000; // max backoff delay in ms
-const lockTimeout=2 * 60 * 1000; // lock expiration timeout in ms (reduced to minimize stuck lock impact)
+const lockAttempts = 15; // ~5 minutes max with exponential backoff
+const lockDelay = 30*1000; // max backoff delay in ms
+const lockTimeout = 2*60*1000; // lock expiration timeout in ms (reduced to minimize stuck lock impact)
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-type Key=string
+type Key = string
 
 
 /**
@@ -155,7 +155,7 @@ export async function purge(page?: string): Promise<void> {
 
 	if ( page ) { // clear all entries for the target page
 
-		const results=await scan(page);
+		const results = await scan(page);
 
 		// delete all entries for the target page; locking handled at the call site
 
@@ -163,13 +163,13 @@ export async function purge(page?: string): Promise<void> {
 
 	} else if ( await dirty() ) {
 
-		const results=await scan();
+		const results = await scan();
 
 		// group cache entries by page
 
-		const entriesByPage=results.reduce((entries, result) => {
+		const entriesByPage = results.reduce((entries, result) => {
 
-			const page=keyPage(result.key);
+			const page = keyPage(result.key);
 
 			return { ...entries, [page]: [...(entries[page] || []), result] };
 
@@ -211,10 +211,10 @@ export async function purge(page?: string): Promise<void> {
  */
 async function dirty(): Promise<boolean> {
 
-	const last=await kvs.get<string>(purgeKey);
-	const next=Date.now();
+	const last = await kvs.get<string>(purgeKey);
+	const next = Date.now();
 
-	if ( !last || (next - parseInt(last)) > purgePeriod ) {
+	if ( !last || (next-parseInt(last)) > purgePeriod ) {
 
 		// claim this purge period by setting our timestamp
 
@@ -233,35 +233,35 @@ async function scan(page?: string) {
 
 	// get cached documents with pagination
 
-	let results: Array<{ key: string; value: any }>=[];
+	let results: Array<{ key: string; value: any }> = [];
 	let cursor: string | undefined;
 
 	do {
 
-		let query=kvs.query()
+		let query = kvs.query()
 			.limit(100);
 
 		// if targeting specific page, query only that page's entries
 
 		if ( page ) {
-			query=query.where("key", WhereConditions.beginsWith(keyPrefix(pageKey(page))));
+			query = query.where("key", WhereConditions.beginsWith(keyPrefix(pageKey(page))));
 		}
 
 		if ( cursor ) {
-			query=query.cursor(cursor);
+			query = query.cursor(cursor);
 		}
 
-		const batch=await query.getMany();
+		const batch = await query.getMany();
 
 		// filter out system keys (only needed for global purge)
 
-		const userEntries=page
+		const userEntries = page
 			? batch.results
 			: batch.results.filter(result => !result.key.startsWith("system:"));
 
 		results.push(...userEntries);
 
-		cursor=batch.nextCursor;
+		cursor = batch.nextCursor;
 
 	} while ( cursor );
 
@@ -302,20 +302,20 @@ export async function lock<T>(job: string, key: Key, task: () => Promise<T>): Pr
 
 async function acquire(job: string, key: Key): Promise<void> {
 
-	const now=Date.now();
-	const page=keyPage(key);
-	const locks=pageKey(page);
+	const now = Date.now();
+	const page = keyPage(key);
+	const locks = pageKey(page);
 
-	for (let attempts=0; attempts < lockAttempts; attempts++) {
+	for (let attempts = 0; attempts < lockAttempts; attempts++) {
 		try {
 
 			// read current lock state
 
-			const catalog=await kvs.get<LockCatalog>(locks) || { locks: {}, version: 0 };
+			const catalog = await kvs.get<LockCatalog>(locks) || { locks: {}, version: 0 };
 
 			// clean expired locks
 
-			const entries=Object.fromEntries(
+			const entries = Object.fromEntries(
 				Object.entries(catalog.locks).filter(([_, lock]) => lock.expires > now)
 			);
 
@@ -337,10 +337,10 @@ async function acquire(job: string, key: Key): Promise<void> {
 								...entries,
 								[key]: {
 									job: job,
-									expires: now + lockTimeout
+									expires: now+lockTimeout
 								}
 							},
-							version: catalog.version + 1
+							version: catalog.version+1
 
 						})
 						.execute();
@@ -356,7 +356,7 @@ async function acquire(job: string, key: Key): Promise<void> {
 
 		} catch ( error ) {
 
-			console.warn(`lock acquisition for <${key}> failed on attempt <${attempts + 1}>:`, error);
+			console.warn(`lock acquisition for <${key}> failed on attempt <${attempts+1}>:`, error);
 
 			await backoff(attempts);
 
@@ -368,33 +368,33 @@ async function acquire(job: string, key: Key): Promise<void> {
 
 async function release(job: string, key: Key): Promise<void> {
 
-	const page=keyPage(key);
-	const locks=pageKey(page);
+	const page = keyPage(key);
+	const locks = pageKey(page);
 
-	for (let attempts=0; attempts < lockAttempts; attempts++) {
+	for (let attempts = 0; attempts < lockAttempts; attempts++) {
 		try {
 
 			// read current lock state
 
-			const catalog=await kvs.get<LockCatalog>(locks);
+			const catalog = await kvs.get<LockCatalog>(locks);
 
 			if ( catalog ) {
 
-				const currentLock=catalog.locks[key];
+				const currentLock = catalog.locks[key];
 
 				if ( currentLock?.job === job ) {
 
 					if ( catalog.version === ((await kvs.get<LockCatalog>(locks))?.version ?? 0) ) { // no version conflict
 
-						const { [key]: _, ...remainingLocks }=catalog.locks;
+						const { [key]: _, ...remainingLocks } = catalog.locks;
 
-						const transaction=kvs.transact();
+						const transaction = kvs.transact();
 
 						if ( Object.keys(remainingLocks).length > 0 ) {
 
 							transaction.set(locks, {
 								locks: remainingLocks,
-								version: catalog.version + 1
+								version: catalog.version+1
 							});
 
 						} else {
@@ -426,7 +426,7 @@ async function release(job: string, key: Key): Promise<void> {
 
 		} catch ( error ) {
 
-			console.warn(`lock release for ${key} failed on attempt ${attempts + 1}:`, error);
+			console.warn(`lock release for ${key} failed on attempt ${attempts+1}:`, error);
 
 			await backoff(attempts);
 		}
@@ -462,6 +462,6 @@ function conflicts(requested: Key, entries: Record<Key, LockEntry>): boolean {
  */
 function backoff(attempts: number): Promise<void> {
 	return new Promise(resolve => setTimeout(resolve,
-		Math.min(1000 * Math.pow(2, attempts), lockDelay)
+		Math.min(1000*Math.pow(2, attempts), lockDelay)
 	));
 }

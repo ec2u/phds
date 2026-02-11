@@ -2,8 +2,8 @@
 title: Storage Layout
 ---
 
-The EC2U PhD Agreements Tool uses Atlassian Forge's key-value storage with a systematic hierarchical naming
-convention. This document outlines the storage schema, key patterns, and data lifecycle.
+The EC2U PhD Agreements Tool uses Atlassian Forge's key-value storage with a systematic hierarchical naming convention.
+This document outlines the storage schema, key patterns, and data lifecycle.
 
 # Key Patterns
 
@@ -132,8 +132,8 @@ multiple users access the same resources simultaneously.
 
 **Lock Catalog Pattern:** `{page}` (page-scoped lock catalog)
 
-Lock catalogs use the `LockCatalog` interface defined in `src/server/tools/cache.ts:43-48`, storing all active
-locks for a page in a single KVS entry with optimistic concurrency control via version tracking.
+Lock catalogs use the `LockCatalog` interface defined in `src/server/tools/cache.ts:43-48`, storing all active locks for
+a page in a single KVS entry with optimistic concurrency control via version tracking.
 
 ### Lock Hierarchy (Coarsest → Finest)
 

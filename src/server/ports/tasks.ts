@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 EC2U Alliance
+ * Copyright © 2025-2026 EC2U Alliance
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@ import { Request } from "../index";
 import { sync } from "../tasks/sync/index";
 
 
-const queue=new Queue({ key: "executor-queue" });
+const queue = new Queue({ key: "executor-queue" });
 
 const isSync = new Set<Task["type"]>([
 
@@ -40,7 +40,7 @@ const isSync = new Set<Task["type"]>([
 
 export async function submitTask<T>({ payload: task, context }: Request<Task<T>>): Promise<string | Status<T>> {
 
-	const page: string=context.extension.content.id;
+	const page: string = context.extension.content.id;
 
 	if ( isSync.has(task.type) ) { // execute synchronously for sync-capable tasks
 
@@ -60,7 +60,7 @@ export async function submitTask<T>({ payload: task, context }: Request<Task<T>>
 export async function monitorTask<T>({ payload: { id } }: Request<{ id: string }>): Promise<Status<T>> {
 	try {
 
-		const status=await getStatus<T>(id);
+		const status = await getStatus<T>(id);
 
 		if ( !isActivity(status) ) {
 			await setStatus(id, undefined); // clean up storage after completion

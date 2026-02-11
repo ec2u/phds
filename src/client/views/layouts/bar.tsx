@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 EC2U Alliance
+ * Copyright © 2025-2026 EC2U Alliance
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import {Box, Inline, xcss} from "@forge/react";
-import React, {ReactNode} from "react";
-import {Rule} from "..";
+import { Box, Inline, xcss } from "@forge/react";
+import React, { ReactNode } from "react";
+import { Rule } from "..";
 
 
 export function ToolBar({

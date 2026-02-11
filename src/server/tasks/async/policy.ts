@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 EC2U Alliance
+ * Copyright © 2025-2026 EC2U Alliance
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,11 +34,11 @@ export async function policy(job: string, page: string, {
 
 }: Payload<PolicyTask>): Promise<Document> {
 
-	const key=policyKey(page, source, language);
+	const key = policyKey(page, source, language);
 
 	return await lock(job, key, async () => {
 
-		const cached=await fetchPolicy(job, page, source, language);
+		const cached = await fetchPolicy(job, page, source, language);
 
 		if ( cached ) {
 
@@ -48,12 +48,12 @@ export async function policy(job: string, page: string, {
 
 		} else {
 
-			const original=await fetchPolicy(job, page, source);
-			const document=original || await extract(job, page, source);
+			const original = await fetchPolicy(job, page, source);
+			const document = original || await extract(job, page, source);
 
 			// translate the document if needed
 
-			const translation=(document.language === language)
+			const translation = (document.language === language)
 				? document
 				: await translate(job, page, source, document, language);
 
@@ -73,17 +73,17 @@ async function extract(job: string, page: string, source: string): Promise<Docum
 
 	await setStatus(job, Activity.Fetching);
 
-	const buffer=await fetchAttachment(page, source);
+	const buffer = await fetchAttachment(page, source);
 
 
 	await setStatus(job, Activity.Prompting);
 
-	const prompt=await retrievePrompt("PDF_TO_MD");
+	const prompt = await retrievePrompt("PDF_TO_MD");
 
 
 	await setStatus(job, Activity.Extracting);
 
-	const file=await upload({
+	const file = await upload({
 		name: source,
 		mime: pdf,
 		data: buffer
@@ -95,7 +95,7 @@ async function extract(job: string, page: string, source: string): Promise<Docum
 		language,
 		markdownContent
 
-	}=await process<{
+	} = await process<{
 
 		title: string;
 		language: Language;
@@ -136,7 +136,7 @@ async function translate(job: string, page: string, source: string, document: Do
 
 	await setStatus(job, Activity.Prompting);
 
-	const translate=await retrievePrompt("TRANSLATION");
+	const translate = await retrievePrompt("TRANSLATION");
 
 
 	await setStatus(job, Activity.Translating);
@@ -147,12 +147,12 @@ async function translate(job: string, page: string, source: string, document: Do
 		translated_title: string;
 		translated_content: string;
 
-	}=await process({
+	} = await process({
 
 		prompt: translate,
 
 		variables: {
-			target_language: language,
+			target_language: language
 		},
 
 		input: document.content,
@@ -196,8 +196,8 @@ async function fetchPolicy(job: string, page: string, source: string, language?:
 
 	await setStatus(job, Activity.Fetching);
 
-	const key=policyKey(page, source, language);
-	const cached=await kvs.get<Document>(key);
+	const key = policyKey(page, source, language);
+	const cached = await kvs.get<Document>(key);
 
 	if ( isUndefined(cached) ) {
 
@@ -209,9 +209,9 @@ async function fetchPolicy(job: string, page: string, source: string, language?:
 
 		await setStatus(job, Activity.Scanning);
 
-		const attachment=await getAttachment(page, source);
-		const attachmentCreated=new Date(attachment.createdAt).getTime();
-		const cachedCreated=new Date(cached.created).getTime();
+		const attachment = await getAttachment(page, source);
+		const attachmentCreated = new Date(attachment.createdAt).getTime();
+		const cachedCreated = new Date(cached.created).getTime();
 
 		// check if cached document is current (cached before attachment was modified)
 
@@ -236,7 +236,7 @@ async function cachePolicy(job: string, page: string, source: string, document: 
 
 	await setStatus(job, Activity.Caching);
 
-	const key=policyKey(page, source, document.original ? undefined : document.language);
+	const key = policyKey(page, source, document.original ? undefined : document.language);
 
 	await kvs.set<Document>(key, document);
 

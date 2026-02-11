@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 EC2U Alliance
+ * Copyright © 2025-2026 EC2U Alliance
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,14 +29,14 @@ interface Cache {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-const CacheContext=createContext<undefined | Cache>(undefined);
+const CacheContext = createContext<undefined | Cache>(undefined);
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-export const useCache=() => {
+export const useCache = () => {
 
-	const context=useContext(CacheContext);
+	const context = useContext(CacheContext);
 
 	if ( !context ) {
 		throw new Error("useCacheContext must be used within <ToolCache/>");

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 EC2U Alliance
+ * Copyright © 2025-2026 EC2U Alliance
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +27,7 @@ export async function classify(job: string, page: string, {
 
 }: Payload<ClassifyTask>): Promise<void> {
 
-	const key=issueKey(page, issue);
+	const key = issueKey(page, issue);
 
 	await lock(job, key, async () => {
 
@@ -35,7 +35,7 @@ export async function classify(job: string, page: string, {
 
 		// update severity for the specific issue
 
-		const issue=await kvs.get<Issue>(key);
+		const issue = await kvs.get<Issue>(key);
 
 		if ( issue ) {
 			await kvs.set<Issue>(key, { ...issue, severity, updated: new Date().toISOString() });

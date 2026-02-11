@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 EC2U Alliance
+ * Copyright © 2025-2026 EC2U Alliance
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-import {Box, Heading, Icon, Popup, Pressable, Stack, Text, xcss} from "@forge/react";
-import React, {useState} from "react";
-import {Reference} from "../../../shared/items/issues";
+import { Box, Heading, Icon, Popup, Pressable, Stack, Text, xcss } from "@forge/react";
+import React, { useState } from "react";
+import { Reference } from "../../../shared/items/issues";
 
 export function ToolReference({
 
@@ -28,7 +28,7 @@ export function ToolReference({
 
 }) {
 
-	const [open, setOpen]=useState<boolean>(false);
+	const [open, setOpen] = useState<boolean>(false);
 
 	return <Popup
 

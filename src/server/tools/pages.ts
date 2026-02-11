@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 EC2U Alliance
+ * Copyright © 2025-2026 EC2U Alliance
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,11 +18,11 @@ import api, { route } from "@forge/api";
 
 export async function checkPage(page: string): Promise<boolean> {
 
-	const url=route`/wiki/api/v2/pages/${page}`;
+	const url = route`/wiki/api/v2/pages/${page}`;
 
 	try {
 
-		const response=await api.asApp().requestConfluence(url, {
+		const response = await api.asApp().requestConfluence(url, {
 
 			headers: { "Accept": "application/json" }
 
@@ -45,11 +45,11 @@ export async function fetchPage(page: string): Promise<{ title: string; content:
 
 	const response = await api.asApp().requestConfluence(url, {
 
-		headers: {"Accept": "application/json"}
+		headers: { "Accept": "application/json" }
 
 	});
 
-	if (!response.ok) {
+	if ( !response.ok ) {
 		throw new Error(`failed to fetch page: ${response.status} ${response.statusText}`);
 	}
 

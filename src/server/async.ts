@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 EC2U Alliance
+ * Copyright © 2025-2026 EC2U Alliance
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ import { kvs } from "@forge/kvs";
 import { isDefined, isString } from "../shared";
 import { Activity, isActivity, Status, Task } from "../shared/tasks";
 
-const statusTimeout=30 * 1000;
+const statusTimeout = 30*1000;
 const statusClipping = 80;
 
 
@@ -51,7 +51,7 @@ export async function setStatus<T>(job: string, value: undefined | Status<T>): P
 
 	if ( job ) {
 
-		const key=jobKey(job);
+		const key = jobKey(job);
 
 		if ( isDefined(value) ) {
 

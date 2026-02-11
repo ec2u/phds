@@ -98,8 +98,8 @@ This will prompt for re-authentication and update the CLI credentials in `~/.for
 
 ## Secret Management
 
-**IMPORTANT**: After setting or updating environment variables, the app must be redeployed to the target
-environment to pick up the new secret values.
+**IMPORTANT**: After setting or updating environment variables, the app must be redeployed to the target environment to
+pick up the new secret values.
 
 ### Deployment Environment Variables
 
@@ -218,13 +218,13 @@ Access the Atlassian Developer Console to manage your apps via web interface:
 
 - **Console URL**: https://developer.atlassian.com/console/myapps/
 - **Features Available**:
-   - View all registered apps
-   - Manage app installations across sites
-   - View app analytics and usage metrics
-   - Manage environment variables through UI
-   - Monitor app health and performance
-   - Configure app permissions and scopes
-   - Access real-time and historical logs
+  - View all registered apps
+  - Manage app installations across sites
+  - View app analytics and usage metrics
+  - Manage environment variables through UI
+  - Monitor app health and performance
+  - Configure app permissions and scopes
+  - Access real-time and historical logs
 
 ### Site Management
 
@@ -245,12 +245,12 @@ forge settings list            # Check app configuration
 ## Security Best Practices
 
 1. **Never commit secrets to version control**
-    - Add `.env` to `.gitignore`
-    - Use forge variables for all sensitive data
+  - Add `.env` to `.gitignore`
+  - Use forge variables for all sensitive data
 
 2. **Use different keys per environment**
-    - Development keys for local/dev
-    - Production keys for live sites
+  - Development keys for local/dev
+  - Production keys for live sites
 
 3. **Rotate keys regularly**
    ```bash
