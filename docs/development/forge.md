@@ -245,12 +245,14 @@ forge settings list            # Check app configuration
 ## Security Best Practices
 
 1. **Never commit secrets to version control**
-  - Add `.env` to `.gitignore`
-  - Use forge variables for all sensitive data
+
+- Add `.env` to `.gitignore`
+- Use forge variables for all sensitive data
 
 2. **Use different keys per environment**
-  - Development keys for local/dev
-  - Production keys for live sites
+
+- Development keys for local/dev
+- Production keys for live sites
 
 3. **Rotate keys regularly**
    ```bash
