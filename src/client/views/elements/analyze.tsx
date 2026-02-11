@@ -14,10 +14,22 @@
  * limitations under the License.
  */
 
+/**
+ * Empty state prompt for triggering compliance analysis.
+ *
+ * @module
+ */
+
 import { Button, EmptyState, Text } from "@forge/react";
 import React from "react";
 
 
+/**
+ * Renders an empty state prompting the user to run compliance analysis.
+ *
+ * @param props the component props
+ * @param props.onAnalyze the callback to trigger analysis
+ */
 export function AnalysisNotPerformedPrompt({ onAnalyze }: { onAnalyze: () => void }) {
 
 	return <EmptyState

@@ -14,11 +14,26 @@
  * limitations under the License.
  */
 
+/**
+ * Issue annotation update task.
+ *
+ * @module
+ */
+
 import { kvs } from "@forge/kvs";
 import { Activity, AnnotateTask, Payload } from "../../../shared/tasks";
 import { setStatus } from "../../async";
 import { issueKey, lock } from "../../tools/cache";
 
+/**
+ * Updates the annotations for a specific issue.
+ *
+ * Acquires an exclusive lock on the issue, then updates its annotations and timestamp in the cache.
+ *
+ * @param job the job identifier for locking
+ * @param page the Confluence page identifier
+ * @param payload the task payload containing issue identifier and annotations
+ */
 export async function annotate(job: string, page: string, {
 
 	issue,

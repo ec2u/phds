@@ -29,9 +29,29 @@ import { retrievePrompt } from "../../tools/langfuse";
 import { markdown, pdf } from "../../tools/mime";
 import { fetchPage } from "../../tools/pages";
 
+/**
+ * AI-powered compliance analysis task.
+ *
+ * Analyses a Confluence page agreement against attached policy documents using Gemini, detecting inconsistencies
+ * through multiple parallel analysis rounds with result merging and deduplication.
+ *
+ * @module
+ */
+
+
+/**
+ * The Gemini model used for compliance analysis.
+ */
 const model = "gemini-2.5-pro";
+
+/**
+ * The number of parallel detection rounds per policy document.
+ */
 const iterations = 5;
 
+/**
+ * The structured response type from the Gemini analysis prompt.
+ */
 type Response = ReadonlyArray<{
 
 	severity: string
@@ -43,6 +63,9 @@ type Response = ReadonlyArray<{
 
 }>;
 
+/**
+ * The JSON schema for structured Gemini analysis responses.
+ */
 const ResponseSchema: Schema = {
 	type: Type.ARRAY,
 	items: {
@@ -83,6 +106,17 @@ const ResponseSchema: Schema = {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * Executes a compliance analysis task.
+ *
+ * Fetches the agreement page content and attached policy documents, runs multiple parallel Gemini analysis rounds,
+ * merges detected issues, and caches the results.
+ *
+ * @param job the background job identifier for status reporting and locking
+ * @param page the Confluence page identifier
+ *
+ * @return all compliance issues (existing and newly detected)
+ */
 export async function analyze(job: string, page: string, {}: Payload<AnalyzeTask>): Promise<ReadonlyArray<Issue>> {
 
 	return await lock(job, issuesKey(page), async () => {
@@ -301,6 +335,13 @@ export async function analyze(job: string, page: string, {}: Payload<AnalyzeTask
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * Normalises an issue by defaulting the state to "pending" if missing.
+ *
+ * @param issue the issue to normalise
+ *
+ * @return the normalised issue
+ */
 function normalize(issue: Issue): Issue {
 	return {
 		...issue,
@@ -308,6 +349,13 @@ function normalize(issue: Issue): Issue {
 	};
 }
 
+/**
+ * Formats a list of issues as a text report for use as Gemini input context.
+ *
+ * @param issues the issues to format
+ *
+ * @return the formatted text report
+ */
 function report(issues: ReadonlyArray<Issue>): string {
 	return issues
 

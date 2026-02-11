@@ -14,10 +14,30 @@
  * limitations under the License.
  */
 
+/**
+ * Browser localStorage persistence hook with cross-tab synchronisation.
+ *
+ * @module
+ */
+
 import { useEffect, useState } from "react";
 import { State } from "./index";
 
 
+/**
+ * Manages state persisted to browser localStorage with automatic cross-tab synchronisation.
+ *
+ * Values are stored as JSON under a namespaced key incorporating the page identifier. Changes in other browser tabs
+ * are automatically synchronised via the `storage` event.
+ *
+ * @typeParam T the type of the stored value
+ *
+ * @param page the Confluence page identifier for key namespacing
+ * @param name the storage key name
+ * @param initial the default value when no stored entry exists
+ *
+ * @return a React state tuple for the persisted value
+ */
 export function useStorage<T>(page: string, name: string, initial: T): State<T> {
 
 	const key = `ec2u-phds-${page}-${name}`;

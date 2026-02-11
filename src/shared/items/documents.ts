@@ -14,25 +14,73 @@
  * limitations under the License.
  */
 
+/**
+ * Document model types for policy sources and their content.
+ *
+ * @module
+ */
+
 import { Language } from "./languages";
 
 
+/**
+ * Mapping from source identifiers to their display titles.
+ */
 export type Catalog = Readonly<Record<Source, Title>>;
 
-export type Source = "" | string // source attachment id; empty for page body
-export type Instant = string // UTC ISO dateTime with ms precision
+/**
+ * Source attachment identifier; empty string for Confluence page body.
+ */
+export type Source = "" | string
 
+/**
+ * UTC ISO date-time string with millisecond precision.
+ */
+export type Instant = string
+
+/**
+ * Human-readable document title.
+ */
 export type Title = string
+
+/**
+ * Markdown-formatted text content.
+ */
 export type Markdown = string
 
+/**
+ * A policy document with its content and metadata.
+ */
 export interface Document {
 
+	/**
+	 * Whether this is the original language version.
+	 */
 	readonly original: boolean;
+
+	/**
+	 * The language of the document content.
+	 */
 	readonly language: Language;
+
+	/**
+	 * The source attachment identifier.
+	 */
 	readonly source: Source;
+
+	/**
+	 * The creation timestamp.
+	 */
 	readonly created: Instant;
 
+	/**
+	 * The document title.
+	 */
 	readonly title: Title;
+
+	/**
+	 * The document content in markdown format.
+	 */
 	readonly content: Markdown;
 
 }

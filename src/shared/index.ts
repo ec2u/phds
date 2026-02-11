@@ -16,6 +16,13 @@
 
 
 /**
+ * Shared type checking utilities and common types.
+ *
+ * @module index
+ */
+
+
+/**
  * Checks if a value is not `undefined` or `null`.
  *
  * @param value the value to check

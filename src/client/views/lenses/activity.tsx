@@ -14,10 +14,22 @@
  * limitations under the License.
  */
 
+/**
+ * Activity spinner component for displaying task progress.
+ *
+ * @module
+ */
+
 import { EmptyState, Spinner } from "@forge/react";
 import React from "react";
 import { Activity } from "../../../shared/tasks";
 
+/**
+ * Renders a loading spinner with a human-readable message for the current activity state.
+ *
+ * @param props the component props
+ * @param props.activity the current activity state
+ */
 export function ToolActivity({
 
 	activity

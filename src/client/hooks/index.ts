@@ -14,6 +14,17 @@
  * limitations under the License.
  */
 
+/**
+ * Shared React hook type definitions.
+ *
+ * @module index
+ */
+
 import { Dispatch, SetStateAction } from "react";
 
+/**
+ * A React state tuple containing the current value and its setter function.
+ *
+ * @typeParam T the type of the state value
+ */
 export type State<T> = [T, Dispatch<SetStateAction<T>>];

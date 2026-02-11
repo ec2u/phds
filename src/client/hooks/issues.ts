@@ -14,6 +14,15 @@
  * limitations under the License.
  */
 
+/**
+ * Compliance issues management hook.
+ *
+ * Provides reactive access to the list of compliance issues with actions for triggering analysis, transitioning
+ * issue states, updating severity levels, and adding annotations.
+ *
+ * @module
+ */
+
 import { useEffect, useState } from "react";
 import { isArray } from "../../shared";
 import { Issue, State } from "../../shared/items/issues";
@@ -21,16 +30,53 @@ import { Status } from "../../shared/tasks";
 import { execute } from "../ports/index";
 import { useCache } from "./cache";
 
+/**
+ * Available actions for managing compliance issues.
+ */
 export interface IssuesActions {
+
+	/**
+	 * Triggers a new compliance analysis and refreshes the issues list.
+	 */
 	refresh: () => Promise<void>;
+
+	/**
+	 * Transitions an issue to a new workflow state.
+	 *
+	 * @param issue the issue identifier
+	 * @param state the target state
+	 */
 	transition: (issue: string, state: State) => Promise<void>;
+
+	/**
+	 * Updates the severity level of an issue.
+	 *
+	 * @param issue the issue identifier
+	 * @param severity the target severity level
+	 */
 	classify: (issue: string, severity: Issue["severity"]) => Promise<void>;
+
+	/**
+	 * Updates the annotations for an issue.
+	 *
+	 * @param issue the issue identifier
+	 * @param notes the markdown annotations content
+	 */
 	annotate: (issue: string, notes: string) => Promise<void>;
+
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * Manages the lifecycle of compliance issues for the current page.
+ *
+ * Loads cached issues on mount, supports triggering new analyses, and provides optimistic mutation actions for state
+ * transitions, severity classification, and annotations.
+ *
+ * @return a tuple of `[status, actions]` where status is the current issues list or activity/error state
+ */
 export function useIssues(): [Status<ReadonlyArray<Issue>>, IssuesActions] {
 
 	const { getCache, setCache } = useCache();

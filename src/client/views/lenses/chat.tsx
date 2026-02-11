@@ -14,9 +14,18 @@
  * limitations under the License.
  */
 
+/**
+ * Chat view placeholder component.
+ *
+ * @module
+ */
+
 import { EmptyState, Icon } from "@forge/react";
 import React from "react";
 
+/**
+ * Renders a work-in-progress placeholder for the chat feature.
+ */
 export function ToolChat() {
 
 	return <EmptyState

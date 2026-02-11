@@ -14,11 +14,26 @@
  * limitations under the License.
  */
 
+/**
+ * Issue state transition task.
+ *
+ * @module
+ */
+
 import { kvs } from "@forge/kvs";
 import { Activity, Payload, TransitionTask } from "../../../shared/tasks";
 import { setStatus } from "../../async";
 import { issueKey, issuesKey, lock } from "../../tools/cache";
 
+/**
+ * Transitions an issue to a new workflow state.
+ *
+ * Acquires a lock on the issues namespace, then updates the issue's state and timestamp in the cache.
+ *
+ * @param job the job identifier for locking
+ * @param page the Confluence page identifier
+ * @param payload the task payload containing issue identifier and target state
+ */
 export async function transition(job: string, page: string, {
 
 	issue: issueId,

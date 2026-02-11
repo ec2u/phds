@@ -14,14 +14,30 @@
  * limitations under the License.
  */
 
+/**
+ * Langfuse prompt management integration.
+ *
+ * @module
+ */
+
 import Langfuse, { TextPromptClient } from "langfuse";
 import { asTrace } from "../../shared";
 
+/**
+ * The Langfuse client instance.
+ */
 const client = new Langfuse();
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * Retrieves a prompt template from Langfuse by name.
+ *
+ * @param name the prompt template name
+ *
+ * @return the compiled prompt client
+ */
 export async function retrievePrompt(name: string): Promise<TextPromptClient> {
 
 	try {

@@ -14,7 +14,29 @@
  * limitations under the License.
  */
 
+/**
+ * MIME type constants for content type handling.
+ *
+ * @module
+ */
+
+
+/**
+ * MIME type for plain text content.
+ */
 export const text = "text/plain";
+
+/**
+ * MIME type for markdown content.
+ */
 export const markdown = "text/markdown";
+
+/**
+ * MIME type for PDF documents.
+ */
 export const pdf = "application/pdf";
+
+/**
+ * MIME type for JSON data.
+ */
 export const json = "application/json";

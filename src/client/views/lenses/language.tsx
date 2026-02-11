@@ -14,11 +14,24 @@
  * limitations under the License.
  */
 
+/**
+ * Language selector component.
+ *
+ * @module
+ */
+
 import { Select } from "@forge/react";
 import React from "react";
 import { Language, languages } from "../../../shared/items/languages";
 
 
+/**
+ * Renders a compact dropdown selector for choosing from the supported languages.
+ *
+ * @param props the component props
+ * @param props.locale the currently selected language code
+ * @param props.onChange the callback when a language is selected
+ */
 export function ToolLanguage({
 
 	locale,

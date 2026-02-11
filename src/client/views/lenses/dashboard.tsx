@@ -14,6 +14,12 @@
  * limitations under the License.
  */
 
+/**
+ * Kanban dashboard view for compliance issues.
+ *
+ * @module
+ */
+
 import { Box, Popup, Pressable, Text, xcss } from "@forge/react";
 import React, { useState } from "react";
 import { Issue, Severities, Severity, State, States } from "../../../shared/items/issues";
@@ -43,6 +49,15 @@ const initialCollapsed = {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * Renders a kanban dashboard view of compliance issues organised by severity and workflow state.
+ *
+ * Persists lane collapse states to browser localStorage for the current page.
+ *
+ * @param props the component props
+ * @param props.page the Confluence page identifier
+ * @param props.issues the issues data and action callbacks
+ */
 export function ToolDashboard({
 
 	page,
@@ -131,6 +146,9 @@ export function ToolDashboard({
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * A clickable kanban card that opens an issue detail popup.
+ */
 function Card({
 
 	issue,

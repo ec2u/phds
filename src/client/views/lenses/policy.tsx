@@ -14,6 +14,12 @@
  * limitations under the License.
  */
 
+/**
+ * Single policy document viewer component.
+ *
+ * @module
+ */
+
 import { AdfRenderer } from "@forge/react";
 import React from "react";
 import { Source } from "../../../shared/items/documents";
@@ -23,6 +29,15 @@ import { usePolicy } from "../../hooks/policy";
 import { ToolActivity } from "./activity";
 import { ToolTrace } from "./trace";
 
+/**
+ * Renders a policy document as ADF content, with optional table-of-contents mode.
+ *
+ * Activity and error states are displayed only in the main view mode (not in TOC mode).
+ *
+ * @param props the component props
+ * @param props.source the source attachment identifier
+ * @param props.as the rendering mode: `"text"` for full content (default) or `"toc"` for table of contents
+ */
 export function ToolPolicy({
 
 	source,

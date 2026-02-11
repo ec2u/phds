@@ -14,9 +14,20 @@
  * limitations under the License.
  */
 
+/**
+ * Forge resolver handler for client-server communication.
+ *
+ * Registers the task submission and monitoring endpoints as Forge resolver definitions.
+ *
+ * @module index
+ */
+
 import Resolver from "@forge/resolver";
 import { monitorTask, submitTask } from "./tasks";
 
+/**
+ * The Forge resolver handler definitions for the macro backend.
+ */
 export const handler = new Resolver()
 
 	.define(submitTask.name, submitTask as any)

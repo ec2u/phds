@@ -15,8 +15,21 @@
  */
 
 
+/**
+ * Language definitions for the EC2U alliance member institutions.
+ *
+ * @module
+ */
+
+
+/**
+ * The default language for content display and translation.
+ */
 export const defaultLanguage = "en" as const;
 
+/**
+ * Mapping from ISO 639-1 language codes to their native display names.
+ */
 export const languages = {
 	de: "Deutsch",
 	en: "English",
@@ -32,4 +45,7 @@ export const languages = {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * ISO 639-1 language code for a supported language.
+ */
 export type Language = keyof typeof languages;

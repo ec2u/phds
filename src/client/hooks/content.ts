@@ -14,6 +14,15 @@
  * limitations under the License.
  */
 
+/**
+ * Confluence page content reading and writing hook.
+ *
+ * Extracts markdown content from the last two-column layout section of a Confluence page and provides a setter
+ * for updating that content back to the page via the Confluence REST API.
+ *
+ * @module
+ */
+
 import type { DocNode, LayoutSectionDefinition } from "@atlaskit/adf-schema";
 import { ParagraphDefinition as Paragraph } from "@atlaskit/adf-schema/dist/types/schema/nodes/paragraph.js";
 import { requestConfluence } from "@forge/bridge";
@@ -21,6 +30,15 @@ import { useProductContext } from "@forge/react";
 import { useEffect, useState } from "react";
 import { adf as toAdf, AdfBlock, markdown } from "../../shared/tools/text";
 
+/**
+ * Manages the markdown content of the current Confluence page.
+ *
+ * Returns a tuple of the extracted markdown content and a setter function for updating it. The content is extracted
+ * from the right column of the last two-column layout section on the page.
+ *
+ * @return a tuple of `[content, setContent]` where content is `undefined` while loading, `null` if unavailable,
+ *     or the markdown string
+ */
 export function useContent(): [undefined | null | string, (value: string) => Promise<void>] {
 
 	const [adf, setAdf] = useState<undefined | null | DocNode>();
@@ -94,8 +112,28 @@ export function useContent(): [undefined | null | string, (value: string) => Pro
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * Extracts content from the right column of the last two-column layout section.
+ *
+ * @param adf the ADF document
+ *
+ * @return the extracted content document, or `null` if no layout section is found
+ */
 function content(adf: DocNode): DocNode | null;
+
+/**
+ * Replaces content in the right column of the last two-column layout section, or creates one.
+ *
+ * @param adf the ADF document
+ * @param content the new content to insert
+ *
+ * @return the updated ADF document
+ */
 function content(adf: DocNode, content: DocNode["content"]): DocNode;
+
+/**
+ * Extracts or replaces content in the last two-column layout section.
+ */
 function content(adf: DocNode, content?: DocNode["content"]): DocNode | null {
 
 	// find last meaningful element, ignoring trailing empty paragraphs

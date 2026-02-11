@@ -14,8 +14,24 @@
  * limitations under the License.
  */
 
+/**
+ * Confluence page access utilities.
+ *
+ * @module
+ */
+
 import api, { route } from "@forge/api";
 
+/**
+ * Checks whether a Confluence page still exists.
+ *
+ * Only treats HTTP 404 as "page deleted"; all other responses and errors are treated as "page exists but
+ * inaccessible" to avoid false deletions.
+ *
+ * @param page the Confluence page identifier
+ *
+ * @return true if the page exists or is inaccessible; false if deleted
+ */
 export async function checkPage(page: string): Promise<boolean> {
 
 	const url = route`/wiki/api/v2/pages/${page}`;
@@ -39,6 +55,15 @@ export async function checkPage(page: string): Promise<boolean> {
 	}
 }
 
+/**
+ * Fetches a Confluence page's title and body content in Atlassian Document Format.
+ *
+ * @param page the Confluence page identifier
+ *
+ * @return the page title and ADF content
+ *
+ * @throws {Error} if the page cannot be fetched
+ */
 export async function fetchPage(page: string): Promise<{ title: string; content: any }> {
 
 	const url = route`/wiki/api/v2/pages/${page}?body-format=atlas_doc_format`;

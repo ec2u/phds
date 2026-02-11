@@ -14,12 +14,27 @@
  * limitations under the License.
  */
 
+/**
+ * Issue severity classification task.
+ *
+ * @module
+ */
+
 import { kvs } from "@forge/kvs";
 import { Issue } from "../../../shared/items/issues";
 import { Activity, ClassifyTask, Payload } from "../../../shared/tasks";
 import { setStatus } from "../../async";
 import { issueKey, lock } from "../../tools/cache";
 
+/**
+ * Updates the severity level of a specific issue.
+ *
+ * Acquires an exclusive lock on the issue, then updates its severity and timestamp in the cache.
+ *
+ * @param job the job identifier for locking
+ * @param page the Confluence page identifier
+ * @param payload the task payload containing issue identifier and severity level
+ */
 export async function classify(job: string, page: string, {
 
 	issue,

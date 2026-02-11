@@ -14,12 +14,29 @@
  * limitations under the License.
  */
 
+/**
+ * Cached issues retrieval task.
+ *
+ * @module
+ */
+
 import { kvs, WhereConditions } from "@forge/kvs";
 import { Issue } from "../../../shared/items/issues";
 import { Activity, IssuesTask, Payload } from "../../../shared/tasks";
 import { setStatus } from "../../async";
 import { issuesKey, keyPrefix, lock } from "../../tools/cache";
 
+/**
+ * Retrieves all cached compliance issues for a Confluence page.
+ *
+ * Acquires a read lock on the issues namespace, queries all issue entries from the KVS, and normalises their state
+ * fields before returning.
+ *
+ * @param job the job identifier for locking
+ * @param page the Confluence page identifier
+ *
+ * @return the cached issues
+ */
 export async function issues(job: string, page: string, {}: Payload<IssuesTask>): Promise<ReadonlyArray<Issue>> {
 
 	return await lock(job, issuesKey(page), async () => {
@@ -59,6 +76,13 @@ export async function issues(job: string, page: string, {}: Payload<IssuesTask>)
 	});
 }
 
+/**
+ * Normalises an issue by defaulting the state to "pending" if missing.
+ *
+ * @param issue the issue to normalise
+ *
+ * @return the normalised issue
+ */
 function normalize(issue: Issue): Issue {
 	return {
 		...issue,

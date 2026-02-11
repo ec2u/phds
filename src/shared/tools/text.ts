@@ -14,6 +14,15 @@
  * limitations under the License.
  */
 
+/**
+ * Bidirectional conversion between Atlassian Document Format and markdown.
+ *
+ * Provides utilities for converting Confluence ADF content to markdown for AI processing and converting markdown
+ * responses back to ADF for rendering in Confluence.
+ *
+ * @module
+ */
+
 import type {
 	BlockQuoteDefinition,
 	BodiedExtensionDefinition,
@@ -47,9 +56,15 @@ import { Root } from "remark-parse/lib";
 import { unified } from "unified";
 
 
+/**
+ * A top-level block node in an Atlassian Document Format document.
+ */
 export type AdfBlock =
 	| DocNode["content"][number];
 
+/**
+ * An inline mark type in an Atlassian Document Format document.
+ */
 export type AdfMark =
 	| LinkDefinition
 	| StrongDefinition
@@ -105,6 +120,16 @@ type Handler<T extends { type: string }> =
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * Converts an Atlassian Document Format document to markdown.
+ *
+ * Recursively processes all ADF block and inline nodes, preserving headings, lists, code blocks, tables, and inline
+ * formatting. Unsupported node types are logged as warnings and rendered as placeholders.
+ *
+ * @param doc the ADF document to convert
+ *
+ * @return the markdown representation
+ */
 export function markdown(doc: DocNode): string {
 
 	return doc.content
@@ -327,6 +352,17 @@ export function markdown(doc: DocNode): string {
 
 }
 
+/**
+ * Converts a markdown string to an Atlassian Document Format document.
+ *
+ * Parses the markdown using remark with GFM support and converts the resulting AST to ADF nodes. Supports both full
+ * text conversion and table-of-contents extraction from headings.
+ *
+ * @param markdown the markdown string to convert
+ * @param as the conversion mode: `"text"` for full content or `"toc"` for table of contents
+ *
+ * @return the ADF document
+ */
 export function adf(markdown: string, as: "text" | "toc" = "text"): DocNode {
 
 	const processor = unified()

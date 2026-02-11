@@ -14,6 +14,12 @@
  * limitations under the License.
  */
 
+/**
+ * Filterable issues catalogue view with sidebar controls.
+ *
+ * @module
+ */
+
 import { Button, EmptyState, Inline, Select, Stack, Text } from "@forge/react";
 import React from "react";
 import { Issue, Severities, Severity, State, States } from "../../../shared/items/issues";
@@ -27,7 +33,7 @@ import ToolIssue, { severityLabel, stateLabel } from "./issue";
 import { ToolTrace } from "./trace";
 
 /**
- * Catalog-specific state ordering: blocked < active < pending < resolved.
+ * Issue state ordering for the catalogue view: blocked < active < pending < resolved.
  */
 const CatalogStateOrder: Record<State, number> = {
 	blocked: 0,
@@ -39,6 +45,15 @@ const CatalogStateOrder: Record<State, number> = {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * Renders a filterable list of compliance issues with state and severity filter controls in a sidebar.
+ *
+ * Persists filter selections to browser localStorage for the current page.
+ *
+ * @param props the component props
+ * @param props.page the Confluence page identifier
+ * @param props.issues the issues data and action callbacks
+ */
 export function ToolIssues({
 
 	page,

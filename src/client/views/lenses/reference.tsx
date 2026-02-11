@@ -14,10 +14,22 @@
  * limitations under the License.
  */
 
+/**
+ * Inline source reference popup component.
+ *
+ * @module
+ */
+
 import { Box, Heading, Icon, Popup, Pressable, Stack, Text, xcss } from "@forge/react";
 import React, { useState } from "react";
 import { Reference } from "../../../shared/items/issues";
 
+/**
+ * Renders an inline info icon that opens a popup showing the source reference title and excerpt.
+ *
+ * @param props the component props
+ * @param props.reference the source reference to display
+ */
 export function ToolReference({
 
 	reference

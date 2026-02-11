@@ -14,10 +14,22 @@
  * limitations under the License.
  */
 
+/**
+ * Error trace display component.
+ *
+ * @module
+ */
+
 import { EmptyState, Icon } from "@forge/react";
 import React from "react";
 import { Trace } from "../../../shared";
 
+/**
+ * Renders an error trace as an empty state with the error message and status code.
+ *
+ * @param props the component props
+ * @param props.trace the error trace to display
+ */
 export function ToolTrace({
 
 	trace

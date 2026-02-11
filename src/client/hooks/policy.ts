@@ -14,6 +14,12 @@
  * limitations under the License.
  */
 
+/**
+ * Single policy document retrieval hook.
+ *
+ * @module
+ */
+
 import { useEffect, useState } from "react";
 import { Document, Source } from "../../shared/items/documents";
 import { Language } from "../../shared/items/languages";
@@ -21,6 +27,17 @@ import { Activity, Status } from "../../shared/tasks";
 import { execute } from "../ports/index";
 import { useCache } from "./cache";
 
+/**
+ * Fetches and caches a single policy document in the requested language.
+ *
+ * Returns the current status of the document retrieval, loading from the in-memory cache on subsequent renders.
+ * Triggers extraction and translation via the backend when no cached version is available.
+ *
+ * @param source the source attachment identifier
+ * @param language the target language code (defaults to `"en"`)
+ *
+ * @return the document status: the policy document, an activity state, or an error trace
+ */
 export function usePolicy(source: Source, language: Language = "en"): Status<Document> {
 
 	const { getCache, setCache } = useCache();

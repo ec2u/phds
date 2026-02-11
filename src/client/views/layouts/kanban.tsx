@@ -14,6 +14,15 @@
  * limitations under the License.
  */
 
+/**
+ * Kanban board layout component with collapsible rows and columns.
+ *
+ * Provides a two-dimensional grid layout for displaying items categorised by row and column lanes, with collapsible
+ * lane sections and customisable card rendering.
+ *
+ * @module
+ */
+
 import { Box, Heading, Inline, Stack, xcss } from "@forge/react";
 import type { Space } from "@forge/react/out/types/components";
 import React, { ReactNode } from "react";
@@ -21,29 +30,74 @@ import { Colors, NeutralColors } from "..";
 import { ToolToggle } from "../elements/toggle";
 
 
-const ColCollapsedWidth = 2.5; //%
+/**
+ * Collapsed column width as a percentage.
+ */
+const ColCollapsedWidth = 2.5;
+
+/**
+ * Vertical gap between rows.
+ */
 const RowGap = "space.200";
 
+/**
+ * Block padding for cells.
+ */
 const CellPaddingBlock = "space.050";
+
+/**
+ * Inline padding for cells.
+ */
 const CellPaddingInline = "space.150";
 
+/**
+ * Default background colour for kanban cells.
+ */
 const BackgroundColor = "color.background.neutral";
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * A kanban lane definition with optional collapse state and visual styling.
+ *
+ * @typeParam T the type of the lane's discriminating value
+ */
 export interface Lane<T> {
 
+	/**
+	 * Whether the lane is currently collapsed.
+	 */
 	readonly collapsed?: boolean;
 
+	/**
+	 * The lane's discriminating value.
+	 */
 	readonly value: T;
 
+	/**
+	 * Optional display label for the lane header.
+	 */
 	readonly label?: ReactNode;
+
+	/**
+	 * Optional colour pair for the lane header.
+	 */
 	readonly colors?: Colors;
 
 }
 
 
+/**
+ * Toggles the collapsed state of a specific lane.
+ *
+ * @typeParam T the type of the lane's discriminating value
+ *
+ * @param lanes the current lane definitions
+ * @param value the value identifying the lane to toggle
+ *
+ * @return the updated lane definitions
+ */
 export function toggle<T>(lanes: readonly Lane<T>[], value: T) {
 	return lanes.map(lane =>
 		lane.value === value ? { ...lane, collapsed: !lane.collapsed } : lane
@@ -53,6 +107,15 @@ export function toggle<T>(lanes: readonly Lane<T>[], value: T) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * Renders a kanban board with items distributed across row and column lanes.
+ *
+ * @typeParam R the type of row lane values
+ * @typeParam C the type of column lane values
+ * @typeParam I the type of items
+ *
+ * @param props the component props
+ */
 export default function ToolKanban<R, C, I>({
 
 	rows,
@@ -109,6 +172,9 @@ export default function ToolKanban<R, C, I>({
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * Internal grid component that computes column widths and renders the kanban structure.
+ */
 function Grid<R, C, I>({
 
 	rows,
@@ -177,6 +243,9 @@ function Grid<R, C, I>({
 
 }
 
+/**
+ * Column header row with toggle controls and item counts.
+ */
 function Cols<G>({
 
 	cols,
@@ -244,6 +313,9 @@ function Cols<G>({
 
 }
 
+/**
+ * A single kanban row with a header label and cells for each column.
+ */
 function Row<R, C, I>({
 
 	row,
@@ -345,6 +417,9 @@ function Row<R, C, I>({
 
 }
 
+/**
+ * Lane header label with optional item count and action button.
+ */
 function Label({
 
 	padding = "space.0",
@@ -389,6 +464,9 @@ function Label({
 
 }
 
+/**
+ * A kanban cell containing stacked card items.
+ */
 function Cell({
 
 	children
@@ -414,6 +492,9 @@ function Cell({
 
 }
 
+/**
+ * Flexible filler element that absorbs remaining horizontal space.
+ */
 function Filler() {
 
 	return <Box xcss={xcss({

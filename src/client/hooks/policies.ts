@@ -14,12 +14,25 @@
  * limitations under the License.
  */
 
+/**
+ * Policy catalogue retrieval hook.
+ *
+ * @module
+ */
+
 import { useEffect, useState } from "react";
 import { Catalog } from "../../shared/items/documents";
 import { Status } from "../../shared/tasks";
 import { execute } from "../ports/index";
 import { useCache } from "./cache";
 
+/**
+ * Fetches and caches the catalogue of available policy documents.
+ *
+ * Returns the current status of the policies catalogue, loading from the in-memory cache on subsequent renders.
+ *
+ * @return the catalogue status: the source-to-title mapping, an activity state, or an error trace
+ */
 export function usePolicies(): Status<Catalog> {
 
 	const { getCache, setCache } = useCache();

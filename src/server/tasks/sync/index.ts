@@ -14,6 +14,15 @@
  * limitations under the License.
  */
 
+/**
+ * Synchronous task dispatcher for resolver-inline execution.
+ *
+ * Routes synchronous tasks to their respective handlers, executing them within the resolver request lifecycle
+ * rather than through the event queue.
+ *
+ * @module index
+ */
+
 import { asTrace } from "../../../shared/index";
 import { Status, Task } from "../../../shared/tasks";
 import { annotate } from "./annotate";
@@ -23,8 +32,25 @@ import { issues } from "./issues";
 import { policies } from "./policies";
 import { transition } from "./transition";
 
+/**
+ * Dispatches a synchronous task to the appropriate handler.
+ *
+ * @typeParam T the type of the task result value
+ *
+ * @param task the task to execute
+ * @param page the Confluence page identifier
+ *
+ * @return the task result status
+ */
 export async function sync<T>(task: Task<T>, page: string): Promise<Status<T>> {
 
+	/**
+	 * Reports an error as a trace.
+	 *
+	 * @param error the error to report
+	 *
+	 * @return the error trace
+	 */
 	function report(error: unknown) {
 
 		console.error("sync task failed:", error);

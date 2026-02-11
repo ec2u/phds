@@ -14,9 +14,24 @@
  * limitations under the License.
  */
 
+/**
+ * Icon button component with tooltip.
+ *
+ * @module
+ */
+
 import { Icon, Pressable, Tooltip, xcss } from "@forge/react";
 import React from "react";
 
+/**
+ * Renders an icon button with a tooltip label.
+ *
+ * @param props the component props
+ * @param props.label the tooltip text and accessibility label
+ * @param props.icon the icon glyph name
+ * @param props.onClick the click event handler
+ * @param props.disabled whether the button is disabled
+ */
 export function ToolAction({
 
 	label,

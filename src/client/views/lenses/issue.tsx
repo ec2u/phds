@@ -14,6 +14,15 @@
  * limitations under the License.
  */
 
+/**
+ * Issue detail view component with inline editing capabilities.
+ *
+ * Provides the full issue detail card with state/severity selectors, annotation editing, expandable source
+ * references, and action buttons for managing individual compliance issues.
+ *
+ * @module
+ */
+
 import {
 	AdfRenderer,
 	Box,
@@ -41,11 +50,25 @@ import { ToolReference } from "./reference";
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * Red accent colour pair.
+ */
 export const RedColors = toColors("red");
+
+/**
+ * Blue accent colour pair.
+ */
 export const BlueColors = toColors("blue");
+
+/**
+ * Grey accent colour pair.
+ */
 export const GrayColors = toColors("gray");
 
 
+/**
+ * Colour mapping for issue workflow states.
+ */
 export const StateColors = {
 	pending: toColors("red"),
 	active: toColors("yellow"),
@@ -53,6 +76,9 @@ export const StateColors = {
 	resolved: toColors("lime")
 } as const;
 
+/**
+ * Colour mapping for issue severity levels.
+ */
 export const SeverityColors = {
 	3: toColors("purple"),
 	2: toColors("red"),
@@ -60,10 +86,24 @@ export const SeverityColors = {
 } as const;
 
 
+/**
+ * Formats a workflow state value as a capitalised display label.
+ *
+ * @param value the state value
+ *
+ * @return the display label
+ */
 export function stateLabel(value: string) {
 	return value.charAt(0).toUpperCase()+value.slice(1);
 }
 
+/**
+ * Formats a severity level as a star rating display label.
+ *
+ * @param value the severity level (1-3)
+ *
+ * @return the star rating string
+ */
 export function severityLabel(value: number) {
 	return "★".repeat(value)+"☆".repeat(3-value);
 }
@@ -71,6 +111,13 @@ export function severityLabel(value: number) {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * Renders a detailed issue card with state/severity controls, description, reference excerpts, and annotation editing.
+ *
+ * @param props the component props
+ * @param props.issue the issue to display
+ * @param props.actions the available issue management actions
+ */
 export default function ToolIssue({
 
 	issue,
@@ -294,6 +341,9 @@ export default function ToolIssue({
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * Renders a two-column table of agreement and policy source references.
+ */
 function ToolReferences({
 
 	references

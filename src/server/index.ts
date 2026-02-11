@@ -14,19 +14,48 @@
  * limitations under the License.
  */
 
+/**
+ * Server-side utilities for Forge resolver request handling.
+ *
+ * @module index
+ */
+
 import { InvokePayload } from "@forge/bridge/out/types";
 import { Request as NativeRequest } from "@forge/resolver";
 import { URLSearchParams } from "url";
 
 
+/**
+ * A typed Forge resolver request with payload and Confluence context.
+ *
+ * @typeParam T the payload type
+ */
 export interface Request<T extends NativeRequest["payload"]> {
+
+	/**
+	 * The request payload.
+	 */
 	payload: T;
+
+	/**
+	 * The Confluence invocation context.
+	 */
 	context: InvokePayload["context"];
+
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * Retrieves a required environment variable.
+ *
+ * @param key the environment variable name
+ *
+ * @return the environment variable value
+ *
+ * @throws {Error} if the environment variable is not defined
+ */
 export function secret(key: string) {
 
 	const value = process.env[key];
@@ -39,6 +68,13 @@ export function secret(key: string) {
 }
 
 
+/**
+ * Encodes a record of key-value pairs as a URL query string.
+ *
+ * @param params the key-value pairs to encode
+ *
+ * @return the URL-encoded query string
+ */
 export function query(params: Record<string, string>) {
 	return new URLSearchParams(params).toString();
 }

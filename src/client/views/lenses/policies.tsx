@@ -14,6 +14,12 @@
  * limitations under the License.
  */
 
+/**
+ * Policy documents browser with sidebar navigation and content viewer.
+ *
+ * @module
+ */
+
 import { EmptyState, Pressable, Stack, Text, xcss } from "@forge/react";
 import React from "react";
 import { isTrace } from "../../../shared";
@@ -23,6 +29,16 @@ import { useStorage } from "../../hooks/storage";
 import ToolSplit from "../layouts/split";
 import { ToolPolicy } from "./policy";
 
+/**
+ * Renders a split-pane view with a selectable policy list in the sidebar and the selected policy content in the
+ * main area.
+ *
+ * Persists the selected policy to browser localStorage for the current page.
+ *
+ * @param props the component props
+ * @param props.page the Confluence page identifier
+ * @param props.policies the policy catalogue mapping source identifiers to titles
+ */
 export function ToolPolicies({
 
 	page,

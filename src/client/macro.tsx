@@ -42,6 +42,19 @@ import { ToolPolicies } from "./views/lenses/policies";
 import { ToolTrace } from "./views/lenses/trace";
 
 
+/**
+ * Main Confluence macro entry point.
+ *
+ * Renders the PhD Agreements Tool macro with tabbed navigation between agreement content, policy documents,
+ * compliance issues, and the dashboard views.
+ *
+ * @module
+ */
+
+
+/**
+ * Navigation tabs for the macro UI.
+ */
 enum Tab {
 	Agreement = "Agreement",
 	Policies = "Policies",
@@ -52,6 +65,9 @@ enum Tab {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * Root macro component providing tabbed navigation and data loading orchestration.
+ */
 function ToolMacro() {
 
 	const context = useProductContext();

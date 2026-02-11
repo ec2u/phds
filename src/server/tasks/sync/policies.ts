@@ -14,6 +14,12 @@
  * limitations under the License.
  */
 
+/**
+ * Policy catalogue retrieval task.
+ *
+ * @module
+ */
+
 import { kvs, WhereConditions } from "@forge/kvs";
 import { isUndefined } from "../../../shared/index";
 import { Document, Source, Title } from "../../../shared/items/documents";
@@ -23,6 +29,17 @@ import { listAttachments } from "../../tools/attachments";
 import { keyPrefix, keySource, lock, policiesKey } from "../../tools/cache";
 import { pdf } from "../../tools/mime";
 
+/**
+ * Builds a catalogue of available policy documents for a Confluence page.
+ *
+ * Lists PDF attachments, purges stale cache entries for removed or updated attachments, and returns a mapping from
+ * source identifiers to display titles.
+ *
+ * @param job the job identifier for locking
+ * @param page the Confluence page identifier
+ *
+ * @return the source-to-title catalogue mapping
+ */
 export async function policies(job: string, page: string, {}: Payload<PoliciesTask>): Promise<Record<Source, Title>> {
 
 	return await lock(job, policiesKey(page), async () => {

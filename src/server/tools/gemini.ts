@@ -14,6 +14,15 @@
  * limitations under the License.
  */
 
+/**
+ * Google Gemini AI integration for prompt processing.
+ *
+ * Provides file upload and prompt processing capabilities using the Gemini API, supporting both plain text and
+ * structured JSON output modes with configurable models and Langfuse prompt templates.
+ *
+ * @module
+ */
+
 import { File, GenerationConfig, GoogleGenAI, Schema } from "@google/genai";
 import { TextPromptClient } from "langfuse";
 import { asTrace, isObject, isString } from "../../shared";
@@ -22,6 +31,9 @@ import { secret } from "../index";
 import { json } from "./mime";
 
 
+/**
+ * Default model and generation configuration.
+ */
 const defaults: {
 
 	model: string,
@@ -41,15 +53,29 @@ const defaults: {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * The Gemini API key.
+ */
 const key = secret("GEMINI_KEY");
 
+/**
+ * The Gemini API client instance.
+ */
 const client = new GoogleGenAI({ apiKey: key });
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
- * Uploads are deleted after 48 hours (https://ai.google.dev/gemini-api/docs/files#delete-uploaded)
+ * Uploads a file to the Gemini API for use in prompt processing.
+ *
+ * Uploaded files are automatically deleted after 48 hours.
+ *
+ * @param options the upload options
+ *
+ * @return the uploaded file metadata
+ *
+ * @see {@link https://ai.google.dev/gemini-api/docs/files#delete-uploaded Gemini File API}
  */
 export async function upload({
 
@@ -86,7 +112,11 @@ export async function upload({
 }
 
 /**
- * processes a prompt with Gemini and returns the response as plain text
+ * Processes a prompt with Gemini and returns the response as plain text.
+ *
+ * @param options the processing options
+ *
+ * @return the response text
  */
 export async function process({
 	model,
@@ -103,7 +133,13 @@ export async function process({
 }): Promise<string>;
 
 /**
- * processes a prompt with Gemini using structured output and returns typed response
+ * Processes a prompt with Gemini using structured output and returns a typed response.
+ *
+ * @typeParam T the expected response type matching the schema
+ *
+ * @param options the processing options including a JSON schema for structured output
+ *
+ * @return the parsed response object
  */
 export async function process<T>({
 	model,
@@ -121,6 +157,9 @@ export async function process<T>({
 	schema: Schema
 }): Promise<T>;
 
+/**
+ * Processes a prompt with Gemini.
+ */
 export async function process({
 	model,
 	prompt,

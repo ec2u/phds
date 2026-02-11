@@ -14,6 +14,15 @@
  * limitations under the License.
  */
 
+/**
+ * Policy document extraction and translation task.
+ *
+ * Handles fetching policy PDF attachments from Confluence, extracting content via Gemini, translating to the
+ * target language, and caching results in Forge KVS with staleness checking.
+ *
+ * @module
+ */
+
 import { kvs } from "@forge/kvs";
 import { Type } from "@google/genai";
 import { isUndefined } from "../../../shared/index";
@@ -27,6 +36,18 @@ import { process, upload } from "../../tools/gemini";
 import { retrievePrompt } from "../../tools/langfuse";
 import { pdf } from "../../tools/mime";
 
+/**
+ * Executes a policy document retrieval and translation task.
+ *
+ * Returns a cached document if available and current, otherwise extracts the content from the PDF attachment using
+ * Gemini and translates it to the target language if needed.
+ *
+ * @param job the background job identifier for status reporting and locking
+ * @param page the Confluence page identifier
+ * @param payload the task payload containing source and target language
+ *
+ * @return the policy document in the requested language
+ */
 export async function policy(job: string, page: string, {
 
 	source,
@@ -69,6 +90,17 @@ export async function policy(job: string, page: string, {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * Extracts content from a PDF attachment using Gemini.
+ *
+ * Uploads the PDF to Gemini, processes it with the PDF-to-markdown prompt, and caches the extracted document.
+ *
+ * @param job the background job identifier
+ * @param page the Confluence page identifier
+ * @param source the attachment identifier
+ *
+ * @return the extracted document
+ */
 async function extract(job: string, page: string, source: string): Promise<Document> {
 
 	await setStatus(job, Activity.Fetching);
@@ -132,6 +164,17 @@ async function extract(job: string, page: string, source: string): Promise<Docum
 	});
 }
 
+/**
+ * Translates a policy document to the target language using Gemini.
+ *
+ * @param job the background job identifier
+ * @param page the Confluence page identifier
+ * @param source the attachment identifier
+ * @param document the original document to translate
+ * @param language the target language code
+ *
+ * @return the translated document
+ */
 async function translate(job: string, page: string, source: string, document: Document, language: Language): Promise<Document> {
 
 	await setStatus(job, Activity.Prompting);
@@ -192,6 +235,19 @@ async function translate(job: string, page: string, source: string, document: Do
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * Retrieves a cached policy document, checking for staleness against the source attachment.
+ *
+ * Returns `undefined` if no cached version exists or if the cached version is stale (older than the source
+ * attachment).
+ *
+ * @param job the background job identifier
+ * @param page the Confluence page identifier
+ * @param source the attachment identifier
+ * @param language optional language code for translated versions
+ *
+ * @return the cached document, or `undefined` if not available or stale
+ */
 async function fetchPolicy(job: string, page: string, source: string, language?: Language): Promise<undefined | Document> {
 
 	await setStatus(job, Activity.Fetching);
@@ -232,6 +288,16 @@ async function fetchPolicy(job: string, page: string, source: string, language?:
 	}
 }
 
+/**
+ * Stores a policy document in the Forge KVS cache.
+ *
+ * @param job the background job identifier
+ * @param page the Confluence page identifier
+ * @param source the attachment identifier
+ * @param document the document to cache
+ *
+ * @return the cached document
+ */
 async function cachePolicy(job: string, page: string, source: string, document: Document): Promise<Document> {
 
 	await setStatus(job, Activity.Caching);

@@ -14,12 +14,24 @@
  * limitations under the License.
  */
 
+/**
+ * Cache clearing button with confirmation modal.
+ *
+ * @module
+ */
+
 import { Button, LoadingButton, Modal, ModalBody, ModalFooter, ModalHeader, ModalTitle } from "@forge/react";
 import React, { useState } from "react";
 import { isActivity, Status } from "../../../shared/tasks";
 import { useCache } from "../../hooks/cache";
 import { execute } from "../../ports/index";
 
+/**
+ * Renders a "Clear" button that prompts for confirmation before purging all cached data for the current page.
+ *
+ * @param props the component props
+ * @param props.isDisabled whether the button is disabled
+ */
 export function ToolClear({
 
 	isDisabled
