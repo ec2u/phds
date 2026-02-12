@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 EC2U Alliance
+ * Copyright © 2025-2026 EC2U Alliance
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,26 +14,63 @@
  * limitations under the License.
  */
 
+/**
+ * Hierarchical cache key management and distributed locking for Forge KVS.
+ *
+ * Provides cache key generation for policy and issue data, a hierarchical locking mechanism with optimistic
+ * concurrency control, and periodic purge operations for deleted pages.
+ *
+ * @module
+ */
+
 import { kvs, WhereConditions } from "@forge/kvs";
 import { Activity } from "../../shared/tasks";
 import { setStatus } from "../async";
 import { checkPage } from "./pages";
 
 
-const policiesTag="policies";
-const issuesTag="issues";
+/**
+ * The tag segment for policies in cache keys.
+ */
+const policiesTag = "policies";
 
-const purgeKey="system:purged";
-const purgePeriod=24 * 60 * 60 * 1000; // purge period in ms
+/**
+ * The tag segment for issues in cache keys.
+ */
+const issuesTag = "issues";
 
-const lockAttempts=15; // ~5 minutes max with exponential backoff
-const lockDelay=30 * 1000; // max backoff delay in ms
-const lockTimeout=2 * 60 * 1000; // lock expiration timeout in ms (reduced to minimize stuck lock impact)
+/**
+ * The KVS key for tracking the last global purge timestamp.
+ */
+const purgeKey = "system:purged";
+
+/**
+ * The minimum interval between global purge operations in milliseconds.
+ */
+const purgePeriod = 24*60*60*1000;
+
+/**
+ * The maximum number of lock acquisition/release retry attempts.
+ */
+const lockAttempts = 15;
+
+/**
+ * The maximum backoff delay between retry attempts in milliseconds.
+ */
+const lockDelay = 30*1000;
+
+/**
+ * The lock expiration timeout in milliseconds.
+ */
+const lockTimeout = 2*60*1000;
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-type Key=string
+/**
+ * A hierarchical cache key string.
+ */
+type Key = string
 
 
 /**
@@ -47,9 +84,19 @@ interface LockCatalog {
 
 }
 
+/**
+ * An individual lock entry tracking ownership and expiration.
+ */
 interface LockEntry {
 
+	/**
+	 * The job identifier that owns this lock.
+	 */
 	readonly job: string;
+
+	/**
+	 * The lock expiration timestamp in milliseconds since epoch.
+	 */
 	readonly expires: number;
 
 }
@@ -151,11 +198,19 @@ export function keySource(key: Key): string {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * Purges cached data from Forge KVS.
+ *
+ * When called with a page identifier, deletes all cache entries for that specific page. When called without arguments,
+ * performs a global purge of entries for deleted Confluence pages, rate-limited to once per 24-hour period.
+ *
+ * @param page optional page identifier to purge; if omitted, performs a global purge
+ */
 export async function purge(page?: string): Promise<void> {
 
 	if ( page ) { // clear all entries for the target page
 
-		const results=await scan(page);
+		const results = await scan(page);
 
 		// delete all entries for the target page; locking handled at the call site
 
@@ -163,13 +218,13 @@ export async function purge(page?: string): Promise<void> {
 
 	} else if ( await dirty() ) {
 
-		const results=await scan();
+		const results = await scan();
 
 		// group cache entries by page
 
-		const entriesByPage=results.reduce((entries, result) => {
+		const entriesByPage = results.reduce((entries, result) => {
 
-			const page=keyPage(result.key);
+			const page = keyPage(result.key);
 
 			return { ...entries, [page]: [...(entries[page] || []), result] };
 
@@ -211,10 +266,10 @@ export async function purge(page?: string): Promise<void> {
  */
 async function dirty(): Promise<boolean> {
 
-	const last=await kvs.get<string>(purgeKey);
-	const next=Date.now();
+	const last = await kvs.get<string>(purgeKey);
+	const next = Date.now();
 
-	if ( !last || (next - parseInt(last)) > purgePeriod ) {
+	if ( !last || (next-parseInt(last)) > purgePeriod ) {
 
 		// claim this purge period by setting our timestamp
 
@@ -229,39 +284,46 @@ async function dirty(): Promise<boolean> {
 	}
 }
 
+/**
+ * Scans the KVS for cache entries, optionally filtered by page.
+ *
+ * @param page optional page identifier to filter results
+ *
+ * @return all matching cache entries
+ */
 async function scan(page?: string) {
 
 	// get cached documents with pagination
 
-	let results: Array<{ key: string; value: any }>=[];
+	let results: Array<{ key: string; value: any }> = [];
 	let cursor: string | undefined;
 
 	do {
 
-		let query=kvs.query()
+		let query = kvs.query()
 			.limit(100);
 
 		// if targeting specific page, query only that page's entries
 
 		if ( page ) {
-			query=query.where("key", WhereConditions.beginsWith(keyPrefix(pageKey(page))));
+			query = query.where("key", WhereConditions.beginsWith(keyPrefix(pageKey(page))));
 		}
 
 		if ( cursor ) {
-			query=query.cursor(cursor);
+			query = query.cursor(cursor);
 		}
 
-		const batch=await query.getMany();
+		const batch = await query.getMany();
 
 		// filter out system keys (only needed for global purge)
 
-		const userEntries=page
+		const userEntries = page
 			? batch.results
 			: batch.results.filter(result => !result.key.startsWith("system:"));
 
 		results.push(...userEntries);
 
-		cursor=batch.nextCursor;
+		cursor = batch.nextCursor;
 
 	} while ( cursor );
 
@@ -300,22 +362,33 @@ export async function lock<T>(job: string, key: Key, task: () => Promise<T>): Pr
 }
 
 
+/**
+ * Acquires a hierarchical lock with exponential backoff retry.
+ *
+ * Uses optimistic concurrency control with version tracking to prevent race conditions. Expired locks are
+ * automatically cleaned during acquisition attempts.
+ *
+ * @param job the job identifier for lock ownership
+ * @param key the cache key to lock
+ *
+ * @throws {Error} if the lock cannot be acquired after all retry attempts
+ */
 async function acquire(job: string, key: Key): Promise<void> {
 
-	const now=Date.now();
-	const page=keyPage(key);
-	const locks=pageKey(page);
+	const now = Date.now();
+	const page = keyPage(key);
+	const locks = pageKey(page);
 
-	for (let attempts=0; attempts < lockAttempts; attempts++) {
+	for (let attempts = 0; attempts < lockAttempts; attempts++) {
 		try {
 
 			// read current lock state
 
-			const catalog=await kvs.get<LockCatalog>(locks) || { locks: {}, version: 0 };
+			const catalog = await kvs.get<LockCatalog>(locks) || { locks: {}, version: 0 };
 
 			// clean expired locks
 
-			const entries=Object.fromEntries(
+			const entries = Object.fromEntries(
 				Object.entries(catalog.locks).filter(([_, lock]) => lock.expires > now)
 			);
 
@@ -337,10 +410,10 @@ async function acquire(job: string, key: Key): Promise<void> {
 								...entries,
 								[key]: {
 									job: job,
-									expires: now + lockTimeout
+									expires: now+lockTimeout
 								}
 							},
-							version: catalog.version + 1
+							version: catalog.version+1
 
 						})
 						.execute();
@@ -356,7 +429,7 @@ async function acquire(job: string, key: Key): Promise<void> {
 
 		} catch ( error ) {
 
-			console.warn(`lock acquisition for <${key}> failed on attempt <${attempts + 1}>:`, error);
+			console.warn(`lock acquisition for <${key}> failed on attempt <${attempts+1}>:`, error);
 
 			await backoff(attempts);
 
@@ -366,35 +439,46 @@ async function acquire(job: string, key: Key): Promise<void> {
 	throw new Error(`lock acquisition for <${key}> failed after <${lockAttempts}> attempts`);
 }
 
+/**
+ * Releases a previously acquired lock.
+ *
+ * Verifies lock ownership before releasing. If the lock is not owned by the specified job, logs a warning and
+ * returns without error.
+ *
+ * @param job the job identifier for lock ownership verification
+ * @param key the cache key to unlock
+ *
+ * @throws {Error} if the lock cannot be released after all retry attempts
+ */
 async function release(job: string, key: Key): Promise<void> {
 
-	const page=keyPage(key);
-	const locks=pageKey(page);
+	const page = keyPage(key);
+	const locks = pageKey(page);
 
-	for (let attempts=0; attempts < lockAttempts; attempts++) {
+	for (let attempts = 0; attempts < lockAttempts; attempts++) {
 		try {
 
 			// read current lock state
 
-			const catalog=await kvs.get<LockCatalog>(locks);
+			const catalog = await kvs.get<LockCatalog>(locks);
 
 			if ( catalog ) {
 
-				const currentLock=catalog.locks[key];
+				const currentLock = catalog.locks[key];
 
 				if ( currentLock?.job === job ) {
 
 					if ( catalog.version === ((await kvs.get<LockCatalog>(locks))?.version ?? 0) ) { // no version conflict
 
-						const { [key]: _, ...remainingLocks }=catalog.locks;
+						const { [key]: _, ...remainingLocks } = catalog.locks;
 
-						const transaction=kvs.transact();
+						const transaction = kvs.transact();
 
 						if ( Object.keys(remainingLocks).length > 0 ) {
 
 							transaction.set(locks, {
 								locks: remainingLocks,
-								version: catalog.version + 1
+								version: catalog.version+1
 							});
 
 						} else {
@@ -426,7 +510,7 @@ async function release(job: string, key: Key): Promise<void> {
 
 		} catch ( error ) {
 
-			console.warn(`lock release for ${key} failed on attempt ${attempts + 1}:`, error);
+			console.warn(`lock release for ${key} failed on attempt ${attempts+1}:`, error);
 
 			await backoff(attempts);
 		}
@@ -436,6 +520,17 @@ async function release(job: string, key: Key): Promise<void> {
 }
 
 
+/**
+ * Checks whether a requested lock conflicts with any existing locks.
+ *
+ * Conflict is determined by hierarchical prefix matching: a lock conflicts if either key is a prefix of the other,
+ * or if the keys are identical.
+ *
+ * @param requested the cache key to check for conflicts
+ * @param entries the currently held lock entries
+ *
+ * @return true if a conflict exists; false otherwise
+ */
 function conflicts(requested: Key, entries: Record<Key, LockEntry>): boolean {
 
 	for (const entry in entries) {
@@ -462,6 +557,6 @@ function conflicts(requested: Key, entries: Record<Key, LockEntry>): boolean {
  */
 function backoff(attempts: number): Promise<void> {
 	return new Promise(resolve => setTimeout(resolve,
-		Math.min(1000 * Math.pow(2, attempts), lockDelay)
+		Math.min(1000*Math.pow(2, attempts), lockDelay)
 	));
 }

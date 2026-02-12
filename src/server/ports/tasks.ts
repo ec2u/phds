@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 EC2U Alliance
+ * Copyright © 2025-2026 EC2U Alliance
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,6 +14,15 @@
  * limitations under the License.
  */
 
+/**
+ * Task submission and monitoring endpoints for the Forge resolver.
+ *
+ * Routes tasks to synchronous or asynchronous execution based on task type, and provides polling-based status
+ * monitoring for background jobs.
+ *
+ * @module
+ */
+
 import { Queue } from "@forge/events";
 import { Activity, isActivity, Status, Task } from "../../shared/tasks";
 import { getStatus, setStatus } from "../async";
@@ -21,8 +30,14 @@ import { Request } from "../index";
 import { sync } from "../tasks/sync/index";
 
 
-const queue=new Queue({ key: "executor-queue" });
+/**
+ * The Forge event queue for scheduling asynchronous task execution.
+ */
+const queue = new Queue({ key: "executor-queue" });
 
+/**
+ * Task types that can be executed synchronously within the resolver request lifecycle.
+ */
 const isSync = new Set<Task["type"]>([
 
 	"policies",
@@ -38,9 +53,21 @@ const isSync = new Set<Task["type"]>([
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * Submits a task for execution.
+ *
+ * Synchronous-capable tasks are executed immediately and their results returned directly. Long-running tasks are
+ * queued for asynchronous execution and a job identifier is returned for status polling.
+ *
+ * @typeParam T the type of the task result value
+ *
+ * @param request the resolver request containing the task and Confluence context
+ *
+ * @return the task result for synchronous tasks, or a job identifier for asynchronous tasks
+ */
 export async function submitTask<T>({ payload: task, context }: Request<Task<T>>): Promise<string | Status<T>> {
 
-	const page: string=context.extension.content.id;
+	const page: string = context.extension.content.id;
 
 	if ( isSync.has(task.type) ) { // execute synchronously for sync-capable tasks
 
@@ -57,10 +84,21 @@ export async function submitTask<T>({ payload: task, context }: Request<Task<T>>
 	}
 }
 
+/**
+ * Polls the status of an asynchronous background job.
+ *
+ * Returns the current status and automatically cleans up storage entries for completed jobs.
+ *
+ * @typeParam T the type of the task result value
+ *
+ * @param request the resolver request containing the job identifier
+ *
+ * @return the current job status
+ */
 export async function monitorTask<T>({ payload: { id } }: Request<{ id: string }>): Promise<Status<T>> {
 	try {
 
-		const status=await getStatus<T>(id);
+		const status = await getStatus<T>(id);
 
 		if ( !isActivity(status) ) {
 			await setStatus(id, undefined); // clean up storage after completion

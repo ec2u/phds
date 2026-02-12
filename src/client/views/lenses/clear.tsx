@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 EC2U Alliance
+ * Copyright © 2025-2026 EC2U Alliance
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,12 +14,24 @@
  * limitations under the License.
  */
 
+/**
+ * Cache clearing button with confirmation modal.
+ *
+ * @module
+ */
+
 import { Button, LoadingButton, Modal, ModalBody, ModalFooter, ModalHeader, ModalTitle } from "@forge/react";
 import React, { useState } from "react";
 import { isActivity, Status } from "../../../shared/tasks";
 import { useCache } from "../../hooks/cache";
 import { execute } from "../../ports/index";
 
+/**
+ * Renders a "Clear" button that prompts for confirmation before purging all cached data for the current page.
+ *
+ * @param props the component props
+ * @param props.isDisabled whether the button is disabled
+ */
 export function ToolClear({
 
 	isDisabled
@@ -31,10 +43,10 @@ export function ToolClear({
 
 }) {
 
-	const { clearCache }=useCache();
+	const { clearCache } = useCache();
 
-	const [confirming, setConfirming]=useState(false);
-	const [clearing, setClearing]=useState<Status<void>>();
+	const [confirming, setConfirming] = useState(false);
+	const [clearing, setClearing] = useState<Status<void>>();
 
 
 	function cancel() {

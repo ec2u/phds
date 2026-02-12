@@ -41,6 +41,9 @@ app:
   id: ari:cloud:ecosystem::app/68e73326-bb04-4df2-a14c-382ba3abbe2b
   runtime:
     name: nodejs22.x
+  package:
+    extraFiles:
+      - src/server/tasks/async/*.sys.md
 
 permissions:
 
@@ -59,7 +62,3 @@ remotes:
     operations:
       - fetch
 
-  - key: langfuse
-    baseUrl: https://cloud.langfuse.com
-    operations:
-      - fetch

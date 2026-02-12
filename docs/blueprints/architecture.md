@@ -29,7 +29,7 @@ within Confluence.
 - **Ports**: `ports/index.ts` defines Forge resolver functions callable from client via `invoke()`
 - **Task Dispatcher**: `tasks/index.ts` routes different task types to specific handlers
 - **Task Handlers**: Individual modules (policies, policy, issues, classify, annotate, transition, clear)
-- **Tools**: Utilities for external integrations (Gemini AI, Langfuse tracing, Confluence pages, caching)
+- **Tools**: Utilities for external integrations (Gemini AI, Confluence pages, caching)
 
 ### 3. Shared Layer (`src/shared/`)
 
@@ -41,7 +41,6 @@ within Confluence.
 
 - **Key-Value Store**: Forge's persistent storage for caching documents, issues, and task status
 - **Async Worker**: Background task execution system for long-running operations
-- **Langfuse**: Prompt management and tracing system for AI operations
 - **Gemini AI**: Google's AI service for document analysis and natural language processing
 
 # Forge Application Architecture
@@ -88,7 +87,7 @@ The system follows an asynchronous task execution pattern with multiple interact
 
 The async worker executes tasks through iterative AI operations:
 
-- **Langfuse Integration**: Worker retrieves optimized prompts for specific task types
+- **Prompt Loading**: Worker reads local prompt templates from co-located `.sys.md` files
 - **Gemini AI Processing**: Worker executes prompts against Gemini API for document analysis
 - **Status Updates**: Worker continuously updates task status in Key-Value Store with Activity states
 - **Result Assembly**: Worker processes AI responses and assembles final task results
@@ -123,10 +122,9 @@ Parallel to background processing:
 
 ### External System Integration
 
-- **Langfuse**: Centralized prompt management enables prompt optimization without code changes
 - **Gemini AI**: Provides document analysis, issue detection, and natural language processing
 - **Key-Value Store**: Serves as both cache and persistent state store with timestamp-based validation
 - **Async Worker**: Ensures long-running AI operations don't block user interface interactions
 
-This architecture enables responsive user experience while handling computationally intensive AI operations,
-with comprehensive status tracking and robust error handling throughout the execution pipeline.
+This architecture enables responsive user experience while handling computationally intensive AI operations, with
+comprehensive status tracking and robust error handling throughout the execution pipeline.

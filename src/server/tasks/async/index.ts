@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 EC2U Alliance
+ * Copyright © 2025-2026 EC2U Alliance
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,6 +14,15 @@
  * limitations under the License.
  */
 
+/**
+ * Asynchronous task executor for Forge event queue processing.
+ *
+ * Dispatches long-running tasks (policy extraction, compliance analysis) to their respective handlers, managing
+ * status reporting and error recovery. Triggers background cache maintenance after task completion.
+ *
+ * @module index
+ */
+
 import Resolver from "@forge/resolver";
 import { asTrace } from "../../../shared/index";
 import { Status, Task } from "../../../shared/tasks";
@@ -23,6 +32,9 @@ import { analyze } from "./analyze";
 import { policy } from "./policy";
 
 
+/**
+ * Context provided by the Forge event queue to async task handlers.
+ */
 interface AsyncEventContext {
 	jobId: string;
 }
@@ -30,6 +42,9 @@ interface AsyncEventContext {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * The Forge resolver handler definitions for asynchronous task execution.
+ */
 export const handler = new Resolver()
 
 	.define("execute", async function ({
@@ -53,8 +68,29 @@ export const handler = new Resolver()
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * Dispatches an asynchronous task to the appropriate handler.
+ *
+ * Routes the task based on its type, reports errors as traces to the job status, and triggers background cache
+ * maintenance on completion.
+ *
+ * @typeParam T the type of the task result value
+ *
+ * @param task the task to execute
+ * @param page the Confluence page identifier
+ * @param job the background job identifier
+ *
+ * @return the task result status
+ */
 async function async<T>(task: Task<T>, page: string, job: string): Promise<Status<T>> {
 
+	/**
+	 * Reports an error as a trace to the job status.
+	 *
+	 * @param error the error to report
+	 *
+	 * @return the error trace
+	 */
 	async function report(error: unknown) {
 
 		console.error("async task failed:", error);

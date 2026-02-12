@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 EC2U Alliance
+ * Copyright © 2025-2026 EC2U Alliance
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,12 +14,27 @@
  * limitations under the License.
  */
 
+/**
+ * Issue severity classification task.
+ *
+ * @module
+ */
+
 import { kvs } from "@forge/kvs";
 import { Issue } from "../../../shared/items/issues";
 import { Activity, ClassifyTask, Payload } from "../../../shared/tasks";
 import { setStatus } from "../../async";
 import { issueKey, lock } from "../../tools/cache";
 
+/**
+ * Updates the severity level of a specific issue.
+ *
+ * Acquires an exclusive lock on the issue, then updates its severity and timestamp in the cache.
+ *
+ * @param job the job identifier for locking
+ * @param page the Confluence page identifier
+ * @param payload the task payload containing issue identifier and severity level
+ */
 export async function classify(job: string, page: string, {
 
 	issue,
@@ -27,7 +42,7 @@ export async function classify(job: string, page: string, {
 
 }: Payload<ClassifyTask>): Promise<void> {
 
-	const key=issueKey(page, issue);
+	const key = issueKey(page, issue);
 
 	await lock(job, key, async () => {
 
@@ -35,7 +50,7 @@ export async function classify(job: string, page: string, {
 
 		// update severity for the specific issue
 
-		const issue=await kvs.get<Issue>(key);
+		const issue = await kvs.get<Issue>(key);
 
 		if ( issue ) {
 			await kvs.set<Issue>(key, { ...issue, severity, updated: new Date().toISOString() });

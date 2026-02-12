@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 EC2U Alliance
+ * Copyright © 2025-2026 EC2U Alliance
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,10 +14,29 @@
  * limitations under the License.
  */
 
+/**
+ * Client-side task execution orchestrator.
+ *
+ * Submits tasks to the server via the Forge bridge and manages status polling for asynchronous operations.
+ *
+ * @module index
+ */
+
 import { asTrace, isString } from "../../shared/index";
 import { Activity, isActivity, Observer, Status, Task } from "../../shared/tasks";
 import { monitorTask, submitTask } from "./tasks";
 
+/**
+ * Submits a task and delivers status updates to the observer.
+ *
+ * For synchronous tasks, the result is delivered immediately. For asynchronous tasks, polls the server at one-second
+ * intervals until a terminal status is received.
+ *
+ * @typeParam T the type of the task result value
+ *
+ * @param observer the callback for receiving status updates
+ * @param task the task to submit
+ */
 export async function execute<T>(observer: Observer<T>, task: Task<T> & Record<string, any>) {
 
 	try {

@@ -1,0 +1,48 @@
+---
+title: INCONSISTENCY_DETECTION Version History
+summary: Issues addressed in each iteration of the inconsistency detection prompt
+description: |
+  Compliance audit prompt that identifies clashes between a university document and a governing policy. Produces
+  structured reports with excerpts, analysis, and severity ratings. Supports iterative use where previously found issues
+  are excluded from subsequent passes.
+---
+
+# Version History
+
+| Transition | Changes | Likely Issue Addressed |
+|---|---|---|
+| 001 (baseline) | Five clash types; documents embedded inline via template variables; flat structure; JSON output with policy excerpt, document excerpt, and reason | Initial compliance detection prompt |
+| 001 to 002 | Externalised document content; added `document_name` and `policy_name` variables | Architecture refactored to pass documents separately from prompt template |
+| 002 to 003 | Split "reason" field into title + description | Monolithic reason strings; improved UI rendering and scannability of reports |
+| 003 to 004 | Major enrichment: added role persona ("compliance officer"); added translation support (`target_language`); added known-issues exclusion; added severity assessment; reduced from 5 to 4 clash types (dropped "Ambiguity or Definitional Conflict") | Multiple gaps: "Ambiguity" category generating noisy false positives; multilingual EU context requiring translation; iterative use requiring deduplication; no severity prioritisation |
+| 004 to 005 | Renamed `existing_issues` to `known_issues` | Naming consistency |
+| 005 to 006 | Repositioned known-issues section to prompt end; made severity values explicit (high/medium/low) | Improved adherence to exclusion rules by leveraging end-of-prompt emphasis |
+| 006 to 007 | Major overhaul: restructured into `#` sections; added "What is NOT a Clash" section with three exclusion categories (semantic variations, super-compliance, expansion into undefined areas); reduced to 3 clash types; defined severity criteria (high: legal/financial risk; medium: operational; low: minor deviation) | False positives from phrasing differences, stricter-than-policy items, and topics outside the policy's scope |
+| 007 to 008 | Added permission for empty output: "feel free to return an empty list" | Model forcing itself to always produce findings even when none existed |
+| 008 to 009 | Added "Never invent irrelevant or inexistent inconsistencies" | Model fabricating/hallucinating low-quality findings |
+| 009 to 010 | Strengthened translation instructions to "MUST" with explicit prohibition of other languages | Model returning excerpts in original document language instead of translating |
+| 010 to 011 | On follow-up passes with known issues: "only highlight clashes of critical severity" | Model producing redundant or marginal findings on second passes |
+| 011 to 012 | Changed to "only report critical severity clashes -- although these are unlikely" | Follow-up pass still too verbose; added rarity hint |
+| 012 to 013 | Changed to "return an empty list, unless super-critical clashes are found" | Further raising the bar for follow-up pass output |
+| 013 to 014 | Changed to "return an empty list -- unless there are extremely critical contradictions, which are unlikely" | Strongest suppression yet for follow-up passes |
+| 014 to 015 | Re-embedded documents inline via `<policy>` and `<document>` tags; added completeness instruction ("You MUST be extremely sure"); simplified role | Architecture shifted back to inline embedding for better cross-referencing accuracy; model was missing valid clashes |
+| 015 to 016 | Refined completeness instruction with peer-review framing: "a second analysis would not reveal any new clashes" | More effective self-verification mental model for the LLM |
+| 016 to 018 | Structural reorganisation; moved behavioural instructions to dedicated `IMPORTANT NOTE` section at prompt end | End-of-prompt positioning for stronger influence on model output |
+| 018 to 019 | Major rewrite: consolidated to 2 clash types (Contradiction, Insufficiency); added METHODOLOGY section with 4-step audit process (policy decomposition, systematic comparison, clash identification/filtering, report generation); added strict JSON formatting guard | Taxonomy confusion with 3 categories; model not systematically decomposing the policy before comparing; JSON wrapped in markdown code fences breaking parsers |
+| 019 to 020 | Fixed section-name cross-reference; removed redundant instruction | Reference consistency |
+| 020 to 021 | Elevated completeness to dedicated `CRITICAL INSTRUCTION` section with "100% coverage" language and peer-review framing | Completeness still a problem; strongest emphasis applied |
+| 021 to 022 | Re-added document names as metadata labels; document content now passed via separate mechanism | Model needed names for output labelling; actual content no longer template-interpolated |
+| 022 to 023 | Formalised known-issues input structure (title, severity, analysis, excerpts); removed `known_issues` from template variables; added "CRITICAL" emphasis on exclusion | Known issues now passed through separate mechanism; ongoing difficulty with model re-reporting known issues |
+
+# Recurring Themes
+
+- **False positive reduction** (versions 004, 007, 011-014): Suppressing noise from phrasing variations,
+  super-compliance, and out-of-scope topics
+- **Anti-hallucination** (versions 008-009): Explicit permission for empty output and prohibition of fabricated findings
+- **Translation compliance** (versions 004, 010): Iterative strengthening of language-enforcement instructions
+- **Follow-up pass control** (versions 011-014): Progressive raising of the threshold for reporting on subsequent passes
+- **Completeness** (versions 015-016, 021): Persistent challenge ensuring all valid clashes are found
+- **Taxonomy simplification** (versions 004, 007, 019): Reduction from 5 to 4 to 3 to 2 clash types to reduce
+  classification confusion
+- **Architectural oscillation** (versions 001-002, 014-015, 021-023): Document content alternated between inline
+  embedding and external passing, reflecting trade-offs between cross-referencing accuracy and prompt-length management

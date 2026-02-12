@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 EC2U Alliance
+ * Copyright © 2025-2026 EC2U Alliance
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,13 +14,37 @@
  * limitations under the License.
  */
 
+/**
+ * Forge bridge invocations for task submission and monitoring.
+ *
+ * @module
+ */
+
 import { invoke } from "@forge/bridge";
 import { Status, Task } from "../../shared/tasks";
 
+/**
+ * Submits a task to the server via the Forge bridge.
+ *
+ * @typeParam T the type of the task result value
+ *
+ * @param task the task to submit
+ *
+ * @return the task result for synchronous tasks, or a job identifier string for asynchronous tasks
+ */
 export function submitTask<T>(task: Task<T> & Record<string, any>) {
 	return invoke<string | Status<T>>("submitTask", task);
 }
 
+/**
+ * Polls the status of an asynchronous background job via the Forge bridge.
+ *
+ * @typeParam T the type of the task result value
+ *
+ * @param id the job identifier
+ *
+ * @return the current job status
+ */
 export function monitorTask<T>(id: string) {
 	return invoke<Status<Status<T>>>("monitorTask", { id });
 }

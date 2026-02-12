@@ -2,16 +2,13 @@
 name: "Bug Report"
 about: "Create a report to help us improve"
 title: "What's wrong with @ec2u/phds?"
-labels: "Issue"
-assignees: ""
+type: "Bug"
 ---
-
 
 **environment**
 
-- @ec2u/phds: *version*
-- operating system: *name/version*
 - browser: *vendor/version*
+- operating system: *name/version*
 
 **steps to reproduce**
 

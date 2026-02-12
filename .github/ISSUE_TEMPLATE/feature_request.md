@@ -2,10 +2,8 @@
 name: "Feature Request"
 about: "Suggest an idea for this project"
 title: "What's missing from @ec2u/phds?"
-labels: "Story"
-assignees: ""
+type: "Feature"
 ---
-
 
 **challenge / use case**
 

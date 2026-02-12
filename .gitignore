@@ -3,7 +3,7 @@
 /.vscode/
 /.forge/
 
-/@
+/@*
 /phds.*
 
 /node_modules/

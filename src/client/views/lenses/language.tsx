@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 EC2U Alliance
+ * Copyright © 2025-2026 EC2U Alliance
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,11 +14,24 @@
  * limitations under the License.
  */
 
-import {Select} from "@forge/react";
+/**
+ * Language selector component.
+ *
+ * @module
+ */
+
+import { Select } from "@forge/react";
 import React from "react";
-import {Language, languages} from "../../../shared/items/languages";
+import { Language, languages } from "../../../shared/items/languages";
 
 
+/**
+ * Renders a compact dropdown selector for choosing from the supported languages.
+ *
+ * @param props the component props
+ * @param props.locale the currently selected language code
+ * @param props.onChange the callback when a language is selected
+ */
 export function ToolLanguage({
 
 	locale,

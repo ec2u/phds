@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 EC2U Alliance
+ * Copyright © 2025-2026 EC2U Alliance
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,6 +14,12 @@
  * limitations under the License.
  */
 
+/**
+ * Filterable issues catalogue view with sidebar controls.
+ *
+ * @module
+ */
+
 import { Button, EmptyState, Inline, Select, Stack, Text } from "@forge/react";
 import React from "react";
 import { Issue, Severities, Severity, State, States } from "../../../shared/items/issues";
@@ -26,6 +32,28 @@ import { ToolActivity } from "./activity";
 import ToolIssue, { severityLabel, stateLabel } from "./issue";
 import { ToolTrace } from "./trace";
 
+/**
+ * Issue state ordering for the catalogue view: blocked < active < pending < resolved.
+ */
+const CatalogStateOrder: Record<State, number> = {
+	blocked: 0,
+	active: 1,
+	pending: 2,
+	resolved: 3
+};
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * Renders a filterable list of compliance issues with state and severity filter controls in a sidebar.
+ *
+ * Persists filter selections to browser localStorage for the current page.
+ *
+ * @param props the component props
+ * @param props.page the Confluence page identifier
+ * @param props.issues the issues data and action callbacks
+ */
 export function ToolIssues({
 
 	page,
@@ -48,8 +76,8 @@ export function ToolIssues({
 			.filter(issue => includes(severity, issue.severity))
 			.sort((x, y) => {
 
-				const xOrder = States.indexOf(x.state);
-				const yOrder = States.indexOf(y.state);
+				const xOrder = CatalogStateOrder[x.state] ?? -1;
+				const yOrder = CatalogStateOrder[y.state] ?? -1;
 
 				return xOrder !== yOrder ? xOrder-yOrder
 					: x.severity !== y.severity ? y.severity-x.severity

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 EC2U Alliance
+ * Copyright © 2025-2026 EC2U Alliance
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,11 +14,24 @@
  * limitations under the License.
  */
 
-import {Box, Inline, xcss} from "@forge/react";
-import React, {ReactNode} from "react";
-import {Rule} from "..";
+/**
+ * Toolbar layout component with menu and action areas.
+ *
+ * @module
+ */
+
+import { Box, Inline, xcss } from "@forge/react";
+import React, { ReactNode } from "react";
+import { Rule } from "..";
 
 
+/**
+ * Renders a toolbar with a left-aligned menu area and a right-aligned action area.
+ *
+ * @param props the component props
+ * @param props.menu the left-aligned menu content
+ * @param props.more the right-aligned action content
+ */
 export function ToolBar({
 
 	menu,

@@ -1,0 +1,20 @@
+{
+  "id": "ba6ea664-9c3f-4e69-ac91-d8a0e54c2b76",
+  "createdAt": "2025-08-15T12:44:32.889Z",
+  "updatedAt": "2025-08-15T12:44:32.889Z",
+  "projectId": "cmbq77blc06qvad07zjw69hxc",
+  "createdBy": "clw0q2sv900005o0ottkl5r7x",
+  "prompt": "Your entire output MUST be a single, valid JSON object. Do not output any other text, explanations, or markdown formatting (like ```json) before or after the JSON object.",
+  "name": "JSON_OUTPUT",
+  "version": 1,
+  "type": "text",
+  "isActive": true,
+  "config": {},
+  "tags": [],
+  "labels": [
+    "production",
+    "latest"
+  ],
+  "commitMessage": null,
+  "resolutionGraph": null
+}

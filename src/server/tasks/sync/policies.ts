@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 EC2U Alliance
+ * Copyright © 2025-2026 EC2U Alliance
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,6 +14,12 @@
  * limitations under the License.
  */
 
+/**
+ * Policy catalogue retrieval task.
+ *
+ * @module
+ */
+
 import { kvs, WhereConditions } from "@forge/kvs";
 import { isUndefined } from "../../../shared/index";
 import { Document, Source, Title } from "../../../shared/items/documents";
@@ -23,6 +29,17 @@ import { listAttachments } from "../../tools/attachments";
 import { keyPrefix, keySource, lock, policiesKey } from "../../tools/cache";
 import { pdf } from "../../tools/mime";
 
+/**
+ * Builds a catalogue of available policy documents for a Confluence page.
+ *
+ * Lists PDF attachments, purges stale cache entries for removed or updated attachments, and returns a mapping from
+ * source identifiers to display titles.
+ *
+ * @param job the job identifier for locking
+ * @param page the Confluence page identifier
+ *
+ * @return the source-to-title catalogue mapping
+ */
 export async function policies(job: string, page: string, {}: Payload<PoliciesTask>): Promise<Record<Source, Title>> {
 
 	return await lock(job, policiesKey(page), async () => {
@@ -31,14 +48,14 @@ export async function policies(job: string, page: string, {}: Payload<PoliciesTa
 
 		await setStatus(job, Activity.Scanning);
 
-		const attachments=await listAttachments(page, pdf);
+		const attachments = await listAttachments(page, pdf);
 
 
 		// get cached policy documents for this page (100 should be sufficient for single page, no pagination needed)
 
 		await setStatus(job, Activity.Fetching);
 
-		const cached=await kvs.query()
+		const cached = await kvs.query()
 			.where("key", WhereConditions.beginsWith(keyPrefix(policiesKey(page))))
 			.limit(100)
 			.getMany();
@@ -53,11 +70,11 @@ export async function policies(job: string, page: string, {}: Payload<PoliciesTa
 
 				// extract source id from cache key
 
-				const source=keySource(result.key);
+				const source = keySource(result.key);
 
 				// find matching attachment
 
-				const attachment=attachments.find(attachment => source === attachment.id);
+				const attachment = attachments.find(attachment => source === attachment.id);
 
 				if ( isUndefined(attachment) ) { // attachment no longer exists, purge this cache entry
 
@@ -65,9 +82,9 @@ export async function policies(job: string, page: string, {}: Payload<PoliciesTa
 
 				} else { // check timestamp staleness: purge if document was cached before attachment was modified
 
-					const document=result.value as Document;
-					const attachmentCreated=new Date(attachment.createdAt).getTime();
-					const cachedCreated=new Date(document.created).getTime();
+					const document = result.value as Document;
+					const attachmentCreated = new Date(attachment.createdAt).getTime();
+					const cachedCreated = new Date(document.created).getTime();
 
 					return cachedCreated < attachmentCreated; // stale if cached before attachment modified
 
@@ -79,7 +96,7 @@ export async function policies(job: string, page: string, {}: Payload<PoliciesTa
 
 		// create catalog (using attachment title, as document title is quite expensive to get upfront)
 
-		const catalog=attachments.reduce((catalog, attachment) => ({
+		const catalog = attachments.reduce((catalog, attachment) => ({
 			...catalog,
 			[attachment.id]: attachment.title.replace(/\.pdf$/, "")
 		}), {} as Record<Source, Title>);

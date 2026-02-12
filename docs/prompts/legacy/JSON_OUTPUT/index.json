@@ -1,0 +1,14 @@
+{
+  "name": "JSON_OUTPUT",
+  "tags": [],
+  "lastUpdatedAt": "2025-08-15T12:44:32.889Z",
+  "versions": [
+    1
+  ],
+  "labels": [
+    "latest",
+    "production"
+  ],
+  "type": "text",
+  "lastConfig": {}
+}

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 EC2U Alliance
+ * Copyright © 2025-2026 EC2U Alliance
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,11 +14,23 @@
  * limitations under the License.
  */
 
-export type Language=keyof typeof languages;
 
-export const defaultLanguage="en" as const;
+/**
+ * Language definitions for the EC2U alliance member institutions.
+ *
+ * @module
+ */
 
-export const languages={
+
+/**
+ * The default language for content display and translation.
+ */
+export const defaultLanguage = "en" as const;
+
+/**
+ * Mapping from ISO 639-1 language codes to their native display names.
+ */
+export const languages = {
 	de: "Deutsch",
 	en: "English",
 	es: "Español",
@@ -29,3 +41,11 @@ export const languages={
 	fi: "Suomi",
 	sv: "Svenska"
 } as const;
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * ISO 639-1 language code for a supported language.
+ */
+export type Language = keyof typeof languages;

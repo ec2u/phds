@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 EC2U Alliance
+ * Copyright © 2025-2026 EC2U Alliance
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,10 +14,22 @@
  * limitations under the License.
  */
 
-import {Box, Heading, Icon, Popup, Pressable, Stack, Text, xcss} from "@forge/react";
-import React, {useState} from "react";
-import {Reference} from "../../../shared/items/issues";
+/**
+ * Inline source reference popup component.
+ *
+ * @module
+ */
 
+import { Box, Heading, Icon, Popup, Pressable, Stack, Text, xcss } from "@forge/react";
+import React, { useState } from "react";
+import { Reference } from "../../../shared/items/issues";
+
+/**
+ * Renders an inline info icon that opens a popup showing the source reference title and excerpt.
+ *
+ * @param props the component props
+ * @param props.reference the source reference to display
+ */
 export function ToolReference({
 
 	reference
@@ -28,7 +40,7 @@ export function ToolReference({
 
 }) {
 
-	const [open, setOpen]=useState<boolean>(false);
+	const [open, setOpen] = useState<boolean>(false);
 
 	return <Popup
 

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 EC2U Alliance
+ * Copyright © 2025-2026 EC2U Alliance
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,13 +14,25 @@
  * limitations under the License.
  */
 
-import type {BackgroundColor, BorderColor} from "@atlaskit/primitives";
-import {xcss} from "@forge/react";
+/**
+ * Shared styling utilities and design tokens for UI components.
+ *
+ * @module index
+ */
+
+import type { BackgroundColor, BorderColor } from "@atlaskit/primitives";
+import { xcss } from "@forge/react";
 
 
+/**
+ * The parameter type accepted by the Forge `xcss` function.
+ */
 export type XCSS =
 	Parameters<typeof xcss>[0];
 
+/**
+ * A pair of Atlassian Design Token colours for background and border styling.
+ */
 export type Colors = {
 	backgroundColor: BackgroundColor;
 	borderColor: BorderColor;
@@ -29,8 +41,14 @@ export type Colors = {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * Neutral grey colour pair for default UI elements.
+ */
 export const NeutralColors = toColors("gray");
 
+/**
+ * Bottom border rule style applied to toolbar and section separators.
+ */
 export const Rule: XCSS = {
 
 	paddingBottom: "space.200",
@@ -45,6 +63,15 @@ export const Rule: XCSS = {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * Creates a colour pair from an Atlassian Design Token accent colour name.
+ *
+ * @typeParam T the colour name string literal type
+ *
+ * @param color the accent colour name
+ *
+ * @return the border and background colour pair
+ */
 export function toColors<T extends string>(color: T) {
 	return {
 		borderColor: `color.border.accent.${color}` as const,

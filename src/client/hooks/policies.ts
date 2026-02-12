@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 EC2U Alliance
+ * Copyright © 2025-2026 EC2U Alliance
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,23 +14,36 @@
  * limitations under the License.
  */
 
+/**
+ * Policy catalogue retrieval hook.
+ *
+ * @module
+ */
+
 import { useEffect, useState } from "react";
 import { Catalog } from "../../shared/items/documents";
 import { Status } from "../../shared/tasks";
 import { execute } from "../ports/index";
 import { useCache } from "./cache";
 
+/**
+ * Fetches and caches the catalogue of available policy documents.
+ *
+ * Returns the current status of the policies catalogue, loading from the in-memory cache on subsequent renders.
+ *
+ * @return the catalogue status: the source-to-title mapping, an activity state, or an error trace
+ */
 export function usePolicies(): Status<Catalog> {
 
-	const { getCache, setCache }=useCache();
+	const { getCache, setCache } = useCache();
 
-	const key="policies";
-	const cached=getCache<Catalog>(key);
+	const key = "policies";
+	const cached = getCache<Catalog>(key);
 
-	const [policies, setPolicies]=useState<Status<Catalog>>(cached ?? {});
+	const [policies, setPolicies] = useState<Status<Catalog>>(cached ?? {});
 
 
-	const update=(policies: Status<Catalog>) => {
+	const update = (policies: Status<Catalog>) => {
 		setPolicies(policies);
 		setCache(key, policies);
 	};

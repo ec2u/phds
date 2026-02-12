@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 EC2U Alliance
+ * Copyright © 2025-2026 EC2U Alliance
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,14 +14,25 @@
  * limitations under the License.
  */
 
+/**
+ * Google Gemini AI integration for prompt processing.
+ *
+ * Provides file upload and prompt processing capabilities using the Gemini API, supporting both plain text and
+ * structured JSON output modes with configurable models.
+ *
+ * @module
+ */
+
 import { File, GenerationConfig, GoogleGenAI, Schema } from "@google/genai";
-import { TextPromptClient } from "langfuse";
-import { asTrace, isObject, isString } from "../../shared";
+import { asTrace } from "../../shared";
 import { secret } from "../index";
 
 import { json } from "./mime";
 
 
+/**
+ * Default model and generation configuration.
+ */
 const defaults: {
 
 	model: string,
@@ -41,15 +52,29 @@ const defaults: {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/**
+ * The Gemini API key.
+ */
 const key = secret("GEMINI_KEY");
 
+/**
+ * The Gemini API client instance.
+ */
 const client = new GoogleGenAI({ apiKey: key });
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
- * Uploads are deleted after 48 hours (https://ai.google.dev/gemini-api/docs/files#delete-uploaded)
+ * Uploads a file to the Gemini API for use in prompt processing.
+ *
+ * Uploaded files are automatically deleted after 48 hours.
+ *
+ * @param options the upload options
+ *
+ * @return the uploaded file metadata
+ *
+ * @see {@link https://ai.google.dev/gemini-api/docs/files#delete-uploaded Gemini File API}
  */
 export async function upload({
 
@@ -86,27 +111,40 @@ export async function upload({
 }
 
 /**
- * processes a prompt with Gemini and returns the response as plain text
+ * Processes a prompt with Gemini and returns the response as plain text.
+ *
+ * @param options the processing options
+ *
+ * @return the response text
  */
 export async function process({
 	model,
+	config,
 	prompt,
 	variables,
 	input,
 	files
 }: {
 	model?: string
-	prompt: string | TextPromptClient
+	config?: GenerationConfig
+	prompt: string
 	variables?: Record<string, string>
 	input?: string | readonly string[]
 	files?: File | readonly File[]
 }): Promise<string>;
 
 /**
- * processes a prompt with Gemini using structured output and returns typed response
+ * Processes a prompt with Gemini using structured output and returns a typed response.
+ *
+ * @typeParam T the expected response type matching the schema
+ *
+ * @param options the processing options including a JSON schema for structured output
+ *
+ * @return the parsed response object
  */
 export async function process<T>({
 	model,
+	config,
 	prompt,
 	variables,
 	input,
@@ -114,15 +152,20 @@ export async function process<T>({
 	schema
 }: {
 	model?: string
-	prompt: string | TextPromptClient
+	config?: GenerationConfig
+	prompt: string
 	variables?: Record<string, string>
 	input?: string | readonly string[]
 	files?: File | readonly File[]
 	schema: Schema
 }): Promise<T>;
 
+/**
+ * Processes a prompt with Gemini.
+ */
 export async function process({
 	model,
+	config: custom,
 	prompt,
 	variables,
 	input,
@@ -130,7 +173,8 @@ export async function process({
 	schema
 }: {
 	model?: string
-	prompt: string | TextPromptClient
+	config?: GenerationConfig
+	prompt: string
 	schema?: Schema
 	variables?: Record<string, string>
 	input?: string | readonly string[]
@@ -155,21 +199,17 @@ export async function process({
 		}
 
 
-		const systemInstruction = isString(prompt)
-			? compile(prompt, variables ?? {})
-			: prompt.compile(variables);
+		const systemInstruction = compile(prompt, variables ?? {});
 
 		const inputArray = input ? (Array.isArray(input) ? input : [input]) : undefined;
 		const filesArray = files ? (Array.isArray(files) ? files : [files]) : undefined;
-
-		const promptName = isString(prompt) ? "inline" : prompt.name;
 		const modelName = model ?? defaults.model;
 
-		console.info(`gemini request: ${promptName} (${modelName})`);
+		console.info(`gemini request: (${modelName})`);
 
 		const config = {
 			...(defaults.config),
-			...(isObject(prompt) && isObject(prompt.config) ? prompt.config : {}),
+			...(custom ?? {}),
 			...(schema && {
 				responseMimeType: json,
 				responseSchema: schema
@@ -207,7 +247,7 @@ export async function process({
 
 		const responseText = result.text || "";
 
-		console.info(`gemini response: ${promptName} (${responseText.length} chars)`);
+		console.info(`gemini response: (${responseText.length} chars)`);
 
 		if ( schema ) {
 

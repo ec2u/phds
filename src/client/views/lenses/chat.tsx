@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 EC2U Alliance
+ * Copyright © 2025-2026 EC2U Alliance
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,9 +14,18 @@
  * limitations under the License.
  */
 
+/**
+ * Chat view placeholder component.
+ *
+ * @module
+ */
+
 import { EmptyState, Icon } from "@forge/react";
 import React from "react";
 
+/**
+ * Renders a work-in-progress placeholder for the chat feature.
+ */
 export function ToolChat() {
 
 	return <EmptyState

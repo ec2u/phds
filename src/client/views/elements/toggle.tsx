@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 EC2U Alliance
+ * Copyright © 2025-2026 EC2U Alliance
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,9 +14,24 @@
  * limitations under the License.
  */
 
+/**
+ * Expand/collapse toggle button component.
+ *
+ * @module
+ */
+
 import React from "react";
 import { ToolAction } from "./action";
 
+/**
+ * Renders a chevron toggle button for expanding and collapsing content sections.
+ *
+ * @param props the component props
+ * @param props.expanded whether the content is currently expanded
+ * @param props.direction the expand/collapse direction (`"vertical"` or `"horizontal"`)
+ * @param props.label optional content label for accessibility
+ * @param props.onToggle the toggle event handler
+ */
 export function ToolToggle({
 
 	expanded,
