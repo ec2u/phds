@@ -22,10 +22,10 @@ import { defaultLanguage } from "../../../shared/items/languages";
 import { Activity, AnalyzeTask, Payload } from "../../../shared/tasks";
 import { markdown as adfToMarkdown } from "../../../shared/tools/text";
 import { setStatus } from "../../async";
+import { file as read } from "../../index";
 import { Attachment, fetchAttachment, listAttachments } from "../../tools/attachments";
 import { issueKey, issuesKey, keyPrefix, lock } from "../../tools/cache";
 import { process, upload } from "../../tools/gemini";
-import { retrievePrompt } from "../../tools/langfuse";
 import { markdown, pdf } from "../../tools/mime";
 import { fetchPage } from "../../tools/pages";
 
@@ -48,6 +48,12 @@ const model = "gemini-2.5-pro";
  * The number of parallel detection rounds per policy document.
  */
 const iterations = 5;
+
+/**
+ * The display name used for the agreement document in Gemini prompts.
+ */
+const agreementName = "agreement";
+
 
 /**
  * The structured response type from the Gemini analysis prompt.
@@ -171,13 +177,26 @@ export async function analyze(job: string, page: string, {}: Payload<AnalyzeTask
 
 		// retrieve prompts
 
-		const detection = await retrievePrompt("INCONSISTENCY_DETECTION");
-		const merging = await retrievePrompt("INCONSISTENCY_MERGING");
+		const detectPrompt = await read("analyze-detect.sys.md", __dirname);
+
+		const detectVariables = {
+			document_name: agreementName,
+			target_language: defaultLanguage
+		};
+
+		const detectConfig = {
+			temperature: 0,
+			seed: 42,
+			topP: 0,
+			topK: 1,
+			candidateCount: 1
+		};
+
+
+		const mergePrompt = await read("analyze-merge.sys.md", __dirname);
 
 
 		// upload agreement text
-
-		const agreementName = "agreement";
 		const agreementFile = await upload({
 			name: agreementName,
 			mime: markdown,
@@ -250,11 +269,11 @@ export async function analyze(job: string, page: string, {}: Payload<AnalyzeTask
 
 			const response = await process<Response>({
 				model,
-				prompt: detection,
+				prompt: detectPrompt,
+				config: detectConfig,
 				variables: {
-					document_name: agreementName,
-					policy_name: file.displayName!,
-					target_language: defaultLanguage
+					...detectVariables,
+					policy_name: file.displayName!
 				},
 				input: history,
 				files: [file, agreementFile],
@@ -268,7 +287,7 @@ export async function analyze(job: string, page: string, {}: Payload<AnalyzeTask
 
 			const response = await process<Response>({
 				model,
-				prompt: merging,
+				prompt: mergePrompt,
 				input: report(issues),
 				schema: ResponseSchema
 			});

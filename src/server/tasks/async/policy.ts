@@ -30,10 +30,10 @@ import { Document } from "../../../shared/items/documents";
 import { Language } from "../../../shared/items/languages";
 import { Activity, Payload, PolicyTask } from "../../../shared/tasks";
 import { setStatus } from "../../async";
+import { file as read } from "../../index";
 import { fetchAttachment, getAttachment } from "../../tools/attachments";
 import { lock, policyKey } from "../../tools/cache";
 import { process, upload } from "../../tools/gemini";
-import { retrievePrompt } from "../../tools/langfuse";
 import { pdf } from "../../tools/mime";
 
 /**
@@ -108,12 +108,17 @@ async function extract(job: string, page: string, source: string): Promise<Docum
 	const buffer = await fetchAttachment(page, source);
 
 
-	await setStatus(job, Activity.Prompting);
-
-	const prompt = await retrievePrompt("PDF_TO_MD");
-
-
 	await setStatus(job, Activity.Extracting);
+
+	const prompt = await read("policy-extract.sys.md", __dirname);
+
+	const config = {
+		temperature: 0,
+		seed: 42,
+		topP: 0,
+		topK: 1,
+		candidateCount: 1
+	};
 
 	const file = await upload({
 		name: source,
@@ -136,6 +141,8 @@ async function extract(job: string, page: string, source: string): Promise<Docum
 	}>({
 
 		prompt: prompt,
+		config: config,
+
 		files: [file],
 
 		schema: {
@@ -177,12 +184,21 @@ async function extract(job: string, page: string, source: string): Promise<Docum
  */
 async function translate(job: string, page: string, source: string, document: Document, language: Language): Promise<Document> {
 
-	await setStatus(job, Activity.Prompting);
-
-	const translate = await retrievePrompt("TRANSLATION");
-
-
 	await setStatus(job, Activity.Translating);
+
+	const prompt = await read("policy-translate.sys.md", __dirname);
+
+	const variables = {
+		target_language: language
+	};
+
+	const config = {
+		temperature: 0,
+		seed: 42,
+		topP: 0,
+		topK: 1,
+		candidateCount: 1
+	};
 
 	const translated: {
 
@@ -192,11 +208,9 @@ async function translate(job: string, page: string, source: string, document: Do
 
 	} = await process({
 
-		prompt: translate,
-
-		variables: {
-			target_language: language
-		},
+		prompt,
+		variables,
+		config,
 
 		input: document.content,
 

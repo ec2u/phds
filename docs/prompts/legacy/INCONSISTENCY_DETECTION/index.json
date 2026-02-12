@@ -1,0 +1,44 @@
+{
+  "name": "INCONSISTENCY_DETECTION",
+  "tags": [],
+  "lastUpdatedAt": "2025-10-23T14:32:32.592Z",
+  "versions": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+  ],
+  "labels": [
+    "latest",
+    "prod-for-md-files",
+    "prod-for-pdf-files",
+    "production"
+  ],
+  "type": "text",
+  "lastConfig": {
+    "temperature": 0,
+    "seed": 42,
+    "top_p": 0,
+    "candidate_count": 1,
+    "top_k": 1
+  }
+}

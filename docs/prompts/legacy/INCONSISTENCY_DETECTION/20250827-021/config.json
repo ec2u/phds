@@ -1,0 +1,7 @@
+{
+  "temperature": 0,
+  "seed": 42,
+  "top_p": 0,
+  "candidate_count": 1,
+  "top_k": 1
+}

@@ -18,14 +18,13 @@
  * Google Gemini AI integration for prompt processing.
  *
  * Provides file upload and prompt processing capabilities using the Gemini API, supporting both plain text and
- * structured JSON output modes with configurable models and Langfuse prompt templates.
+ * structured JSON output modes with configurable models.
  *
  * @module
  */
 
 import { File, GenerationConfig, GoogleGenAI, Schema } from "@google/genai";
-import { TextPromptClient } from "langfuse";
-import { asTrace, isObject, isString } from "../../shared";
+import { asTrace } from "../../shared";
 import { secret } from "../index";
 
 import { json } from "./mime";
@@ -120,13 +119,15 @@ export async function upload({
  */
 export async function process({
 	model,
+	config,
 	prompt,
 	variables,
 	input,
 	files
 }: {
 	model?: string
-	prompt: string | TextPromptClient
+	config?: GenerationConfig
+	prompt: string
 	variables?: Record<string, string>
 	input?: string | readonly string[]
 	files?: File | readonly File[]
@@ -143,6 +144,7 @@ export async function process({
  */
 export async function process<T>({
 	model,
+	config,
 	prompt,
 	variables,
 	input,
@@ -150,7 +152,8 @@ export async function process<T>({
 	schema
 }: {
 	model?: string
-	prompt: string | TextPromptClient
+	config?: GenerationConfig
+	prompt: string
 	variables?: Record<string, string>
 	input?: string | readonly string[]
 	files?: File | readonly File[]
@@ -162,6 +165,7 @@ export async function process<T>({
  */
 export async function process({
 	model,
+	config: custom,
 	prompt,
 	variables,
 	input,
@@ -169,7 +173,8 @@ export async function process({
 	schema
 }: {
 	model?: string
-	prompt: string | TextPromptClient
+	config?: GenerationConfig
+	prompt: string
 	schema?: Schema
 	variables?: Record<string, string>
 	input?: string | readonly string[]
@@ -194,21 +199,17 @@ export async function process({
 		}
 
 
-		const systemInstruction = isString(prompt)
-			? compile(prompt, variables ?? {})
-			: prompt.compile(variables);
+		const systemInstruction = compile(prompt, variables ?? {});
 
 		const inputArray = input ? (Array.isArray(input) ? input : [input]) : undefined;
 		const filesArray = files ? (Array.isArray(files) ? files : [files]) : undefined;
-
-		const promptName = isString(prompt) ? "inline" : prompt.name;
 		const modelName = model ?? defaults.model;
 
-		console.info(`gemini request: ${promptName} (${modelName})`);
+		console.info(`gemini request: (${modelName})`);
 
 		const config = {
 			...(defaults.config),
-			...(isObject(prompt) && isObject(prompt.config) ? prompt.config : {}),
+			...(custom ?? {}),
 			...(schema && {
 				responseMimeType: json,
 				responseSchema: schema
@@ -246,7 +247,7 @@ export async function process({
 
 		const responseText = result.text || "";
 
-		console.info(`gemini response: ${promptName} (${responseText.length} chars)`);
+		console.info(`gemini response: (${responseText.length} chars)`);
 
 		if ( schema ) {
 

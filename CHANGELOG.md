@@ -13,6 +13,11 @@ Changes deployed to development, pending production promotion.
 
 - Reassign state colors: pending=red, active=yellow
 - Use catalog-specific state ordering (blocked < active < pending < resolved) in issues list
+- Migrate prompt management from Langfuse to local codebase files
+
+### Removed
+
+- Langfuse dependency and external permission
 
 ## [2026-01-09]
 

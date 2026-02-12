@@ -1,0 +1,15 @@
+{
+  "name": "INCONSISTENCY_MERGING",
+  "tags": [],
+  "lastUpdatedAt": "2025-10-23T14:15:04.739Z",
+  "versions": [
+    1,
+    2
+  ],
+  "labels": [
+    "latest",
+    "production"
+  ],
+  "type": "text",
+  "lastConfig": {}
+}

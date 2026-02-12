@@ -2,10 +2,10 @@
 
 AI-powered textual analysis for cotutelle PhD agreement drafting.
 
-The **EC2U PhD Agreements Tool** provides Large Language Model (LLM) based textual analysis supporting PhD
-coordinators and other relevant stakeholders of the [EC2U](https://ec2u.eu/) European University Alliance in
-drafting cotutelle PhD agreements, that is jointly supervised doctoral programmes where a candidate is enrolled
-at two universities under a shared agreement. The tool supports this process through:
+The **EC2U PhD Agreements Tool** provides Large Language Model (LLM) based textual analysis supporting PhD coordinators
+and other relevant stakeholders of the [EC2U](https://ec2u.eu/) European University Alliance in drafting cotutelle PhD
+agreements, that is jointly supervised doctoral programmes where a candidate is enrolled at two universities under a
+shared agreement. The tool supports this process through:
 
 - **Compatibility Analysis**: analyse existing agreements against relevant regulations from both partner universities
 - **Automatic Translations**: translate agreement documents and regulations across partner university languages

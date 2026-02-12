@@ -5,7 +5,6 @@ participant "Client" as client
 participant "Server" as server
 participant "Key-Value Store" as store
 participant "Async Worker" as worker
-participant "Langfuse" as langfuse
 participant "Gemini" as gemini
 
 client -> server: launch task
@@ -18,10 +17,7 @@ deactivate server
 
 par
     group loop [task execution]
-        worker -> langfuse: retrieve prompt
-        activate langfuse
-        langfuse --> worker: prompt
-        deactivate langfuse
+        worker -> worker: load prompt
         worker -> gemini: execute prompt
         activate gemini
         gemini --> worker: response

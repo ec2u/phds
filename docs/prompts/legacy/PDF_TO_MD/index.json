@@ -1,0 +1,23 @@
+{
+  "name": "PDF_TO_MD",
+  "tags": [],
+  "lastUpdatedAt": "2025-08-27T10:43:44.303Z",
+  "versions": [
+    1,
+    2,
+    3,
+    4
+  ],
+  "labels": [
+    "latest",
+    "production"
+  ],
+  "type": "text",
+  "lastConfig": {
+    "temperature": 0,
+    "seed": 42,
+    "top_p": 0,
+    "candidate_count": 1,
+    "top_k": 1
+  }
+}
