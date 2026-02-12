@@ -23,8 +23,8 @@
  * @module
  */
 
-import { File, GenerationConfig, GoogleGenAI, Schema } from "@google/genai";
-import { asTrace } from "../../shared";
+import { File, GenerationConfig, GoogleGenAI, Schema, Type } from "@google/genai";
+import { asTrace, isArray, isBoolean, isNull, isNumber, isObject, isString } from "../../shared";
 import { secret } from "../index";
 
 import { json } from "./mime";
@@ -251,15 +251,15 @@ export async function process({
 
 		if ( schema ) {
 
-			try {
+			const parsed = responseText.trim() ? JSON.parse(responseText) : {};
 
-				return responseText.trim() ? JSON.parse(responseText) : {};
+			if ( matches(parsed, schema) ) {
 
-			} catch ( parseError ) {
+				return parsed;
 
-				console.warn(`malformed JSON response <${responseText}>`);
+			} else {
 
-				return {};
+				throw asTrace(new Error(`invalid gemini response <${responseText.substring(0, 500)}…>`));
 
 			}
 
@@ -277,4 +277,73 @@ export async function process({
 
 	}
 
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * Checks if a value matches a Gemini {@link Schema} definition at runtime.
+ *
+ * Recursively validates the value against the schema's `type`, `required`, `properties`, `items`, `enum`,
+ * and `nullable` constraints, composing the existing `is*()` type guards.
+ *
+ * @param value the value to validate
+ * @param schema the Gemini schema to validate against
+ *
+ * @return `true` if the value conforms to the schema; `false` otherwise
+ */
+function matches(value: unknown, schema: Schema): boolean {
+
+	if ( schema.nullable && isNull(value) ) {
+
+		return true;
+
+	} else if ( schema.anyOf ) {
+
+		return schema.anyOf.some(sub => matches(value, sub));
+
+	} else {
+
+		switch ( schema.type ) {
+
+			case Type.STRING:
+
+				return isString(value) && (!schema.enum || schema.enum.includes(value));
+
+			case Type.NUMBER:
+
+				return isNumber(value);
+
+			case Type.INTEGER:
+
+				return isNumber(value) && Number.isInteger(value);
+
+			case Type.BOOLEAN:
+
+				return isBoolean(value);
+
+			case Type.NULL:
+
+				return isNull(value);
+
+			case Type.ARRAY:
+
+				return isArray(value) && (!schema.items || value.every(item => matches(item, schema.items!)));
+
+			case Type.OBJECT:
+
+				return isObject(value)
+					&& (!schema.required || schema.required.every(key => key in value))
+					&& (!schema.properties || Object.entries(schema.properties).every(([key, sub]) =>
+						!(key in value) || matches(value[key], sub)
+					));
+
+			default:
+
+				return false;
+
+		}
+
+	}
 }
