@@ -21,6 +21,49 @@
  * @module index
  */
 
+/**
+ * Status type representing task state as either an activity, result data, or error trace.
+ *
+ * @template T the type of result data
+ */
+export type Status<T> = Activity | T | Trace;
+
+/**
+ * Enumeration of task activity states.
+ */
+export enum Activity {
+
+	Submitting,
+	Scheduling,
+	Locking,
+
+	Scanning,
+	Fetching,
+	Caching,
+	Purging,
+
+	Uploading,
+	Extracting,
+	Translating,
+	Analyzing
+
+}
+
+/**
+ * Error trace information.
+ */
+export interface Trace {
+
+	/** Error code */
+	readonly code: number;
+
+	/** Error message or description */
+	readonly text: string;
+
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
  * Checks if a value is not `undefined` or `null`.
@@ -141,16 +184,25 @@ export function isFunction(value: unknown): value is Function {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
- * Error trace information.
+ * Checks if a value is a valid Activity enum value.
+ *
+ * @param value the value to check
+ *
+ * @return `true` if the value is a valid Activity; `false` otherwise
  */
-export interface Trace {
+export function isActivity(value: unknown): value is Activity {
+	return isNumber(value) && value >= Activity.Submitting && value <= Activity.Analyzing;
+}
 
-	/** Error code */
-	readonly code: number;
-
-	/** Error message or description */
-	readonly text: string;
-
+/**
+ * Converts a value to an Activity enum value if valid.
+ *
+ * @param value the value to convert
+ *
+ * @return the Activity value if valid; `undefined` otherwise
+ */
+export function asActivity(value: unknown): undefined | Activity {
+	return isActivity(value) ? value : undefined;
 }
 
 
@@ -181,6 +233,48 @@ export function asTrace(value: unknown): Trace {
 	};
 }
 
+
+
+/**
+ * Pattern matches on a Status value and applies the appropriate handler.
+ *
+ * @template T the type of the result value
+ * @template R the return type of all handlers
+ *
+ * @param status the Status value to match on
+ * @param cases handlers for each possible Status variant
+ *
+ * @return the result of applying the appropriate handler
+ */
+export function on<T, R>(status: Status<T>, cases: {
+
+	state: R | ((state: Activity) => R),
+	value: R | ((value: T) => R),
+	trace: R | ((trace: Trace) => R),
+
+}): R {
+
+	function apply<S>(handler: R | ((arg: S) => R), arg: S): R {
+		return typeof handler === "function"
+			? (handler as (arg: S) => R)(arg)
+			: handler;
+	}
+
+	if ( isActivity(status) ) {
+
+		return apply(cases.state, status);
+
+	} else if ( isTrace(status) ) {
+
+		return apply(cases.trace, status);
+
+	} else {
+
+		return apply(cases.value, status);
+
+	}
+
+}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

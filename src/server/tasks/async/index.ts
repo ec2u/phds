@@ -24,12 +24,20 @@
  */
 
 import Resolver from "@forge/resolver";
-import { asTrace } from "../../../shared/index";
-import { Status, Task } from "../../../shared/tasks";
-import { setStatus, Specs } from "../../async";
+import { kvs } from "@forge/kvs";
+import type { Status } from "../../../shared/index";
 import { purge } from "../../tools/cache";
-import { analyze } from "./analyze";
-import { policy } from "./policy";
+import type { Task } from "../_index";
+import { analyze } from "../analyze/analyze";
+import { policy } from "../policy/policy";
+
+
+/**
+ * Callback for reporting async task status to the resource key.
+ *
+ * Accepts any {@link Status} value to write progress or results, or `undefined` to delete the key on completion.
+ */
+export type Report = <T>(status: undefined | Status<T>) => Promise<void>;
 
 
 /**
@@ -37,6 +45,31 @@ import { policy } from "./policy";
  */
 interface AsyncEventContext {
 	jobId: string;
+}
+
+/**
+ * Specifications for an asynchronous job, combining the target page and task definition.
+ */
+export interface Specs {
+
+	/**
+	 * The Confluence page identifier.
+	 */
+	readonly page: string;
+
+	/**
+	 * The resource key for status reporting and locking.
+	 *
+	 * Computed by the sync resolver and passed through the queue payload so that async handlers don't need to
+	 * recompute it.
+	 */
+	readonly key: string;
+
+	/**
+	 * The task to execute.
+	 */
+	readonly task: Task;
+
 }
 
 
@@ -49,8 +82,8 @@ export const handler = new Resolver()
 
 	.define("execute", async function ({
 
-		payload: { page, task },
-		context: { jobId: job }
+		payload: { page, key, task },
+		context: { jobId }
 
 	}: {
 
@@ -59,7 +92,7 @@ export const handler = new Resolver()
 
 	}) {
 
-		return await async(task, page, job);
+		await dispatch(task, page, key, jobId);
 
 	} as any)
 
@@ -71,66 +104,45 @@ export const handler = new Resolver()
 /**
  * Dispatches an asynchronous task to the appropriate handler.
  *
- * Routes the task based on its type, reports errors as traces to the job status, and triggers background cache
- * maintenance on completion.
- *
- * @typeParam T the type of the task result value
+ * Routes the task based on its type and reports errors to the console. Task handlers are responsible for writing
+ * their own status and error traces to the resource key. Triggers background cache maintenance after task completion.
  *
  * @param task the task to execute
  * @param page the Confluence page identifier
- * @param job the background job identifier
- *
- * @return the task result status
+ * @param key the resource key for status reporting and locking
+ * @param jobId the Forge queue job identifier, used as lock owner
  */
-async function async<T>(task: Task<T>, page: string, job: string): Promise<Status<T>> {
-
-	/**
-	 * Reports an error as a trace to the job status.
-	 *
-	 * @param error the error to report
-	 *
-	 * @return the error trace
-	 */
-	async function report(error: unknown) {
-
-		console.error("async task failed:", error);
-
-		const trace = asTrace(error);
-
-		await setStatus(job, trace);
-
-		return trace;
-	}
-
+async function dispatch(task: Task, page: string, key: string, jobId: string): Promise<void> {
 	try {
+
+		const owner = `${task.type}:${jobId}`;
+
+		const report: Report = (status) =>
+			status === undefined ? kvs.delete(key) : kvs.set(key, status);
 
 		if ( task.type === "policy" ) {
 
-			return await policy(job, page, task as any) as Status<T>;
+			await policy(owner, key, report, page, task as any);
 
 		} else if ( task.type === "analyze" ) {
 
-			return await analyze(job, page, task as any) as Status<T>;
+			await analyze(owner, key, report, page, task as any);
 
 		} else {
 
-			return await report(new Error(`unknown task type`));
+			console.error("unknown task type:", task);
 
 		}
 
 	} catch ( error ) {
 
-		return await report(error);
+		console.error("async task failed:", error);
 
 	} finally {
 
-		// launch background tasks (fire-and-forget; resource locking handles contentions)
+		// fire-and-forget background maintenance; resource locking handles contentions
 
-		Promise.all([
-
-			purge() // global cache purge
-
-		]).catch(error =>
+		purge().catch(error =>
 			console.error("background task failed:", error)
 		);
 

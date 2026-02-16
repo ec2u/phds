@@ -21,11 +21,15 @@
  */
 
 import { useEffect, useState } from "react";
+import { Activity, asTrace, isActivity, type Status } from "../../shared/index";
 import { Document, Source } from "../../shared/items/documents";
 import { Language } from "../../shared/items/languages";
-import { Activity, Status } from "../../shared/tasks";
-import { execute } from "../ports/index";
+import { getPolicy } from "../ports/resources";
 import { useCache } from "./cache";
+import { poll } from "./index";
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
  * Fetches and caches a single policy document in the requested language.
@@ -33,10 +37,10 @@ import { useCache } from "./cache";
  * Returns the current status of the document retrieval, loading from the in-memory cache on subsequent renders.
  * Triggers extraction and translation via the backend when no cached version is available.
  *
- * @param source the source attachment identifier
- * @param language the target language code (defaults to `"en"`)
+ * @param source The source attachment identifier
+ * @param language The target language code (defaults to `"en"`)
  *
- * @return the document status: the policy document, an activity state, or an error trace
+ * @returns The document status: the policy document, an activity state, or an error trace
  */
 export function usePolicy(source: Source, language: Language = "en"): Status<Document> {
 
@@ -45,26 +49,32 @@ export function usePolicy(source: Source, language: Language = "en"): Status<Doc
 	const key = `policy:${source}-${language}`;
 	const cached = getCache<Document>(key);
 
-	const [policy, setPolicy] = useState<Status<Document>>(cached || Activity.Submitting);
+	const [policy, setPolicy] = useState<Status<Document>>(cached ?? Activity.Submitting);
 
-
-	function update(policy: Status<Document>) {
-		setPolicy(policy);
-		setCache(key, policy);
-	}
 
 	useEffect(() => {
 
-		if ( cached ) { setPolicy(cached); } else {
+		if ( cached ) {
 
-			execute<Document>(update, {
+			setPolicy(cached);
 
-				type: "policy",
+			return () => {};
 
-				source,
-				language
+		} else {
 
-			});
+			setPolicy(Activity.Submitting);
+
+			return poll(() => getPolicy(source, language).catch(asTrace).then(status => {
+
+				setPolicy(status);
+
+				if ( !isActivity(status) ) {
+					setCache(key, status);
+				}
+
+				return status;
+
+			}));
 
 		}
 

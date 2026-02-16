@@ -25,9 +25,9 @@
 
 import { File, GenerationConfig, GoogleGenAI, Schema } from "@google/genai";
 import { asTrace } from "../../shared";
-import { secret } from "../index";
 
 import { json } from "./mime";
+import { secret } from "./secrets";
 
 
 /**

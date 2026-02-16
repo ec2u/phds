@@ -52,9 +52,9 @@ interface Cache {
 	getCache<V>(key: string): undefined | V;
 
 	/**
-	 * Clears all cached entries.
+	 * Purge all cached entries.
 	 */
-	clearCache(): void;
+	purgeCache(): void;
 
 }
 
@@ -78,7 +78,7 @@ const CacheContext = createContext<undefined | Cache>(undefined);
  *
  * @throws {Error} if used outside a `ToolCache` provider
  */
-export const useCache = () => {
+export function useCache(): Cache {
 
 	const context = useContext(CacheContext);
 
@@ -87,7 +87,8 @@ export const useCache = () => {
 	}
 
 	return context;
-};
+}
+
 
 /**
  * Cache provider component that makes the in-memory cache available to descendant components.
@@ -109,14 +110,14 @@ export function ToolCache({ children }: { children: ReactNode }) {
 		return cache.get(key);
 	}, [cache]);
 
-	const clearCache = useCallback(() => {
+	const purgeCache = useCallback(() => {
 		setCacheState(new Map());
 	}, []);
 
 
 	return createElement(CacheContext.Provider, {
 
-		value: { setCache, getCache, clearCache },
+		value: { setCache, getCache, purgeCache },
 		children
 
 	});

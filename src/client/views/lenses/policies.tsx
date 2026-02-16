@@ -22,9 +22,8 @@
 
 import { EmptyState, Pressable, Stack, Text, xcss } from "@forge/react";
 import React from "react";
-import { isTrace } from "../../../shared";
+import { isActivity, isTrace, on } from "../../../shared";
 import { Catalog } from "../../../shared/items/documents";
-import { isActivity, on } from "../../../shared/tasks";
 import { useStorage } from "../../hooks/storage";
 import ToolSplit from "../layouts/split";
 import { ToolPolicy } from "./policy";

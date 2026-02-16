@@ -22,8 +22,8 @@
 
 import { AdfRenderer } from "@forge/react";
 import React from "react";
+import { on } from "../../../shared/index";
 import { Source } from "../../../shared/items/documents";
-import { on } from "../../../shared/tasks";
 import { adf } from "../../../shared/tools/text";
 import { usePolicy } from "../../hooks/policy";
 import { ToolActivity } from "./activity";

@@ -157,8 +157,8 @@ trajectory seen in the [PDF extraction evaluator](pdf-to-md.md).
 
 # Related Resources
 
-- Active prompt: [`policy-translate.sys.md`](../../../src/server/tasks/async/policy-translate.sys.md)
-- Development log: [`policy-translate.log.md`](../../../src/server/tasks/async/policy-translate.log.md)
+- Active prompt: [`policy-translate.sys.md`](../../../src/server/tasks/policy/policy-translate.sys.md)
+- Development log: [`policy-translate.log.md`](../../../src/server/tasks/policy/policy-translate.log.md)
 - Translation archive: [`TRANSLATION/`](TRANSLATION/)
 - Drafting archive: [`TRANSLATION_DRAFTING/`](TRANSLATION_DRAFTING/)
 - Improvement archive: [`TRANSLATION_IMPROVEMENT/`](TRANSLATION_IMPROVEMENT/)

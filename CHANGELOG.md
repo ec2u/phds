@@ -9,6 +9,12 @@ date-based releases.
 
 Changes deployed to development, pending production promotion.
 
+### Fixed
+
+- Stale policy content shown when switching between policies in sidebar (#6)
+- Progress spinner stuck on "Scheduling Request…" during policy extraction and translation (#6)
+- Flash of "No Policy Documents" empty state on page reload (#6)
+
 ### Changed
 
 - Reassign state colors: pending=red, active=yellow

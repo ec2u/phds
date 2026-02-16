@@ -2,46 +2,81 @@
 !theme plain
 
 participant "Client" as client
-participant "Server" as server
-participant "Key-Value Store" as store
-participant "Async Worker" as worker
+participant "Resolver" as resolver
+participant "KVS" as kvs
+participant "Queue Consumer" as consumer
 participant "Gemini" as gemini
 
-client -> server: launch task
-activate server
-server -> store: initialize task status
-server -> worker: delegate task
-activate worker
-server --> client: task id
-deactivate server
+== Read (Cache Hit) ==
+
+client -> resolver: get resource
+activate resolver
+resolver -> kvs: read resource key
+kvs --> resolver: value (fresh)
+resolver --> client: 200 value
+deactivate resolver
+
+== Read (Cache Miss) ==
+
+client -> resolver: get resource
+activate resolver
+resolver -> kvs: read resource key
+kvs --> resolver: empty / stale
+resolver -> kvs: write Activity.Scheduling
+resolver -> consumer: queue async task
+resolver --> client: 202 Activity.Scheduling
+deactivate resolver
 
 par
-    group loop [task execution]
-        worker -> worker: load prompt
-        worker -> gemini: execute prompt
+
+    group async task
+        consumer -> kvs: acquire lock
+        activate consumer
+
+        consumer -> kvs: write Activity.Fetching
+        consumer -> gemini: execute prompt
         activate gemini
-        gemini --> worker: response
+        gemini --> consumer: response
         deactivate gemini
-        worker -> store: update task status
+
+        consumer -> kvs: write Activity.Extracting
+        consumer -> gemini: execute prompt
+        activate gemini
+        gemini --> consumer: response
+        deactivate gemini
+
+        consumer -> kvs: write result
+        consumer -> kvs: release lock
+        deactivate consumer
     end
-    worker -> worker: assemble task results
-    worker -> store: store task results
-    deactivate worker
+
 else
-    group loop [polling]
-        client -> server: check status
-        activate server
-        server -> store: retrieve task status
-        store --> server: task status
-        server --> client: task status
-        deactivate server
+
+    group polling
+        client -> resolver: get resource
+        activate resolver
+        resolver -> kvs: read resource key
+        kvs --> resolver: Activity
+        resolver --> client: 202 Activity
+        deactivate resolver
     end
 
 end
-activate server
-server -> store: retrieve task results
-store --> server: task results
-server -> store: clear task status
-server --> client: task results
+
+client -> resolver: get resource
+activate resolver
+resolver -> kvs: read resource key
+kvs --> resolver: value
+resolver --> client: 200 value
+deactivate resolver
+
+== Error ==
+
+client -> resolver: get resource
+activate resolver
+resolver -> kvs: read resource key
+kvs --> resolver: Trace
+resolver --> client: error
+deactivate resolver
 
 @enduml

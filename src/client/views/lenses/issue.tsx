@@ -40,7 +40,8 @@ import {
 } from "@forge/react";
 import React, { useRef, useState } from "react";
 import { isString } from "../../../shared";
-import { Issue, Reference, Severities, State, States } from "../../../shared/items/issues";
+import type { Reference } from "../../../shared/items/documents";
+import { Issue, Severities, State, States } from "../../../shared/items/issues";
 import { adf } from "../../../shared/tools/text";
 import { IssuesActions } from "../../hooks/issues";
 import { ToolToggle } from "../elements/toggle";
@@ -155,12 +156,12 @@ export default function ToolIssue({
 
 	function transition(state: State) {
 		setMode("updating");
-		actions.transition(issue.id, state).then(() => setMode("reading")).then(() => setExpanded(false));
+		actions.update(issue.id, { state }).then(() => setMode("reading")).then(() => setExpanded(false));
 	}
 
 	function classify(severity: Issue["severity"]) {
 		setMode("updating");
-		actions.classify(issue.id, severity).then(() => setMode("reading")).then(() => setExpanded(false));
+		actions.update(issue.id, { severity }).then(() => setMode("reading")).then(() => setExpanded(false));
 	}
 
 	function annotate() {
@@ -174,7 +175,7 @@ export default function ToolIssue({
 
 	function save() {
 		setMode("updating");
-		actions.annotate(issue.id, notes.current).then(() => setMode("reading"));
+		actions.update(issue.id, { annotations: notes.current }).then(() => setMode("reading"));
 	}
 
 

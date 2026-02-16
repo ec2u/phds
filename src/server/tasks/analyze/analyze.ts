@@ -16,18 +16,19 @@
 
 import { kvs, WhereConditions } from "@forge/kvs";
 import { File, Schema, Type } from "@google/genai";
-import { isString } from "../../../shared/index";
-import { Issue, Reference } from "../../../shared/items/issues";
+import { Activity, asTrace, isString } from "../../../shared/index";
+import type { Reference } from "../../../shared/items/documents";
+import { Issue, normalizeIssue } from "../../../shared/items/issues";
 import { defaultLanguage } from "../../../shared/items/languages";
-import { Activity, AnalyzeTask, Payload } from "../../../shared/tasks";
 import { markdown as adfToMarkdown } from "../../../shared/tools/text";
-import { setStatus } from "../../async";
-import { file as read } from "../../index";
 import { Attachment, fetchAttachment, listAttachments } from "../../tools/attachments";
-import { issueKey, issuesKey, keyPrefix, lock } from "../../tools/cache";
+import { issueKey, keyPrefix, lock } from "../../tools/cache";
+import { file as read } from "../../tools/files";
 import { process, upload } from "../../tools/gemini";
 import { markdown, pdf } from "../../tools/mime";
 import { fetchPage } from "../../tools/pages";
+import type { AnalyzeTask, Payload } from "../_index";
+import type { Report } from "../async/index";
 
 /**
  * AI-powered compliance analysis task.
@@ -118,18 +119,21 @@ const ResponseSchema: Schema = {
  * Fetches the agreement page content and attached policy documents, runs multiple parallel Gemini analysis rounds,
  * merges detected issues, and caches the results.
  *
- * @param job the background job identifier for status reporting and locking
+ * @param owner the lock owner identifier
+ * @param key the resource key for status reporting and locking
+ * @param report the progress reporting callback
  * @param page the Confluence page identifier
  *
  * @return all compliance issues (existing and newly detected)
  */
-export async function analyze(job: string, page: string, {}: Payload<AnalyzeTask>): Promise<ReadonlyArray<Issue>> {
+export async function analyze(owner: string, key: string, report: Report, page: string, {}: Payload<AnalyzeTask>): Promise<void> {
+	try {
 
-	return await lock(job, issuesKey(page), async () => {
+	await lock(owner, key, async () => {
 
 		// query for existing issues for this page
 
-		await setStatus(job, Activity.Fetching);
+		await report(Activity.Fetching);
 
 		const results: Array<{ key: string; value: any }> = [];
 
@@ -138,7 +142,7 @@ export async function analyze(job: string, page: string, {}: Payload<AnalyzeTask
 		do {
 
 			const query = kvs.query()
-				.where("key", WhereConditions.beginsWith(keyPrefix(issuesKey(page))))
+				.where("key", WhereConditions.beginsWith(keyPrefix(key)))
 				.limit(100);
 
 			const batch = await (cursor ? query.cursor(cursor) : query).getMany();
@@ -152,7 +156,7 @@ export async function analyze(job: string, page: string, {}: Payload<AnalyzeTask
 
 		const normalized = results.map(result => ({
 			...result,
-			value: normalize(result.value as Issue)
+			value: normalizeIssue(result.value as Issue)
 		}));
 
 
@@ -163,7 +167,7 @@ export async function analyze(job: string, page: string, {}: Payload<AnalyzeTask
 
 		if ( agreement.trim() === "" ) {
 
-			await setStatus(job, []);
+			await report(undefined);
 
 			return [];
 
@@ -172,7 +176,7 @@ export async function analyze(job: string, page: string, {}: Payload<AnalyzeTask
 
 		// analyse agreement text
 
-		await setStatus(job, Activity.Analyzing);
+		await report(Activity.Analyzing);
 
 
 		// retrieve prompts
@@ -227,7 +231,7 @@ export async function analyze(job: string, page: string, {}: Payload<AnalyzeTask
 
 		// generate a report detailing all existing issues
 
-		const history = report(normalized.map(result => result.value as Issue));
+		const history = format(normalized.map(result => result.value));
 
 
 		// process agreement/policy pairs with multiple parallel analysis rounds
@@ -288,7 +292,7 @@ export async function analyze(job: string, page: string, {}: Payload<AnalyzeTask
 			const response = await process<Response>({
 				model,
 				prompt: mergePrompt,
-				input: report(issues),
+				input: format(issues),
 				schema: ResponseSchema
 			});
 
@@ -329,7 +333,7 @@ export async function analyze(job: string, page: string, {}: Payload<AnalyzeTask
 
 		// cache results
 
-		await setStatus(job, Activity.Caching);
+		await report(Activity.Caching);
 
 		for (const issue of issues) {
 			await kvs.set<Issue>(issueKey(page, issue.id), issue);
@@ -343,30 +347,24 @@ export async function analyze(job: string, page: string, {}: Payload<AnalyzeTask
 			...issues
 		];
 
-		await setStatus(job, result);
+		await report(undefined);
 
 		return result;
 
 	});
 
+	} catch ( error ) {
+
+		await report(asTrace(error));
+
+		throw error;
+
+	}
+
 }
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-/**
- * Normalises an issue by defaulting the state to "pending" if missing.
- *
- * @param issue the issue to normalise
- *
- * @return the normalised issue
- */
-function normalize(issue: Issue): Issue {
-	return {
-		...issue,
-		state: issue.state || "pending"
-	};
-}
 
 /**
  * Formats a list of issues as a text report for use as Gemini input context.
@@ -375,7 +373,7 @@ function normalize(issue: Issue): Issue {
  *
  * @return the formatted text report
  */
-function report(issues: ReadonlyArray<Issue>): string {
+function format(issues: ReadonlyArray<Issue>): string {
 	return issues
 
 		.map(issue => [

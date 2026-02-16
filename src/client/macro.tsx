@@ -26,8 +26,7 @@ import ForgeReconciler, {
 	xcss
 } from "@forge/react";
 import React, { useState } from "react";
-import { isArray } from "../shared/index";
-import { Activity, on } from "../shared/tasks";
+import { Activity, isArray, on } from "../shared/index";
 import { ToolCache } from "./hooks/cache";
 import { useContent } from "./hooks/content";
 import { useIssues } from "./hooks/issues";

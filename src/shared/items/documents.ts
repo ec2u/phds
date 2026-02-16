@@ -84,3 +84,35 @@ export interface Document {
 	readonly content: Markdown;
 
 }
+
+/**
+ * A reference to a specific location within a source document.
+ */
+export interface Reference {
+
+	/**
+	 * The source attachment identifier.
+	 */
+	readonly source: Source;
+
+	/**
+	 * The referenced document title.
+	 */
+	readonly title: string;
+
+	/**
+	 * The quoted text excerpt from the source.
+	 */
+	readonly excerpt: string;
+
+	/**
+	 * The character offset within the source content.
+	 */
+	readonly offset: number;
+
+	/**
+	 * The character length of the referenced content.
+	 */
+	readonly length: number;
+
+}

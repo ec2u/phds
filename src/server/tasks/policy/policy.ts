@@ -25,16 +25,16 @@
 
 import { kvs } from "@forge/kvs";
 import { Type } from "@google/genai";
-import { isUndefined } from "../../../shared/index";
+import { Activity, asTrace, isActivity, isTrace } from "../../../shared/index";
 import { Document } from "../../../shared/items/documents";
 import { Language } from "../../../shared/items/languages";
-import { Activity, Payload, PolicyTask } from "../../../shared/tasks";
-import { setStatus } from "../../async";
-import { file as read } from "../../index";
 import { fetchAttachment, getAttachment } from "../../tools/attachments";
 import { lock, policyKey } from "../../tools/cache";
+import { file as read } from "../../tools/files";
 import { process, upload } from "../../tools/gemini";
 import { pdf } from "../../tools/mime";
+import type { Payload, PolicyTask } from "../_index";
+import type { Report } from "../async/index";
 
 /**
  * Executes a policy document retrieval and translation task.
@@ -42,48 +42,55 @@ import { pdf } from "../../tools/mime";
  * Returns a cached document if available and current, otherwise extracts the content from the PDF attachment using
  * Gemini and translates it to the target language if needed.
  *
- * @param job the background job identifier for status reporting and locking
- * @param page the Confluence page identifier
- * @param payload the task payload containing source and target language
+ * @param owner The lock owner identifier
+ * @param key The resource key for status reporting and locking
+ * @param report The progress reporting callback
+ * @param page The Confluence page identifier
+ * @param payload The task payload containing source and target language
  *
- * @return the policy document in the requested language
+ * @returns The policy document in the requested language
  */
-export async function policy(job: string, page: string, {
+export async function policy(owner: string, key: string, report: Report, page: string, {
 
 	source,
 	language
 
-}: Payload<PolicyTask>): Promise<Document> {
+}: Payload<PolicyTask>): Promise<void> {
+	try {
 
-	const key = policyKey(page, source, language);
+		await lock(owner, key, async () => {
 
-	return await lock(job, key, async () => {
+			const cached = await fetchPolicy(report, page, source, language);
 
-		const cached = await fetchPolicy(job, page, source, language);
+			if ( cached ) {
 
-		if ( cached ) {
+				return cached;
 
-			await setStatus(job, cached);
+			} else {
 
-			return cached;
+				const original = await fetchPolicy(report, page, source);
+				const document = original || await extract(report, page, source);
 
-		} else {
+				// translate the document if needed
 
-			const original = await fetchPolicy(job, page, source);
-			const document = original || await extract(job, page, source);
+				const translation = (document.language === language)
+					? document
+					: await translate(report, page, source, document, language);
 
-			// translate the document if needed
+				await report(translation);
 
-			const translation = (document.language === language)
-				? document
-				: await translate(job, page, source, document, language);
+				return translation;
+			}
 
-			await setStatus(job, translation);
+		});
 
-			return translation;
-		}
+	} catch ( error ) {
 
-	});
+		await report(asTrace(error));
+
+		throw error;
+
+	}
 
 }
 
@@ -95,20 +102,20 @@ export async function policy(job: string, page: string, {
  *
  * Uploads the PDF to Gemini, processes it with the PDF-to-markdown prompt, and caches the extracted document.
  *
- * @param job the background job identifier
- * @param page the Confluence page identifier
- * @param source the attachment identifier
+ * @param report The progress reporting callback
+ * @param page The Confluence page identifier
+ * @param source The attachment identifier
  *
- * @return the extracted document
+ * @returns The extracted document
  */
-async function extract(job: string, page: string, source: string): Promise<Document> {
+async function extract(report: Report, page: string, source: string): Promise<Document> {
 
-	await setStatus(job, Activity.Fetching);
+	await report(Activity.Fetching);
 
 	const buffer = await fetchAttachment(page, source);
 
 
-	await setStatus(job, Activity.Extracting);
+	await report(Activity.Extracting);
 
 	const prompt = await read("policy-extract.sys.md", __dirname);
 
@@ -161,7 +168,7 @@ async function extract(job: string, page: string, source: string): Promise<Docum
 
 	});
 
-	return await cachePolicy(job, page, source, {
+	return await cachePolicy(report, page, source, {
 		original: true,
 		language,
 		source,
@@ -174,17 +181,17 @@ async function extract(job: string, page: string, source: string): Promise<Docum
 /**
  * Translates a policy document to the target language using Gemini.
  *
- * @param job the background job identifier
- * @param page the Confluence page identifier
- * @param source the attachment identifier
- * @param document the original document to translate
- * @param language the target language code
+ * @param report The progress reporting callback
+ * @param page The Confluence page identifier
+ * @param source The attachment identifier
+ * @param document The original document to translate
+ * @param language The target language code
  *
- * @return the translated document
+ * @returns The translated document
  */
-async function translate(job: string, page: string, source: string, document: Document, language: Language): Promise<Document> {
+async function translate(report: Report, page: string, source: string, document: Document, language: Language): Promise<Document> {
 
-	await setStatus(job, Activity.Translating);
+	await report(Activity.Translating);
 
 	const prompt = await read("policy-translate.sys.md", __dirname);
 
@@ -231,9 +238,9 @@ async function translate(job: string, page: string, source: string, document: Do
 	});
 
 
-	await setStatus(job, Activity.Caching);
+	await report(Activity.Caching);
 
-	return await cachePolicy(job, page, source, {
+	return await cachePolicy(report, page, source, {
 
 		original: false,
 		language: language,
@@ -255,29 +262,31 @@ async function translate(job: string, page: string, source: string, document: Do
  * Returns `undefined` if no cached version exists or if the cached version is stale (older than the source
  * attachment).
  *
- * @param job the background job identifier
- * @param page the Confluence page identifier
- * @param source the attachment identifier
- * @param language optional language code for translated versions
+ * @param report The progress reporting callback
+ * @param page The Confluence page identifier
+ * @param source The attachment identifier
+ * @param language Optional language code for translated versions
  *
- * @return the cached document, or `undefined` if not available or stale
+ * @returns The cached document, or `undefined` if not available or stale
  */
-async function fetchPolicy(job: string, page: string, source: string, language?: Language): Promise<undefined | Document> {
+async function fetchPolicy(report: Report, page: string, source: string, language?: Language): Promise<undefined | Document> {
 
-	await setStatus(job, Activity.Fetching);
+	await report(Activity.Fetching);
 
 	const key = policyKey(page, source, language);
-	const cached = await kvs.get<Document>(key);
+	const entry = await kvs.get(key);
 
-	if ( isUndefined(cached) ) {
+	if ( entry == null || isActivity(entry) || isTrace(entry) ) {
 
 		return undefined;
 
 	} else {
 
+		const cached = entry as Document;
+
 		// get attachment metadata to check if cache is current
 
-		await setStatus(job, Activity.Scanning);
+		await report(Activity.Scanning);
 
 		const attachment = await getAttachment(page, source);
 		const attachmentCreated = new Date(attachment.createdAt).getTime();
@@ -287,7 +296,7 @@ async function fetchPolicy(job: string, page: string, source: string, language?:
 
 		if ( cachedCreated < attachmentCreated ) {
 
-			await setStatus(job, Activity.Purging);
+			await report(Activity.Purging);
 
 			await kvs.delete(key); // stale entry, purge it
 
@@ -305,16 +314,16 @@ async function fetchPolicy(job: string, page: string, source: string, language?:
 /**
  * Stores a policy document in the Forge KVS cache.
  *
- * @param job the background job identifier
- * @param page the Confluence page identifier
- * @param source the attachment identifier
- * @param document the document to cache
+ * @param report The progress reporting callback
+ * @param page The Confluence page identifier
+ * @param source The attachment identifier
+ * @param document The document to cache
  *
- * @return the cached document
+ * @returns The cached document
  */
-async function cachePolicy(job: string, page: string, source: string, document: Document): Promise<Document> {
+async function cachePolicy(report: Report, page: string, source: string, document: Document): Promise<Document> {
 
-	await setStatus(job, Activity.Caching);
+	await report(Activity.Caching);
 
 	const key = policyKey(page, source, document.original ? undefined : document.language);
 

@@ -22,9 +22,9 @@
 
 import { Button, LoadingButton, Modal, ModalBody, ModalFooter, ModalHeader, ModalTitle } from "@forge/react";
 import React, { useState } from "react";
-import { isActivity, Status } from "../../../shared/tasks";
+import { Activity, asTrace, isActivity, type Status } from "../../../shared/index";
 import { useCache } from "../../hooks/cache";
-import { execute } from "../../ports/index";
+import { clearCache } from "../../ports/resources";
 
 /**
  * Renders a "Clear" button that prompts for confirmation before purging all cached data for the current page.
@@ -43,7 +43,7 @@ export function ToolClear({
 
 }) {
 
-	const { clearCache } = useCache();
+	const { purgeCache } = useCache();
 
 	const [confirming, setConfirming] = useState(false);
 	const [clearing, setClearing] = useState<Status<void>>();
@@ -54,8 +54,17 @@ export function ToolClear({
 	}
 
 	function confirm() {
+
 		setConfirming(false);
-		execute(setClearing, { type: "clear" }).then(clearCache);
+		setClearing(Activity.Submitting);
+
+		clearCache().then(status => {
+			setClearing(status);
+			purgeCache();
+		}).catch(error => {
+			setClearing(asTrace(error));
+		});
+
 	}
 
 

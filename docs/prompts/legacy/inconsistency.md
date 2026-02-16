@@ -175,9 +175,9 @@ the start, while the detection task required extensive iteration to calibrate pr
 
 # Related Resources
 
-- Active detection prompt: [`analyze-detect.sys.md`](../../../src/server/tasks/async/analyze-detect.sys.md)
-- Active merging prompt: [`analyze-merge.sys.md`](../../../src/server/tasks/async/analyze-merge.sys.md)
-- Detection development log: [`analyze-detect.log.md`](../../../src/server/tasks/async/analyze-detect.log.md)
-- Merging development log: [`analyze-merge.log.md`](../../../src/server/tasks/async/analyze-merge.log.md)
+- Active detection prompt: [`analyze-detect.sys.md`](../../../src/server/tasks/analyze/analyze-detect.sys.md)
+- Active merging prompt: [`analyze-merge.sys.md`](../../../src/server/tasks/analyze/analyze-merge.sys.md)
+- Detection development log: [`analyze-detect.log.md`](../../../src/server/tasks/analyze/analyze-detect.log.md)
+- Merging development log: [`analyze-merge.log.md`](../../../src/server/tasks/analyze/analyze-merge.log.md)
 - Detection archive: [`INCONSISTENCY_DETECTION/`](INCONSISTENCY_DETECTION/)
 - Merging archive: [`INCONSISTENCY_MERGING/`](INCONSISTENCY_MERGING/)

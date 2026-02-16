@@ -21,6 +21,17 @@
  */
 
 import { Dispatch, SetStateAction } from "react";
+import { isActivity, type Status } from "../../shared/index";
+
+
+/**
+ * Interval in milliseconds between status polling requests for in-progress operations.
+ */
+const PollingPeriod = 1000;
+
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
  * A React state tuple containing the current value and its setter function.
@@ -28,3 +39,35 @@ import { Dispatch, SetStateAction } from "react";
  * @typeParam T the type of the state value
  */
 export type State<T> = [T, Dispatch<SetStateAction<T>>];
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * Polls an asynchronous resource until a terminal status is reached.
+ *
+ * Fires an immediate call, then polls at {@link PollingPeriod} intervals. The task function performs the fetch and
+ * handles the result; `poll` inspects the returned status to decide whether to continue. Stops polling when the
+ * status is no longer an {@link Activity}. Returns a cleanup function that aborts polling.
+ *
+ * @param task The async function to poll — must return the status for lifecycle control
+ *
+ * @returns A cleanup function that stops polling
+ */
+export function poll(task: () => Promise<Status<unknown>>): () => void {
+
+	const interval = setInterval(tick, PollingPeriod);
+
+	tick();
+
+	return () => clearInterval(interval);
+
+	function tick() {
+		task().then(status => {
+			if ( !isActivity(status) ) {
+				clearInterval(interval);
+			}
+		});
+	}
+
+}

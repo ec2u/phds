@@ -1,52 +1,61 @@
 ---
 title: Storage Layout
+summary: KVS key patterns, data lifecycle, and concurrency control
+description: Describes the hierarchical key-value storage schema, caching strategies, and locking mechanism.
 ---
 
-The EC2U PhD Agreements Tool uses Atlassian Forge's key-value storage with a systematic hierarchical naming convention.
-This document outlines the storage schema, key patterns, and data lifecycle.
+The EC2U PhD Agreements Tool uses Atlassian Forge's key-value storage (KVS) with a hierarchical naming convention. All
+content keys are page-scoped — the page identifier is the root segment.
 
 # Key Patterns
 
 ## Policy Documents
 
-**Pattern:** `{page}:policy:{source}[:{language}]`
+**Pattern:** `{page}:policies:{source}[:{language}]`
 
-- **Original documents:** `{page}:policy:{source}`
-- **Translations:** `{page}:policy:{source}:{language}`
-- **Data Type:** `Document` interface
-- **Example:** `abc123:policy:att789` or `abc123:policy:att789:en`
+- **Original documents:** `{page}:policies:{source}`
+- **Translations:** `{page}:policies:{source}:{language}`
+- **Data Type:** `Document` (defined in `src/shared/items/documents.ts`)
+- **Example:** `abc123:policies:att789` or `abc123:policies:att789:en`
 
 ## Issues
 
-**Pattern:** `{page}:issue:{issueId}`
+**Pattern:** `{page}:issues:{issueId}`
 
-- **Data Type:** `Issue` interface
-- **issueId:** UUID generated for each issue
-- **Example:** `abc123:issue:f47ac10b-58cc-4372-a567-0e02b2c3d479`
+- **Data Type:** `Issue` (defined in `src/shared/items/issues.ts`)
+- **issueId:** UUID generated for each detected issue
+- **Example:** `abc123:issues:f47ac10b-58cc-4372-a567-0e02b2c3d479`
 
-## Job Status
+## Collection Sentinels
 
-**Pattern:** `job:{jobId}`
+**Pattern:** `{page}:issues`
 
-- **Data Type:** `Status<T>` (Activity | T | Trace)
-- **Purpose:** Track async operation progress
-- **Example:** `job:task456`
+- **Data Type:** `Status<void>` — `Activity` during analysis, `Trace` on failure, empty on success
+- **Purpose:** signals analysis progress on the issues collection (see
+  [Issue Collection](api.md#issue-collection))
+
+## Lock Catalogues
+
+**Pattern:** `{page}`
+
+- **Data Type:** `LockCatalog` (defined in `src/server/tools/cache.ts`)
+- **Purpose:** stores all active locks for a page with optimistic concurrency control via version tracking
 
 ## System Metadata
 
-**Pattern:** `system:{metadata}`
+**Pattern:** `system:{key}`
 
-- **Purge tracking:** `system:purged` (stores timestamp)
-- **Global system state and maintenance info**
+- **Purge tracking:** `system:purged` stores the last global purge timestamp
+- **Purpose:** global system state and maintenance information
 
 # Data Structures
 
-Data types stored in the key-value store are defined in the shared layer:
+Data types stored in KVS are defined in the shared layer:
 
-- **Document Interface:** Defined in `src/shared/documents.ts`
-- **Issue Interface:** Defined in `src/shared/issues.ts`
-- **Status Types:** Defined in `src/shared/tasks.ts` (Status<T>, Activity enum)
-- **Language Types:** Defined in `src/shared/languages.ts`
+- **Document:** `src/shared/items/documents.ts`
+- **Issue:** `src/shared/items/issues.ts`
+- **Language:** `src/shared/items/languages.ts`
+- **Status, Activity, Trace:** `src/shared/index.ts`
 
 # Caching Strategies
 
@@ -54,152 +63,100 @@ Data types stored in the key-value store are defined in the shared layer:
 
 - Policy documents validated against attachment modification timestamps
 - Cache entries purged if `cached.created < attachment.createdAt`
-- Automatic staleness detection
+- Automatic staleness detection on read
 
 ## Lazy Purging
 
-- **Global purge:** Runs every 24 hours in background
-- **Selective purging:** Removes entries for deleted pages
-- **Manual purging:** Available via clear task
+- **Global purge:** runs every 24 hours in background after each async task
+- **Selective purging:** removes entries for deleted Confluence pages
+- **Manual purging:** available via `clearCache()` resolver
 
-## Translation Optimization
+## Translation Optimisation
 
 - Original documents cached separately from translations
 - Each language gets its own cache entry
-- Reduces redundant processing for multilingual scenarios
+- Avoids redundant extraction when only a new translation is needed
 
 # Data Lifecycle
-
-## Issue Lifecycle
-
-```
-Create → Store → [Classify] → [Annotate] → [Transition] → [Transition]
-```
-
-- **Classify:** Update severity level
-- **Annotate:** Add markdown notes
-- **Transition:** Change issue state (e.g., open, resolved, archived)
 
 ## Policy Document Lifecycle
 
 ```
-Extract → Cache → [Translate] → Cache Translation
+Read → [Extract → Cache] → [Translate → Cache Translation]
 ```
 
-- Original extraction cached immediately
-- Translations created on-demand and cached separately
-- Each translation maintains separate cache entry
+- Extraction triggered on first read or when cached value is stale
+- Original and translations cached as separate keys
+- Staleness checked against source attachment metadata
 
-## Job Status Lifecycle
+## Issue Lifecycle
 
 ```
-Submit → Process (Activity updates) → Complete → Cleanup
+Analyse → Store → [Update state] → [Update severity] → [Annotate]
 ```
 
-- Status updated with Activity enums during processing
-- Final result or error trace stored on completion
-- Entry deleted after successful completion
+- Issues are append-only — new analysis adds issues without overwriting existing ones
+- Individual issue mutations write directly to the per-issue key
+- See [Issue Collection](api.md#issue-collection) for collection key semantics
 
-# Storage Dependencies
+# Query Patterns
 
-## Primary Identifiers
+- **Page scope:** `{page}:*` — all data for a page
+- **Policies only:** `{page}:policies:*` — all policies for a page
+- **Issues only:** `{page}:issues:*` — all issues for a page
+- **System data:** `system:*` — global metadata
 
-- **Page ID:** Root identifier for all content-related storage
-- **Attachment ID:** Links policy storage to Confluence attachments
-- **Job ID:** Tracks async operation status
+# Concurrency Control
 
-## Inter-Key Relationships
+## Lock Hierarchy
 
-- **Policy-Issue:** Issues reference policies via source IDs
-- **Page-Scoped:** All content operations scoped to specific pages
-- **Cache Coherence:** Policy invalidation triggers issue re-analysis
+The system implements hierarchical locking with prefix-based conflict detection. Locks are stored in a page-scoped
+`LockCatalog` entry.
 
-## Query Patterns
+### Page Level (most restrictive)
 
-- **Page scope:** `{page}:*` - all data for a page
-- **Issues only:** `{page}:issue:*` - all issues for a page
-- **Policies only:** `{page}:policy:*` - all policies for a page
-- **System data:** `system:*` - global metadata
+**Key:** `{page}`
 
-# Concurrency Control and Locking
+- **Purpose:** operations affecting the entire page (for example `clearCache`)
+- **Conflicts with:** all other locks on the same page
 
-## Lock Management System
+### Catalogue Level
 
-The system implements a hierarchical locking mechanism to prevent race conditions and enable cooperative caching when
-multiple users access the same resources simultaneously.
+**Key:** `{page}:policies` | `{page}:issues`
 
-### Lock Storage Structure
+- **Purpose:** bulk operations on resource catalogues (for example `getPolicies`, `refreshIssues`)
+- **Conflicts with:** individual resource locks of the same type and page-level locks
 
-**Lock Catalog Pattern:** `{page}` (page-scoped lock catalog)
+### Resource Level (most granular)
 
-Lock catalogs use the `LockCatalog` interface defined in `src/server/tools/cache.ts:43-48`, storing all active locks for
-a page in a single KVS entry with optimistic concurrency control via version tracking.
+**Key:** `{page}:policies:{source}[:{language}]` | `{page}:issues:{issueId}`
 
-### Lock Hierarchy (Coarsest → Finest)
+- **Purpose:** operations on individual resources (for example `getPolicy`, `updateIssue`)
+- **Conflicts with:** catalogue-level locks of the same type and page-level locks
 
-#### 1. Page Level - Most Restrictive
+## Conflict Detection
 
-**Lock Identifier:** `{page}`
+Lock conflicts occur when either key is a prefix of the other, or the keys are identical. This provides bidirectional
+blocking — both upward (fine → coarse) and downward (coarse → fine) — ensuring that bulk and individual operations on
+the same resource type are mutually exclusive.
 
-- **Purpose**: Operations affecting the entire page
-- **Used by**: `clear` (purge all data), full page operations
-- **Blocks**: All other locks on the same page
+## Lock Ownership
 
-#### 2. Resource Type Level - Catalog Scoped
+Each lock entry carries an **owner** identifier (for example `getPolicies:1738000000000-4821` or `policy:job-abc123`)
+and an expiration timestamp. The owner string includes the caller site name and a unique code for diagnostics.
 
-**Lock Identifiers:** `policies` | `issues`
+## Cooperative Caching
 
-- **Purpose**: Operations on resource catalogs (bulk operations)
-- **Used by**: `policies` (catalog building), `issues` (bulk issue analysis)
-- **Blocks**: Individual resource locks of same type
+When multiple users request the same resource concurrently:
 
-#### 3. Individual Resource Level - Most Granular
+1. First request acquires the lock and starts processing
+1. Subsequent requests wait for the lock to be released
+1. On release, waiters find the cached result and skip duplicate work
 
-**Lock Identifiers:** `policy:{source}:{language?}` | `issue:{issueId}`
+Only one AI operation is triggered; all users receive consistent results.
 
-- **Purpose**: Operations on specific resources
-- **Used by**: `policy`, `classify`, `annotate`, `transition`
-- **Blocks**: Conflicts with catalog operations of same type
+## Platform Limitations
 
-### Conflict Detection Algorithm
-
-The system uses hierarchical conflict detection with prefix matching (see `conflicts()` function in
-`src/server/tools/cache.ts:360-375`). Lock conflicts occur when:
-
-- **Exact match**: Requested lock identical to existing lock
-- **Parent-child hierarchy**: One lock is a prefix of another (e.g., `policies` conflicts with `policy:123`)
-- **Bidirectional blocking**: Both upward (fine→coarse) and downward (coarse→fine) conflicts detected
-
-### KVS Platform Limitations
-
-**Current Implementation Status:**
-
-- **Race condition limitation**: KVS API constraints prevent atomic read-check-write operations
-- **Probabilistic correctness**: System accepts rare race conditions with extensive monitoring and logging
-- **2-minute timeout**: Minimizes impact of stuck locks from race conditions
-
-**Missing Features for Distributed Locking:**
-
-- ❌ Conditional reads (no `.if()`, `.exists()`, `.hasVersion()`)
-- ❌ Compare-and-swap operations
-- ❌ Read operations within transactions
-- ❌ Built-in lock primitives
-
-**Mitigation Strategies:**
-
-- Hierarchical design reduces conflict probability
-- 2-minute timeout minimizes stuck lock impact
-- Exponential backoff reduces contention
-- Extensive logging enables issue detection
-
-## Cooperative Caching Workflow
-
-**Example: Multiple Policy Translation Requests**
-
-1. User A requests `policy:123:fr` translation
-2. User A acquires lock `policy:123:fr`
-3. Users B & C wait for lock release
-4. User A completes work, caches result, releases lock
-5. Users B & C find cached result, skip duplicate work
-
-**Result**: Only one AI operation triggered, all users get consistent results.
+Forge KVS lacks compare-and-swap primitives, so `acquire()` uses optimistic concurrency control with version tracking.
+This leaves a TOCTOU race window (#25). Mitigations include hierarchical design to reduce conflict probability,
+2-minute lock timeout, exponential backoff, and resource-level deduplication via `Activity` sentinels.

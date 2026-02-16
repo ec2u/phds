@@ -43,7 +43,7 @@ app:
     name: nodejs22.x
   package:
     extraFiles:
-      - src/server/tasks/async/*.sys.md
+      - src/server/tasks/**/*.sys.md
 
 permissions:
 
@@ -61,4 +61,3 @@ remotes:
     baseUrl: https://generativelanguage.googleapis.com
     operations:
       - fetch
-

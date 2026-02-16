@@ -22,8 +22,8 @@
 
 import { Button, EmptyState, Inline, Select, Stack, Text } from "@forge/react";
 import React from "react";
+import { on } from "../../../shared/index";
 import { Issue, Severities, Severity, State, States } from "../../../shared/items/issues";
-import { on } from "../../../shared/tasks";
 import { IssuesActions } from "../../hooks/issues";
 import { useStorage } from "../../hooks/storage";
 import { AnalysisNotPerformedPrompt } from "../elements/analyze";

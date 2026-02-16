@@ -26,7 +26,7 @@
 import api, { route } from "@forge/api";
 import { asTrace } from "../../shared";
 import { Document } from "../../shared/items/documents";
-import { query } from "../index";
+import { query } from "../_index";
 
 
 /**

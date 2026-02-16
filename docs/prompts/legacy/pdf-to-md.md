@@ -114,7 +114,7 @@ improving the evaluator's ability to catch genuine errors.
 
 # Related Resources
 
-- Active prompt: [`policy-extract.sys.md`](../../../src/server/tasks/async/policy-extract.sys.md)
-- Development log: [`policy-extract.log.md`](../../../src/server/tasks/async/policy-extract.log.md)
+- Active prompt: [`policy-extract.sys.md`](../../../src/server/tasks/policy/policy-extract.sys.md)
+- Development log: [`policy-extract.log.md`](../../../src/server/tasks/policy/policy-extract.log.md)
 - Extraction archive: [`PDF_TO_MD/`](PDF_TO_MD/)
 - Evaluation archive: [`PDF_TO_MD_EVALUATION/`](PDF_TO_MD_EVALUATION/)

@@ -24,11 +24,11 @@
  */
 
 import { useEffect, useState } from "react";
-import { isArray } from "../../shared";
-import { Issue, State } from "../../shared/items/issues";
-import { Status } from "../../shared/tasks";
-import { execute } from "../ports/index";
+import { Activity, asTrace, isActivity, isArray, type Status } from "../../shared";
+import { Issue, IssueUpdate } from "../../shared/items/issues";
+import { getIssues, refreshIssues, updateIssue } from "../ports/resources";
 import { useCache } from "./cache";
+import { poll } from "./index";
 
 /**
  * Available actions for managing compliance issues.
@@ -41,28 +41,12 @@ export interface IssuesActions {
 	refresh: () => Promise<void>;
 
 	/**
-	 * Transitions an issue to a new workflow state.
+	 * Persists changes to an issue and optimistically updates the local cache.
 	 *
 	 * @param issue the issue identifier
-	 * @param state the target state
+	 * @param changes the mutable fields to update
 	 */
-	transition: (issue: string, state: State) => Promise<void>;
-
-	/**
-	 * Updates the severity level of an issue.
-	 *
-	 * @param issue the issue identifier
-	 * @param severity the target severity level
-	 */
-	classify: (issue: string, severity: Issue["severity"]) => Promise<void>;
-
-	/**
-	 * Updates the annotations for an issue.
-	 *
-	 * @param issue the issue identifier
-	 * @param notes the markdown annotations content
-	 */
-	annotate: (issue: string, notes: string) => Promise<void>;
+	update: (issue: string, changes: IssueUpdate) => Promise<void>;
 
 }
 
@@ -84,27 +68,29 @@ export function useIssues(): [Status<ReadonlyArray<Issue>>, IssuesActions] {
 	const key = "issues";
 	const cached = getCache<ReadonlyArray<Issue>>(key);
 
-	const [issues, setIssues] = useState<Status<ReadonlyArray<Issue>>>(cached ?? []);
+	const [issues, setIssues] = useState<Status<ReadonlyArray<Issue>>>(cached ?? Activity.Submitting);
 
 
-	function update(issues: Status<ReadonlyArray<Issue>>) {
+	async function refresh(): Promise<void> {
 
-		setIssues(issues);
+		setIssues(Activity.Submitting);
 
-		if ( isArray<Issue>(issues) ) {
-			setCache(key, issues);
-		}
+		await refreshIssues().catch(asTrace);
+
+		setCache(key, undefined);
 
 	}
 
-	function mutate(id: string, changes: Partial<Issue>) {
+	async function update(issue: string, changes: IssueUpdate): Promise<void> {
+
+		await updateIssue(issue, changes);
 
 		setIssues(current => {
 			if ( isArray<Issue>(current) ) {
 
-				const updated = current.map(issue => issue.id === id
-					? { ...issue, ...changes }
-					: issue
+				const updated = current.map(i => i.id === issue
+					? { ...i, ...changes }
+					: i
 				);
 
 				setCache(key, updated);
@@ -121,64 +107,27 @@ export function useIssues(): [Status<ReadonlyArray<Issue>>, IssuesActions] {
 	}
 
 
-	async function refresh(): Promise<void> {
-
-		await execute<ReadonlyArray<Issue>>(update, {
-			type: "analyze"
-		});
-
-	}
-
-	async function transition(issue: string, state: State): Promise<void> {
-
-		await execute<void>(() => { }, {
-			type: "transition",
-			issue,
-			state
-		});
-
-		mutate(issue, { state });
-
-	}
-
-	async function classify(issue: string, severity: Issue["severity"]): Promise<void> {
-
-		await execute<void>(() => { }, {
-			type: "classify",
-			issue,
-			severity
-		});
-
-		mutate(issue, { severity });
-
-	}
-
-	async function annotate(issue: string, annotations: string): Promise<void> {
-
-		await execute<void>(() => { }, {
-			type: "annotate",
-			issue,
-			annotations
-		});
-
-		mutate(issue, { annotations });
-
-	}
-
-
 	useEffect(() => {
 
 		if ( cached ) {
 
 			setIssues(cached);
 
+			return () => {};
+
 		} else {
 
-			execute<ReadonlyArray<Issue>>(update, {
+			return poll(() => getIssues().catch(asTrace).then(status => {
 
-				type: "issues"
+				setIssues(status);
 
-			});
+				if ( !isActivity(status) ) {
+					setCache(key, status);
+				}
+
+				return status;
+
+			}));
 
 		}
 
@@ -189,9 +138,7 @@ export function useIssues(): [Status<ReadonlyArray<Issue>>, IssuesActions] {
 		issues,
 		{
 			refresh,
-			transition,
-			classify,
-			annotate
+			update
 		}
 	];
 

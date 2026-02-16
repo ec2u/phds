@@ -22,7 +22,7 @@
 
 import { Box, Heading, Icon, Popup, Pressable, Stack, Text, xcss } from "@forge/react";
 import React, { useState } from "react";
-import { Reference } from "../../../shared/items/issues";
+import type { Reference } from "../../../shared/items/documents";
 
 /**
  * Renders an inline info icon that opens a popup showing the source reference title and excerpt.

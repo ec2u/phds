@@ -24,8 +24,7 @@
  */
 
 import { kvs, WhereConditions } from "@forge/kvs";
-import { Activity } from "../../shared/tasks";
-import { setStatus } from "../async";
+import { Activity } from "../../shared/index";
 import { checkPage } from "./pages";
 
 
@@ -90,9 +89,9 @@ interface LockCatalog {
 interface LockEntry {
 
 	/**
-	 * The job identifier that owns this lock.
+	 * The owner identifier for this lock (e.g. `"getPolicies:1738000000000-4821"`).
 	 */
-	readonly job: string;
+	readonly owner: string;
 
 	/**
 	 * The lock expiration timestamp in milliseconds since epoch.
@@ -336,7 +335,7 @@ async function scan(page?: string) {
 /**
  * Execute a task with exclusive lock protection
  *
- * @param job - Job identifier for lock ownership
+ * @param owner - Owner identifier for lock ownership (e.g. `"getPolicies:1738000000000-4821"`)
  * @param key - Lock key (includes page prefix)
  * @param task - Function to execute while holding the lock
  *
@@ -344,11 +343,9 @@ async function scan(page?: string) {
  *
  * @throws Error if lock cannot be acquired or released or task fails
  */
-export async function lock<T>(job: string, key: Key, task: () => Promise<T>): Promise<T> {
+export async function lock<T>(owner: string, key: Key, task: () => Promise<T>): Promise<T> {
 
-	await setStatus(job, Activity.Locking);
-
-	await acquire(job, key);
+	await acquire(owner, key);
 
 	try {
 
@@ -356,7 +353,7 @@ export async function lock<T>(job: string, key: Key, task: () => Promise<T>): Pr
 
 	} finally {
 
-		await release(job, key);
+		await release(owner, key);
 
 	}
 }
@@ -368,12 +365,12 @@ export async function lock<T>(job: string, key: Key, task: () => Promise<T>): Pr
  * Uses optimistic concurrency control with version tracking to prevent race conditions. Expired locks are
  * automatically cleaned during acquisition attempts.
  *
- * @param job the job identifier for lock ownership
+ * @param owner the owner identifier for lock ownership
  * @param key the cache key to lock
  *
  * @throws {Error} if the lock cannot be acquired after all retry attempts
  */
-async function acquire(job: string, key: Key): Promise<void> {
+async function acquire(owner: string, key: Key): Promise<void> {
 
 	const now = Date.now();
 	const page = keyPage(key);
@@ -409,7 +406,7 @@ async function acquire(job: string, key: Key): Promise<void> {
 							locks: {
 								...entries,
 								[key]: {
-									job: job,
+									owner: owner,
 									expires: now+lockTimeout
 								}
 							},
@@ -442,15 +439,15 @@ async function acquire(job: string, key: Key): Promise<void> {
 /**
  * Releases a previously acquired lock.
  *
- * Verifies lock ownership before releasing. If the lock is not owned by the specified job, logs a warning and
+ * Verifies lock ownership before releasing. If the lock is not owned by the specified owner, logs a warning and
  * returns without error.
  *
- * @param job the job identifier for lock ownership verification
+ * @param owner the owner identifier for lock ownership verification
  * @param key the cache key to unlock
  *
  * @throws {Error} if the lock cannot be released after all retry attempts
  */
-async function release(job: string, key: Key): Promise<void> {
+async function release(owner: string, key: Key): Promise<void> {
 
 	const page = keyPage(key);
 	const locks = pageKey(page);
@@ -466,7 +463,7 @@ async function release(job: string, key: Key): Promise<void> {
 
 				const currentLock = catalog.locks[key];
 
-				if ( currentLock?.job === job ) {
+				if ( currentLock?.owner === owner ) {
 
 					if ( catalog.version === ((await kvs.get<LockCatalog>(locks))?.version ?? 0) ) { // no version conflict
 
@@ -497,9 +494,9 @@ async function release(job: string, key: Key): Promise<void> {
 
 					}
 
-				} else { // lock not owned by this job
+				} else { // lock not owned by this owner
 
-					console.warn(`attempted to release lock <${key}> not owned by job <${job}>`);
+					console.warn(`attempted to release lock <${key}> not owned by <${owner}>`);
 
 					return;
 				}

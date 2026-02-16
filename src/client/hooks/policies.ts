@@ -21,9 +21,9 @@
  */
 
 import { useEffect, useState } from "react";
+import { Activity, asTrace, isActivity, type Status } from "../../shared/index";
 import { Catalog } from "../../shared/items/documents";
-import { Status } from "../../shared/tasks";
-import { execute } from "../ports/index";
+import { getPolicies } from "../ports/resources";
 import { useCache } from "./cache";
 
 /**
@@ -40,22 +40,20 @@ export function usePolicies(): Status<Catalog> {
 	const key = "policies";
 	const cached = getCache<Catalog>(key);
 
-	const [policies, setPolicies] = useState<Status<Catalog>>(cached ?? {});
-
-
-	const update = (policies: Status<Catalog>) => {
-		setPolicies(policies);
-		setCache(key, policies);
-	};
+	const [policies, setPolicies] = useState<Status<Catalog>>(cached ?? Activity.Submitting);
 
 
 	useEffect(() => {
 
 		if ( cached ) { setPolicies(cached); } else {
 
-			execute<Catalog>(update, {
+			getPolicies().catch(asTrace).then(status => {
 
-				type: "policies"
+				setPolicies(status);
+
+				if ( !isActivity(status) ) {
+					setCache(key, status);
+				}
 
 			});
 
