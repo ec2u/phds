@@ -34,7 +34,7 @@ import { file as read } from "../../tools/files";
 import { process, upload } from "../../tools/gemini";
 import { pdf } from "../../tools/mime";
 import type { Payload, PolicyTask } from "../_index";
-import type { Report } from "../async/index";
+import type { Report } from "../index";
 
 /**
  * Executes a policy document retrieval and translation task.

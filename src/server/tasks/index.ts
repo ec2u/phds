@@ -20,16 +20,16 @@
  * Dispatches long-running tasks (policy extraction, compliance analysis) to their respective handlers, managing
  * status reporting and error recovery. Triggers background cache maintenance after task completion.
  *
- * @module index
+ * @module async
  */
 
 import Resolver from "@forge/resolver";
 import { kvs } from "@forge/kvs";
-import type { Status } from "../../../shared/index";
-import { purge } from "../../tools/cache";
-import type { Task } from "../_index";
-import { analyze } from "../analyze/analyze";
-import { policy } from "../policy/policy";
+import type { Status } from "../../shared/index";
+import { purge } from "../tools/cache";
+import type { Task } from "./_index";
+import { analyze } from "./analyze/analyze";
+import { policy } from "./policy/policy";
 
 
 /**

@@ -28,7 +28,7 @@ import { process, upload } from "../../tools/gemini";
 import { markdown, pdf } from "../../tools/mime";
 import { fetchPage } from "../../tools/pages";
 import type { AnalyzeTask, Payload } from "../_index";
-import type { Report } from "../async/index";
+import type { Report } from "../index";
 
 /**
  * AI-powered compliance analysis task.
