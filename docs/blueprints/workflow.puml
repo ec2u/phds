@@ -57,7 +57,16 @@ else
         activate resolver
         resolver -> kvs: read resource key
         kvs --> resolver: Activity
-        resolver --> client: 202 Activity
+
+        alt lock held
+            resolver --> client: 202 Activity
+        else lock not held (crashed job)
+            resolver -> kvs: purge stale sentinel
+            resolver -> kvs: write Activity.Scheduling
+            resolver -> consumer: re-queue async task
+            resolver --> client: 202 Activity.Scheduling
+        end
+
         deactivate resolver
     end
 

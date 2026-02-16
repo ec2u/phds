@@ -31,6 +31,7 @@ import { getAttachment, listAttachments } from "../tools/attachments";
 import {
 	issueKey,
 	issuesKey,
+	isLocked,
 	keyPrefix,
 	keySource,
 	lock,
@@ -124,9 +125,16 @@ export async function getPolicy({ payload: { source, language }, context }: Requ
 
 		const cached = await kvs.get<Status<Document>>(key);
 
-		if ( isActivity(cached) ) { // job in progress — #25: check lock presence to detect crashed jobs
+		if ( isActivity(cached) ) { // job in progress — check lock presence to detect crashed jobs
 
-			return cached;
+			if ( await isLocked(key) ) {
+				return cached; // job still running
+			} else {
+				await kvs.delete(key); // stale sentinel — job crashed
+				await kvs.set(key, Activity.Scheduling);
+				await queue.push({ page, key, task: { type: "policy", source, language } } as any);
+				return Activity.Scheduling;
+			}
 
 		} else if ( isTrace(cached) ) { // previous error — dismiss clears it
 
@@ -186,36 +194,38 @@ export async function getIssues({ context }: Request<{}>): Promise<Status<Readon
 
 		if ( isActivity(sentinel) ) {
 
-			return sentinel;
+			if ( await isLocked(issuesKey(page)) ) {
+				return sentinel; // job still running
+			} else {
+				await kvs.delete(issuesKey(page)); // stale sentinel — job crashed
+			}
 
 		} else if ( isTrace(sentinel) ) {
 
 			return sentinel;
 
-		} else {
-
-			// read individual issues from KVS
-
-			const results: Array<{ key: string; value: unknown }> = [];
-
-			let cursor: string | undefined;
-
-			do {
-
-				const query = kvs.query()
-					.where("key", WhereConditions.beginsWith(keyPrefix(issuesKey(page))))
-					.limit(100);
-
-				const batch = await (cursor ? query.cursor(cursor) : query).getMany();
-
-				results.push(...batch.results);
-				cursor = batch.nextCursor;
-
-			} while ( cursor );
-
-			return results.map(result => normalizeIssue(result.value as Issue));
-
 		}
+
+		// read individual issues from KVS
+
+		const results: Array<{ key: string; value: unknown }> = [];
+
+		let cursor: string | undefined;
+
+		do {
+
+			const query = kvs.query()
+				.where("key", WhereConditions.beginsWith(keyPrefix(issuesKey(page))))
+				.limit(100);
+
+			const batch = await (cursor ? query.cursor(cursor) : query).getMany();
+
+			results.push(...batch.results);
+			cursor = batch.nextCursor;
+
+		} while ( cursor );
+
+		return results.map(result => normalizeIssue(result.value as Issue));
 
 	} catch ( error ) {
 

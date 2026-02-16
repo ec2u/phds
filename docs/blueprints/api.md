@@ -44,16 +44,16 @@ both cached results and async progress.
 A read handler (for example `getPolicy()`) reads the resource key and branches:
 
 1. **Empty** → write `Activity.Scheduling` sentinel, queue async job, return `202`
-1. **`Activity`** → check lock presence; if lock held return `202` with current activity, if no lock held purge stale
-   sentinel and fall through to step 1 (crashed job recovery — depends on #25)
+1. **`Activity`** → check lock presence via `isLocked()`; if lock held return `202` with current activity, if no lock
+   held purge stale sentinel and fall through to step 1 (crashed job recovery)
 1. **Value** → check staleness against source metadata; if fresh return `200`, if stale purge and fall through to
    step 1
 1. **`Trace`** → return error (#18 error dismissal — dismiss clears the `Trace`)
 
 # Async Handover
 
-The resolver writes `Activity.Scheduling` as a sentinel before queuing the job — best-effort deduplication that becomes
-correct once locking (#25) is fixed. The async task then acquires the lock and updates the resource key as it
+The resolver writes `Activity.Scheduling` as a sentinel before queuing the job — best-effort deduplication backed by
+lock-based sentinel recovery. The async task then acquires the lock and updates the resource key as it
 progresses (`Activity.Fetching` → `Activity.Extracting` → …). The final value is written when done.
 
 As a safety net, after acquiring the lock the job checks the key state and bails out if a fresh value is already present

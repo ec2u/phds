@@ -13,7 +13,7 @@ within Confluence.
 
 - `src/client/macro.tsx`: main React component with tabbed UI interface
 - `src/server/ports/index.ts`: Forge resolver exposing resource-centric endpoints
-- `src/server/tasks/async/index.ts`: async task executor handling long-running background tasks
+- `src/server/tasks/index.ts`: async task dispatcher and executor handling long-running background tasks
 - `src/shared/`: shared type definitions and utilities used by both client and server
 - `manifest.yml`: Forge app configuration defining the macro, resolvers, and async consumers
 
@@ -31,7 +31,7 @@ within Confluence.
 - **Ports**: `ports/index.ts` registers Forge resolver functions; `ports/resources.ts` implements resource-centric
   handlers (`getPolicies`, `getPolicy`, `getIssues`, `refreshIssues`, `getIssue`, `updateIssue`, `clearCache`)
 - **Task Handlers**: `tasks/policy/` for document extraction and translation, `tasks/analyze/` for compliance analysis
-- **Task Dispatcher**: `tasks/async/index.ts` routes queued tasks to the appropriate handler
+- **Task Dispatcher**: `tasks/index.ts` routes queued tasks to the appropriate handler
 - **Tools**: utilities for external integrations (Gemini AI, Confluence pages, attachments, caching, locking)
 
 ### 3. Shared Layer (`src/shared/`)

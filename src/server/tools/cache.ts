@@ -24,7 +24,7 @@
  */
 
 import { kvs, WhereConditions } from "@forge/kvs";
-import { Activity } from "../../shared/index";
+import { Activity, isDefined } from "../../shared/index";
 import { checkPage } from "./pages";
 
 
@@ -61,7 +61,7 @@ const lockDelay = 30*1000;
 /**
  * The lock expiration timeout in milliseconds.
  */
-const lockTimeout = 2*60*1000;
+const lockTimeout = 15*60*1000;
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -333,6 +333,23 @@ async function scan(page?: string) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
+ * Checks whether a lock is currently held for a given key.
+ *
+ * @param key the cache key to check
+ *
+ * @returns true if a non-expired lock exists for the key; false otherwise
+ */
+export async function isLocked(key: Key): Promise<boolean> {
+	const catalog = await kvs.get<LockCatalog>(pageKey(keyPage(key)));
+	if ( !catalog ) {
+		return false;
+	} else {
+		const entry = catalog.locks[key];
+		return isDefined(entry) && entry.expires > Date.now();
+	}
+}
+
+/**
  * Execute a task with exclusive lock protection
  *
  * @param owner - Owner identifier for lock ownership (e.g. `"getPolicies:1738000000000-4821"`)
@@ -341,7 +358,7 @@ async function scan(page?: string) {
  *
  * @returns Promise resolving to task result
  *
- * @throws Error if lock cannot be acquired or released or task fails
+ * @throws Error if lock cannot be acquired or task fails
  */
 export async function lock<T>(owner: string, key: Key, task: () => Promise<T>): Promise<T> {
 
@@ -353,7 +370,11 @@ export async function lock<T>(owner: string, key: Key, task: () => Promise<T>): 
 
 	} finally {
 
-		await release(owner, key);
+		try {
+			await release(owner, key);
+		} catch ( error ) {
+			console.warn(`lock release for <${key}> failed; will expire naturally:`, error);
+		}
 
 	}
 }
@@ -362,7 +383,7 @@ export async function lock<T>(owner: string, key: Key, task: () => Promise<T>): 
 /**
  * Acquires a hierarchical lock with exponential backoff retry.
  *
- * Uses optimistic concurrency control with version tracking to prevent race conditions. Expired locks are
+ * Uses write-then-verify pattern to handle race conditions. Expired locks are
  * automatically cleaned during acquisition attempts.
  *
  * @param owner the owner identifier for lock ownership
@@ -372,12 +393,13 @@ export async function lock<T>(owner: string, key: Key, task: () => Promise<T>): 
  */
 async function acquire(owner: string, key: Key): Promise<void> {
 
-	const now = Date.now();
 	const page = keyPage(key);
 	const locks = pageKey(page);
 
 	for (let attempts = 0; attempts < lockAttempts; attempts++) {
 		try {
+
+			const now = Date.now();
 
 			// read current lock state
 
@@ -394,34 +416,35 @@ async function acquire(owner: string, key: Key): Promise<void> {
 
 				await backoff(attempts);
 
-			} else { // optimistic update with version check
+			} else { // write-then-verify
 
-				// use single read to reduce race condition window
+				const nextVersion = catalog.version+1;
 
-				if ( catalog.version === ((await kvs.get<LockCatalog>(locks))?.version ?? 0) ) { // no version conflict
+				await kvs.transact()
+					.set(locks, {
 
-					await kvs.transact()
-						.set(locks, {
+						locks: {
+							...entries,
+							[key]: {
+								owner: owner,
+								expires: now+lockTimeout
+							}
+						},
+						version: nextVersion
 
-							locks: {
-								...entries,
-								[key]: {
-									owner: owner,
-									expires: now+lockTimeout
-								}
-							},
-							version: catalog.version+1
+					})
+					.execute();
 
-						})
-						.execute();
+				// verify our entry survived
 
+				const verified = await kvs.get<LockCatalog>(locks);
+
+				if ( verified?.locks[key]?.owner === owner ) {
 					return;
-
-				} else { // version conflict, retry
-
+				} else {
 					await backoff(attempts);
-
 				}
+
 			}
 
 		} catch ( error ) {
@@ -465,33 +488,33 @@ async function release(owner: string, key: Key): Promise<void> {
 
 				if ( currentLock?.owner === owner ) {
 
-					if ( catalog.version === ((await kvs.get<LockCatalog>(locks))?.version ?? 0) ) { // no version conflict
+					const { [key]: _, ...remainingLocks } = catalog.locks;
 
-						const { [key]: _, ...remainingLocks } = catalog.locks;
+					const transaction = kvs.transact();
 
-						const transaction = kvs.transact();
+					if ( Object.keys(remainingLocks).length > 0 ) {
 
-						if ( Object.keys(remainingLocks).length > 0 ) {
+						transaction.set(locks, {
+							locks: remainingLocks,
+							version: catalog.version+1
+						});
 
-							transaction.set(locks, {
-								locks: remainingLocks,
-								version: catalog.version+1
-							});
+					} else {
 
-						} else {
+						transaction.delete(locks);
 
-							transaction.delete(locks);
+					}
 
-						}
+					await transaction.execute();
 
-						await transaction.execute();
+					// verify our entry was removed
 
+					const verified = await kvs.get<LockCatalog>(locks);
+
+					if ( !verified?.locks[key] || verified.locks[key].owner !== owner ) {
 						return;
-
-					} else { // version conflict, retry
-
+					} else {
 						await backoff(attempts);
-
 					}
 
 				} else { // lock not owned by this owner
@@ -546,14 +569,17 @@ function conflicts(requested: Key, entries: Record<Key, LockEntry>): boolean {
 }
 
 /**
- * Exponential backoff delay for retry operations
+ * Exponential backoff delay with full jitter for retry operations
  *
  * @param attempts - Current attempt number (0-based)
  *
- * @returns Promise that resolves after exponential backoff delay
+ * @returns Promise that resolves after randomized backoff delay
  */
 function backoff(attempts: number): Promise<void> {
-	return new Promise(resolve => setTimeout(resolve,
-		Math.min(1000*Math.pow(2, attempts), lockDelay)
-	));
+
+	const base = Math.min(1000*Math.pow(2, attempts), lockDelay);
+	const jitter = Math.random()*base;
+
+	return new Promise(resolve => setTimeout(resolve, jitter));
+
 }

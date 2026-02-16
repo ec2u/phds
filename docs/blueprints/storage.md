@@ -157,6 +157,8 @@ Only one AI operation is triggered; all users receive consistent results.
 
 ## Platform Limitations
 
-Forge KVS lacks compare-and-swap primitives, so `acquire()` uses optimistic concurrency control with version tracking.
-This leaves a TOCTOU race window (#25). Mitigations include hierarchical design to reduce conflict probability,
-2-minute lock timeout, exponential backoff, and resource-level deduplication via `Activity` sentinels.
+Forge KVS lacks compare-and-swap primitives, so `acquire()` and `release()` use a write-then-verify pattern — write
+the lock entry unconditionally, then re-read to confirm ownership. This narrows the race window compared to the earlier
+read-check-write approach. Additional mitigations include hierarchical design to reduce conflict probability, 15-minute
+lock timeout aligned to the Forge platform limit, full-jitter exponential backoff, stale sentinel recovery via
+`isLocked()`, and resource-level deduplication via `Activity` sentinels.
