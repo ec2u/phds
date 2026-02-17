@@ -273,7 +273,7 @@ export function ToolIssuesActions() {
 
 		<Button
 
-			isDisabled={isTrace(issues)}
+			isDisabled={busy || issues.length === 0}
 
 			onClick={refresh}
 

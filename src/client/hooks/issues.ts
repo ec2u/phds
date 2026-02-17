@@ -24,7 +24,7 @@
  */
 
 import { useEffect, useState } from "react";
-import { Activity, asTrace, isActivity, isArray, type Status } from "../../shared";
+import { Activity, asTrace, isActivity, isArray, isTrace, type Status } from "../../shared";
 import { Issue, IssueUpdate } from "../../shared/items/issues";
 import { clearIssues, getIssues, refreshIssues, updateIssue } from "../ports/resources";
 import { useCache } from "./cache";
@@ -84,21 +84,29 @@ export function useIssues(): [Status<ReadonlyArray<Issue>>, IssuesActions] {
 
 	async function refresh(): Promise<void> {
 
-		setCache(key, Activity.Submitting);
+		setIssues(Activity.Submitting);
 
-		await refreshIssues().catch(asTrace);
+		const result = await refreshIssues().catch(asTrace);
 
-		deleteCache(key);
+		if ( isTrace(result) ) {
+			setIssues(result);
+		} else {
+			deleteCache(key);
+		}
 
 	}
 
 	async function clear(): Promise<void> {
 
-		setCache(key, Activity.Submitting);
+		setIssues(Activity.Submitting);
 
-		await clearIssues().catch(asTrace);
+		const result = await clearIssues().catch(asTrace);
 
-		deleteCache(key);
+		if ( isTrace(result) ) {
+			setIssues(result);
+		} else {
+			deleteCache(key);
+		}
 
 	}
 

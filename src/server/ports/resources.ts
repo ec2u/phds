@@ -253,15 +253,7 @@ export async function getIssues({ context }: Request<{}>): Promise<Status<Readon
 
 		const sentinel = await kvs.get(key);
 
-		if ( isActivity(sentinel) ) {
-
-			if ( await isLocked(key) ) {
-				return sentinel; // job still running
-			} else {
-				await kvs.delete(key); // stale sentinel — job crashed
-			}
-
-		} else if ( isTrace(sentinel) ) {
+		if ( isActivity(sentinel) || isTrace(sentinel) ) {
 
 			return sentinel;
 

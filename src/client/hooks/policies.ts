@@ -69,7 +69,7 @@ export function usePolicies(): [Status<Catalog>, PoliciesActions] {
 
 	async function clear(): Promise<void> {
 
-		setCache(key, Activity.Submitting);
+		setPolicies(Activity.Submitting);
 
 		await clearPolicies().catch(asTrace);
 
