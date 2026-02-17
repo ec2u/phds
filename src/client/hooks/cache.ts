@@ -52,6 +52,23 @@ interface Cache {
 	getCache<V>(key: string): undefined | V;
 
 	/**
+	 * Tests whether any cached entry with a key starting with the given prefix satisfies the predicate.
+	 *
+	 * @param prefix the key prefix to match
+	 * @param predicate the test function applied to each matching value
+	 *
+	 * @return true if at least one matching entry satisfies the predicate; false otherwise
+	 */
+	someCache(prefix: string, predicate: (value: unknown) => boolean): boolean;
+
+	/**
+	 * Deletes cached entries whose keys start with the given prefix.
+	 *
+	 * @param prefix the key prefix to match
+	 */
+	deleteCache(prefix: string): void;
+
+	/**
 	 * Purge all cached entries.
 	 */
 	purgeCache(): void;
@@ -110,6 +127,27 @@ export function ToolCache({ children }: { children: ReactNode }) {
 		return cache.get(key);
 	}, [cache]);
 
+	const someCache = useCallback((prefix: string, predicate: (value: unknown) => boolean) => {
+		for ( const [key, value] of cache ) {
+			if ( key.startsWith(prefix) && predicate(value) ) {
+				return true;
+			}
+		}
+		return false;
+	}, [cache]);
+
+	const deleteCache = useCallback((prefix: string) => {
+		setCacheState(prev => {
+			const next = new Map(prev);
+			for ( const key of next.keys() ) {
+				if ( key.startsWith(prefix) ) {
+					next.delete(key);
+				}
+			}
+			return next;
+		});
+	}, []);
+
 	const purgeCache = useCallback(() => {
 		setCacheState(new Map());
 	}, []);
@@ -117,7 +155,7 @@ export function ToolCache({ children }: { children: ReactNode }) {
 
 	return createElement(CacheContext.Provider, {
 
-		value: { setCache, getCache, purgeCache },
+		value: { setCache, getCache, someCache, deleteCache, purgeCache },
 		children
 
 	});

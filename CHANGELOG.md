@@ -11,9 +11,17 @@ Changes deployed to development, pending production promotion.
 
 ### Fixed
 
+- "Refresh Analysis" button disabled when no analysis has been performed (#18)
+- "Clear Policies" button enabled while individual policy extraction is in progress (#18)
+- Stale issues and sidebar controls shown during refresh and clear operations
+- "Clear Policies" not evicting cached individual policy documents from local cache
 - Stale policy content shown when switching between policies in sidebar (#6)
 - Progress spinner stuck on "Scheduling Request…" during policy extraction and translation (#6)
 - Flash of "No Policy Documents" empty state on page reload (#6)
+
+### Added
+
+- Separate "Clear Policies" and "Clear Issues" actions replacing the single "Clear" button
 
 ### Changed
 

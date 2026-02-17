@@ -23,29 +23,70 @@
 import { useEffect, useState } from "react";
 import { Activity, asTrace, isActivity, type Status } from "../../shared/index";
 import { Catalog } from "../../shared/items/documents";
-import { getPolicies } from "../ports/resources";
+import { clearPolicies, getPolicies } from "../ports/resources";
 import { useCache } from "./cache";
+import { PolicyKeyPrefix } from "./policy";
+
+
+/**
+ * Cache key for the policies catalogue.
+ */
+export const PoliciesKey = "policies";
+
+
+/**
+ * Available actions for managing policy data.
+ */
+export interface PoliciesActions {
+
+	/**
+	 * Clears all cached policy data and resets the policies state.
+	 */
+	clear: () => Promise<void>;
+
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
  * Fetches and caches the catalogue of available policy documents.
  *
- * Returns the current status of the policies catalogue, loading from the in-memory cache on subsequent renders.
+ * Returns the current status of the policies catalogue and actions for cache management, loading from the in-memory
+ * cache on subsequent renders.
  *
- * @return the catalogue status: the source-to-title mapping, an activity state, or an error trace
+ * @return a tuple of `[status, actions]` where status is the catalogue mapping, an activity state, or an error trace
  */
-export function usePolicies(): Status<Catalog> {
+export function usePolicies(): [Status<Catalog>, PoliciesActions] {
 
-	const { getCache, setCache } = useCache();
+	const { getCache, setCache, deleteCache } = useCache();
 
-	const key = "policies";
+	const key = PoliciesKey;
 	const cached = getCache<Catalog>(key);
 
 	const [policies, setPolicies] = useState<Status<Catalog>>(cached ?? Activity.Submitting);
 
 
+	async function clear(): Promise<void> {
+
+		setCache(key, Activity.Submitting);
+
+		await clearPolicies().catch(asTrace);
+
+		deleteCache(PolicyKeyPrefix);
+		deleteCache(key);
+
+	}
+
 	useEffect(() => {
 
-		if ( cached ) { setPolicies(cached); } else {
+		if ( cached && !isActivity(cached) ) {
+
+			setPolicies(cached);
+
+		} else {
+
+			setPolicies(cached ?? Activity.Submitting);
 
 			getPolicies().catch(asTrace).then(status => {
 
@@ -61,5 +102,10 @@ export function usePolicies(): Status<Catalog> {
 
 	}, [cached]);
 
-	return policies;
+	return [
+		policies,
+		{
+			clear
+		}
+	];
 }

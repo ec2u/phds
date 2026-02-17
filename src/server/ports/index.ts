@@ -23,21 +23,34 @@
  */
 
 import Resolver from "@forge/resolver";
-import { clearCache, getIssue, getIssues, getPolicies, getPolicy, refreshIssues, updateIssue } from "./resources";
+import {
+	clearIssues,
+	clearPolicies,
+	getAttachments,
+	getIssue,
+	getIssues,
+	getPolicies,
+	getPolicy,
+	refreshIssues,
+	updateIssue
+} from "./resources";
 
 /**
  * The Forge resolver handler definitions for the macro backend.
  */
 export const handler = new Resolver()
 
+	.define(getAttachments.name, getAttachments as any)
+
 	.define(getPolicies.name, getPolicies as any)
+	.define(clearPolicies.name, clearPolicies as any)
 	.define(getPolicy.name, getPolicy as any)
 
 	.define(getIssues.name, getIssues as any)
 	.define(refreshIssues.name, refreshIssues as any)
+	.define(clearIssues.name, clearIssues as any)
+
 	.define(getIssue.name, getIssue as any)
 	.define(updateIssue.name, updateIssue as any)
-
-	.define(clearCache.name, clearCache as any)
 
 	.getDefinitions();

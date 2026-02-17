@@ -26,19 +26,16 @@ import ForgeReconciler, {
 	xcss
 } from "@forge/react";
 import React, { useState } from "react";
-import { Activity, isArray, on } from "../shared/index";
+import { Activity } from "../shared/index";
+import { useAttachments } from "./hooks/attachments";
 import { ToolCache } from "./hooks/cache";
 import { useContent } from "./hooks/content";
-import { useIssues } from "./hooks/issues";
-import { usePolicies } from "./hooks/policies";
 import { Rule } from "./views/index";
 import { ToolBar } from "./views/layouts/bar";
 import { ToolActivity } from "./views/lenses/activity";
-import { ToolClear } from "./views/lenses/clear";
 import { ToolDashboard } from "./views/lenses/dashboard";
-import { ToolIssues } from "./views/lenses/issues";
-import { ToolPolicies } from "./views/lenses/policies";
-import { ToolTrace } from "./views/lenses/trace";
+import { ToolIssues, ToolIssuesActions } from "./views/lenses/issues";
+import { ToolPolicies, ToolPoliciesActions } from "./views/lenses/policies";
 
 
 /**
@@ -70,37 +67,17 @@ enum Tab {
 function ToolMacro() {
 
 	const context = useProductContext();
+	const page: string = context?.extension?.content?.id ?? "";
 
 	const [agreement] = useContent();
-	const policies = usePolicies();
-	const [issues, actions] = useIssues();
+	const attachments = useAttachments();
 
 	const [selected, setSelected] = useState(Tab.Agreement);
 
 
-	const page: string = context?.extension?.content?.id ?? "";
-
-	const ready = !!context && !!agreement && on(policies, {
-
-		state: false,
-		trace: false,
-		value: true
-
-	}) && on(issues, {
-
-		state: false,
-		trace: false,
-		value: true
-
-	});
-
-	const active = !ready || selected !== Tab.Agreement || on(policies, {
-
-		state: false,
-		trace: false,
-		value: policies => Object.keys(policies).length === 0
-
-	});
+	const ready = !!context && !!agreement && attachments !== undefined;
+	const stocked = !!attachments && Object.keys(attachments).length > 0;
+	const active = !ready || !stocked || selected !== Tab.Agreement;
 
 
 	function button(tab: Tab, disabled?: boolean) {
@@ -132,25 +109,17 @@ function ToolMacro() {
 
 			</ButtonGroup>}
 
-			more={<ButtonGroup>
+			more={<>
 
-				<Button
+				{selected === Tab.Policies && <ToolPoliciesActions/>}
+				{selected === Tab.Issues && <ToolIssuesActions/>}
+				{selected === Tab.Dashboard && <ToolIssuesActions/>}
 
-					isDisabled={isArray(issues) && issues.length === 0
-						|| selected !== Tab.Issues && selected !== Tab.Dashboard
-					}
-
-					onClick={actions.refresh}
-
-				>Refresh Analysis</Button>
-
-				<ToolClear isDisabled={!ready || selected === Tab.Agreement}/>
-
-			</ButtonGroup>}
+			</>}
 
 		/>
 
-		{agreement === undefined ? (
+		{!ready ? (
 
 			<ToolActivity activity={Activity.Fetching}/>
 
@@ -171,42 +140,25 @@ function ToolMacro() {
 				description={<Text>Enter Confluence <Code>Edit</Code> mode to update.</Text>}
 			/>
 
-		) : on(policies, {
+		) : !stocked ? (
 
-			state: activity => <ToolActivity activity={activity}/>,
-			trace: trace => <ToolTrace trace={trace}/>,
+			<EmptyState header={"No Policy Documents"}
+				description={<Text>Upload PDF documents to the <Code>Attachments</Code> area below.</Text>}
+			/>
 
-			value: policies => on(issues, {
+		) : selected === Tab.Policies ? (
 
-				state: activity => <ToolActivity activity={activity}/>,
-				trace: trace => <ToolTrace trace={trace}/>,
+			<ToolPolicies page={page}/>
 
-				value: issues => {
+		) : selected === Tab.Issues ? (
 
-					return Object.keys(policies).length === 0 ? (
+			<ToolIssues page={page}/>
 
-						<EmptyState header={"No Policy Documents"}
-							description={<Text>Upload PDF documents to the <Code>Attachments</Code> area below.</Text>}
-						/>
+		) : selected === Tab.Dashboard ? (
 
-					) : selected === Tab.Policies ? (
+			<ToolDashboard page={page}/>
 
-						<ToolPolicies page={page} policies={policies}/>
-
-					) : selected === Tab.Issues ? (
-
-						<ToolIssues page={page} issues={[issues, actions]}/>
-
-					) : selected === Tab.Dashboard ? (
-
-						<ToolDashboard page={page} issues={[issues, actions]}/>
-
-					) : null;
-
-				}
-
-			})
-		})}
+		) : null}
 
 	</Box>;
 

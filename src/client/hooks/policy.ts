@@ -29,6 +29,12 @@ import { useCache } from "./cache";
 import { poll } from "./index";
 
 
+/**
+ * Cache key prefix for individual policy documents.
+ */
+export const PolicyKeyPrefix = "policy:";
+
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
@@ -40,13 +46,13 @@ import { poll } from "./index";
  * @param source The source attachment identifier
  * @param language The target language code (defaults to `"en"`)
  *
- * @returns The document status: the policy document, an activity state, or an error trace
+ * @returns A tuple of `[status, actions]` where status is the document, an activity state, or an error trace
  */
 export function usePolicy(source: Source, language: Language = "en"): Status<Document> {
 
-	const { getCache, setCache } = useCache();
+	const { getCache, setCache, deleteCache } = useCache();
 
-	const key = `policy:${source}-${language}`;
+	const key = `${PolicyKeyPrefix}${source}-${language}`;
 	const cached = getCache<Document>(key);
 
 	const [policy, setPolicy] = useState<Status<Document>>(cached ?? Activity.Submitting);
@@ -54,7 +60,7 @@ export function usePolicy(source: Source, language: Language = "en"): Status<Doc
 
 	useEffect(() => {
 
-		if ( cached ) {
+		if ( cached && !isActivity(cached) ) {
 
 			setPolicy(cached);
 
@@ -62,7 +68,7 @@ export function usePolicy(source: Source, language: Language = "en"): Status<Doc
 
 		} else {
 
-			setPolicy(Activity.Submitting);
+			setPolicy(cached ?? Activity.Submitting);
 
 			return poll(() => getPolicy(source, language).catch(asTrace).then(status => {
 

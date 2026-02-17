@@ -20,11 +20,24 @@
  * @module
  */
 
-import { Button, EmptyState, Inline, Select, Stack, Text } from "@forge/react";
-import React from "react";
-import { on } from "../../../shared/index";
+import {
+	Button,
+	ButtonGroup,
+	EmptyState,
+	Inline,
+	Modal,
+	ModalBody,
+	ModalFooter,
+	ModalHeader,
+	ModalTitle,
+	Select,
+	Stack,
+	Text
+} from "@forge/react";
+import React, { useState } from "react";
+import { isActivity, isTrace, on } from "../../../shared/index";
 import { Issue, Severities, Severity, State, States } from "../../../shared/items/issues";
-import { IssuesActions } from "../../hooks/issues";
+import { useIssues } from "../../hooks/issues";
 import { useStorage } from "../../hooks/storage";
 import { AnalysisNotPerformedPrompt } from "../elements/analyze";
 import ToolSplit from "../layouts/split";
@@ -48,23 +61,23 @@ const CatalogStateOrder: Record<State, number> = {
 /**
  * Renders a filterable list of compliance issues with state and severity filter controls in a sidebar.
  *
- * Persists filter selections to browser localStorage for the current page.
+ * Uses {@link useIssues} internally for data and actions. Persists filter selections to browser localStorage for the
+ * current page.
  *
  * @param props the component props
  * @param props.page the Confluence page identifier
- * @param props.issues the issues data and action callbacks
  */
 export function ToolIssues({
 
-	page,
-	issues: [items, actions]
+	page
 
 }: {
 
-	page: string,
-	issues: [ReadonlyArray<Issue>, IssuesActions]
+	page: string
 
 }) {
+
+	const [items, actions] = useIssues();
 
 	const [state, setState] = useStorage<readonly State[]>(page, "issues-states", []);
 	const [severity, setSeverity] = useStorage<readonly Severity[]>(page, "issues-severities", []);
@@ -97,97 +110,14 @@ export function ToolIssues({
 	}
 
 
+
 	return <ToolSplit
 
 		side={on(items, {
 
-			state: undefined,
-			trace: undefined,
-
-			value: issues => {
-
-				const sorted = select(issues);
-
-				const count = sorted.length;
-				const total = issues.length;
-
-				const states = States.map(value => ({
-					value,
-					label: stateLabel(value),
-					isDisabled: !issues
-						.filter(issue => includes(severity, issue.severity))
-						.some(({ state }) => value === state)
-				}));
-
-				const severities = Severities.map(value => ({
-					value,
-					label: severityLabel(value),
-					isDisabled: !issues
-						.filter(issue => includes(state, issue.state))
-						.some(({ severity }) => value === severity)
-				}));
-
-				return <Stack space={"space.200"}>
-
-					<Select
-
-						isMulti={true}
-						isClearable={false}
-						isDisabled={total === 0}
-
-						spacing={"compact"}
-						placeholder={"State"}
-
-						value={state?.map(value => states.find(option => option.value === value))}
-						options={states}
-
-						onChange={(options: undefined | typeof states[number][]) =>
-							setState(options?.map(option => option.value) ?? [])
-						}
-
-					/>
-
-					<Select
-
-						isMulti={true}
-						isClearable={false}
-						isDisabled={total === 0}
-
-						spacing="compact"
-						placeholder={"Severity"}
-
-						value={severity?.map(value => severities.find(option => option.value === value))}
-						options={severities}
-
-						onChange={(options: undefined | typeof severities[number][]) =>
-							setSeverity(options?.map(option => option.value) ?? [])
-						}
-
-					/>
-
-					{total > 0 && <Inline space={"space.050"} spread={"space-between"}>
-
-                        <Text weight={"bold"}>{
-							state?.length || severity?.length ? `${count}/${total} Issue${total === 1 ? "" : "s"}`
-								: `${total} Issue${total === 1 ? "" : "s"}`
-						}</Text>
-
-                        <Button
-
-                            isDisabled={!(state.length > 0 || severity.length > 0)}
-
-                            appearance={"subtle"}
-                            iconAfter="cross-circle"
-
-                            onClick={clear}
-
-                        >Clear</Button>
-
-                    </Inline>}
-
-				</Stack>;
-
-			}
+			state: () => <Sidebar disabled={true}/>,
+			trace: () => <Sidebar disabled={true}/>,
+			value: issues => <Sidebar disabled={false} issues={issues}/>
 
 		})}
 
@@ -225,4 +155,155 @@ export function ToolIssues({
 
 	})}</ToolSplit>;
 
+
+	function Sidebar({ disabled, issues=[] }: { disabled: boolean, issues?: readonly Issue[] }) {
+
+		const sorted = select(issues);
+
+		const count = sorted.length;
+		const total = issues.length;
+
+		const states = States.map(value => ({
+			value,
+			label: stateLabel(value),
+			isDisabled: disabled || !issues
+				.filter(issue => includes(severity, issue.severity))
+				.some(({ state }) => value === state)
+		}));
+
+		const severities = Severities.map(value => ({
+			value,
+			label: severityLabel(value),
+			isDisabled: disabled || !issues
+				.filter(issue => includes(state, issue.state))
+				.some(({ severity }) => value === severity)
+		}));
+
+		return <Stack space={"space.200"}>
+
+			<Select
+
+				isMulti={true}
+				isClearable={false}
+				isDisabled={disabled || total === 0}
+
+				spacing={"compact"}
+				placeholder={"State"}
+
+				value={state?.map(value => states.find(option => option.value === value))}
+				options={states}
+
+				onChange={(options: undefined | typeof states[number][]) =>
+					setState(options?.map(option => option.value) ?? [])
+				}
+
+			/>
+
+			<Select
+
+				isMulti={true}
+				isClearable={false}
+				isDisabled={disabled || total === 0}
+
+				spacing="compact"
+				placeholder={"Severity"}
+
+				value={severity?.map(value => severities.find(option => option.value === value))}
+				options={severities}
+
+				onChange={(options: undefined | typeof severities[number][]) =>
+					setSeverity(options?.map(option => option.value) ?? [])
+				}
+
+			/>
+
+			{!disabled && total > 0 && <Inline space={"space.050"} spread={"space-between"}>
+
+                <Text weight={"bold"}>{
+					state?.length || severity?.length ? `${count}/${total} Issue${total === 1 ? "" : "s"}`
+						: `${total} Issue${total === 1 ? "" : "s"}`
+				}</Text>
+
+                <Button
+
+                    isDisabled={!(state.length > 0 || severity.length > 0)}
+
+                    appearance={"subtle"}
+                    iconAfter="cross-circle"
+
+                    onClick={clear}
+
+                >Clear</Button>
+
+            </Inline>}
+
+		</Stack>;
+
+	}
+
+}
+
+/**
+ * Renders the issues toolbar action group with "Refresh Analysis" and "Clear Issues" buttons.
+ *
+ * Uses {@link useIssues} internally for data and actions. Automatically disabled when issues are loading,
+ * in error state, or empty. The "Clear Issues" button prompts for confirmation before purging all cached
+ * issue data for the current page.
+ */
+export function ToolIssuesActions() {
+
+	const [issues, { refresh, clear }] = useIssues();
+
+	const [confirming, setConfirming] = useState(false);
+
+	const busy = isActivity(issues) || isTrace(issues);
+
+
+	function cancel() {
+		setConfirming(false);
+	}
+
+	function confirm() {
+		setConfirming(false);
+		clear();
+	}
+
+
+	return <ButtonGroup>
+
+		<Button
+
+			isDisabled={isTrace(issues)}
+
+			onClick={refresh}
+
+		>Refresh Analysis</Button>
+
+		<Button
+
+			isDisabled={busy || issues.length === 0}
+
+			onClick={() => setConfirming(true)}
+
+		>Clear Issues</Button>
+
+		{confirming && <Modal onClose={() => setConfirming(false)}>
+
+            <ModalHeader>
+                <ModalTitle>Confirm Clear Issues</ModalTitle>
+            </ModalHeader>
+
+            <ModalBody>
+                Are you sure you want to clear all cached issue data? This action will clear the compliance
+                analysis history for this page and cannot be undone.
+            </ModalBody>
+
+            <ModalFooter>
+                <Button appearance="subtle" autoFocus={true} onClick={cancel}>Cancel</Button>
+                <Button appearance="danger" onClick={confirm}>Clear Issues</Button>
+            </ModalFooter>
+
+        </Modal>}
+
+	</ButtonGroup>;
 }

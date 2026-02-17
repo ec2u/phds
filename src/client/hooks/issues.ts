@@ -26,7 +26,7 @@
 import { useEffect, useState } from "react";
 import { Activity, asTrace, isActivity, isArray, type Status } from "../../shared";
 import { Issue, IssueUpdate } from "../../shared/items/issues";
-import { getIssues, refreshIssues, updateIssue } from "../ports/resources";
+import { clearIssues, getIssues, refreshIssues, updateIssue } from "../ports/resources";
 import { useCache } from "./cache";
 import { poll } from "./index";
 
@@ -41,6 +41,11 @@ export interface IssuesActions {
 	refresh: () => Promise<void>;
 
 	/**
+	 * Clears all cached issue data and resets the issues state.
+	 */
+	clear: () => Promise<void>;
+
+	/**
 	 * Persists changes to an issue and optimistically updates the local cache.
 	 *
 	 * @param issue the issue identifier
@@ -49,6 +54,12 @@ export interface IssuesActions {
 	update: (issue: string, changes: IssueUpdate) => Promise<void>;
 
 }
+
+
+/**
+ * Cache key for the issues collection.
+ */
+export const IssuesKey = "issues";
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -63,9 +74,9 @@ export interface IssuesActions {
  */
 export function useIssues(): [Status<ReadonlyArray<Issue>>, IssuesActions] {
 
-	const { getCache, setCache } = useCache();
+	const { getCache, setCache, deleteCache } = useCache();
 
-	const key = "issues";
+	const key = IssuesKey;
 	const cached = getCache<ReadonlyArray<Issue>>(key);
 
 	const [issues, setIssues] = useState<Status<ReadonlyArray<Issue>>>(cached ?? Activity.Submitting);
@@ -73,11 +84,21 @@ export function useIssues(): [Status<ReadonlyArray<Issue>>, IssuesActions] {
 
 	async function refresh(): Promise<void> {
 
-		setIssues(Activity.Submitting);
+		setCache(key, Activity.Submitting);
 
 		await refreshIssues().catch(asTrace);
 
-		setCache(key, undefined);
+		deleteCache(key);
+
+	}
+
+	async function clear(): Promise<void> {
+
+		setCache(key, Activity.Submitting);
+
+		await clearIssues().catch(asTrace);
+
+		deleteCache(key);
 
 	}
 
@@ -109,13 +130,15 @@ export function useIssues(): [Status<ReadonlyArray<Issue>>, IssuesActions] {
 
 	useEffect(() => {
 
-		if ( cached ) {
+		if ( cached && !isActivity(cached) ) {
 
 			setIssues(cached);
 
 			return () => {};
 
 		} else {
+
+			setIssues(cached ?? Activity.Submitting);
 
 			return poll(() => getIssues().catch(asTrace).then(status => {
 
@@ -138,6 +161,7 @@ export function useIssues(): [Status<ReadonlyArray<Issue>>, IssuesActions] {
 		issues,
 		{
 			refresh,
+			clear,
 			update
 		}
 	];

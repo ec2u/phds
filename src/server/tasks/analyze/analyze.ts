@@ -129,229 +129,229 @@ const ResponseSchema: Schema = {
 export async function analyze(owner: string, key: string, report: Report, page: string, {}: Payload<AnalyzeTask>): Promise<void> {
 	try {
 
-	await lock(owner, key, async () => {
+		await lock(owner, key, async () => {
 
-		// query for existing issues for this page
+			// query for existing issues for this page
 
-		await report(Activity.Fetching);
+			await report(Activity.Fetching);
 
-		const results: Array<{ key: string; value: any }> = [];
+			const results: Array<{ key: string; value: any }> = [];
 
-		let cursor: string | undefined;
+			let cursor: string | undefined;
 
-		do {
+			do {
 
-			const query = kvs.query()
-				.where("key", WhereConditions.beginsWith(keyPrefix(key)))
-				.limit(100);
+				const query = kvs.query()
+					.where("key", WhereConditions.beginsWith(keyPrefix(key)))
+					.limit(100);
 
-			const batch = await (cursor ? query.cursor(cursor) : query).getMany();
+				const batch = await (cursor ? query.cursor(cursor) : query).getMany();
 
-			results.push(...batch.results);
-			cursor = batch.nextCursor;
+				results.push(...batch.results);
+				cursor = batch.nextCursor;
 
-		} while ( cursor );
+			} while ( cursor );
 
-		// normalize retrieved issues to ensure state defaults to "pending"
+			// normalize retrieved issues to ensure state defaults to "pending"
 
-		const normalized = results.map(result => ({
-			...result,
-			value: normalizeIssue(result.value as Issue)
-		}));
+			const normalized = results.map(result => ({
+				...result,
+				value: normalizeIssue(result.value as Issue)
+			}));
 
 
-		// fetch page content and convert to markdown
+			// fetch page content and convert to markdown
 
-		const pageContent = await fetchPage(page);
-		const agreement = adfToMarkdown(pageContent.content);
+			const pageContent = await fetchPage(page);
+			const agreement = adfToMarkdown(pageContent.content);
 
-		if ( agreement.trim() === "" ) {
+			if ( agreement.trim() === "" ) {
+
+				await report(undefined);
+
+				return [];
+
+			}
+
+
+			// analyse agreement text
+
+			await report(Activity.Analyzing);
+
+
+			// retrieve prompts
+
+			const detectPrompt = await read("analyze-detect.sys.md", __dirname);
+
+			const detectVariables = {
+				document_name: agreementName,
+				target_language: defaultLanguage
+			};
+
+			const detectConfig = {
+				temperature: 0,
+				seed: 42,
+				topP: 0,
+				topK: 1,
+				candidateCount: 1
+			};
+
+
+			const mergePrompt = await read("analyze-merge.sys.md", __dirname);
+
+
+			// upload agreement text
+			const agreementFile = await upload({
+				name: agreementName,
+				mime: markdown,
+				data: Buffer.from(agreement, "utf-8")
+			});
+
+
+			// upload policies
+
+			const policies = await listAttachments(page, pdf);
+
+			const policyFiles = await Promise.all(policies.map(async (attachment) => {
+
+				// fetch the attachment content
+
+				const content = await fetchAttachment(page, attachment.id);
+
+				// upload to Gemini
+
+				return await upload({
+					name: attachment.title,
+					mime: attachment.mediaType,
+					data: content
+				});
+
+			}));
+
+
+			// generate a report detailing all existing issues
+
+			const history = format(normalized.map(result => result.value));
+
+
+			// process agreement/policy pairs with multiple parallel analysis rounds
+
+			const issues = await analyse();
+
+
+			async function analyse(): Promise<Issue[]> {
+
+				// for each agreement/policy pair
+
+
+				// !!! disable iterations/merge: return directly detect() results
+
+				const issues = await Promise.all(
+					policyFiles.map(async (file, index) => {
+
+						// do multiple parallel rounds of detection for this policy
+
+						const detected = await Promise.all(
+							Array.from({ length: iterations }, () => detect(file, policies[index]))
+						);
+
+						// merge all detected issues for this policy
+
+						return await merge(detected.flat(), policies[index]); // !!! disable
+
+						// !!! return detect(file, policies[index])
+
+					})
+				);
+
+				// merge all issues
+
+				return issues.flat();
+			}
+
+			async function detect(file: File, policy: Attachment): Promise<Issue[]> {
+
+				const response = await process<Response>({
+					model,
+					prompt: detectPrompt,
+					config: detectConfig,
+					variables: {
+						...detectVariables,
+						policy_name: file.displayName!
+					},
+					input: history,
+					files: [file, agreementFile],
+					schema: ResponseSchema
+				});
+
+				return response.map(entry => convert(entry, policy));
+			}
+
+			async function merge(issues: ReadonlyArray<Issue>, policy: Attachment): Promise<Issue[]> {
+
+				const response = await process<Response>({
+					model,
+					prompt: mergePrompt,
+					input: format(issues),
+					schema: ResponseSchema
+				});
+
+				return response.map((entry) => convert(entry, policy));
+			}
+
+
+			function convert(entry: Response[number], policy: Attachment): Issue {
+				return {
+
+					id: crypto.randomUUID(),
+					created: new Date().toISOString(),
+					severity: entry.severity === "high" ? 3 : entry.severity === "medium" ? 2 : 1,
+					state: "pending",
+
+					title: entry.reason_title,
+					description: [
+						entry.reason_analysis,
+						{
+							source: "",
+							title: "Agreement",
+							excerpt: entry.document_clash_excerpt,
+							offset: 0, // !!!
+							length: entry.document_clash_excerpt.length // !!!
+						} as Reference,
+						{
+							source: policy.id,
+							title: policy.title.replace(/\.\w+$/, ""), // remove filename extension
+							excerpt: entry.policy_clash_excerpt,
+							offset: 0, // !!!
+							length: entry.policy_clash_excerpt.length // !!!
+						} as Reference
+					]
+
+				};
+			}
+
+
+			// cache results
+
+			await report(Activity.Caching);
+
+			for (const issue of issues) {
+				await kvs.set<Issue>(issueKey(page, issue.id), issue);
+			}
+
+
+			// return all issues (existing + new)
+
+			const result = [
+				...(normalized.map(result => result.value as Issue)),
+				...issues
+			];
 
 			await report(undefined);
 
-			return [];
+			return result;
 
-		}
-
-
-		// analyse agreement text
-
-		await report(Activity.Analyzing);
-
-
-		// retrieve prompts
-
-		const detectPrompt = await read("analyze-detect.sys.md", __dirname);
-
-		const detectVariables = {
-			document_name: agreementName,
-			target_language: defaultLanguage
-		};
-
-		const detectConfig = {
-			temperature: 0,
-			seed: 42,
-			topP: 0,
-			topK: 1,
-			candidateCount: 1
-		};
-
-
-		const mergePrompt = await read("analyze-merge.sys.md", __dirname);
-
-
-		// upload agreement text
-		const agreementFile = await upload({
-			name: agreementName,
-			mime: markdown,
-			data: Buffer.from(agreement, "utf-8")
 		});
-
-
-		// upload policies
-
-		const policies = await listAttachments(page, pdf);
-
-		const policyFiles = await Promise.all(policies.map(async (attachment) => {
-
-			// fetch the attachment content
-
-			const content = await fetchAttachment(page, attachment.id);
-
-			// upload to Gemini
-
-			return await upload({
-				name: attachment.title,
-				mime: attachment.mediaType,
-				data: content
-			});
-
-		}));
-
-
-		// generate a report detailing all existing issues
-
-		const history = format(normalized.map(result => result.value));
-
-
-		// process agreement/policy pairs with multiple parallel analysis rounds
-
-		const issues = await analyse();
-
-
-		async function analyse(): Promise<Issue[]> {
-
-			// for each agreement/policy pair
-
-
-			// !!! disable iterations/merge: return directly detect() results
-
-			const issues = await Promise.all(
-				policyFiles.map(async (file, index) => {
-
-					// do multiple parallel rounds of detection for this policy
-
-					const detected = await Promise.all(
-						Array.from({ length: iterations }, () => detect(file, policies[index]))
-					);
-
-					// merge all detected issues for this policy
-
-					return await merge(detected.flat(), policies[index]); // !!! disable
-
-					// !!! return detect(file, policies[index])
-
-				})
-			);
-
-			// merge all issues
-
-			return issues.flat();
-		}
-
-		async function detect(file: File, policy: Attachment): Promise<Issue[]> {
-
-			const response = await process<Response>({
-				model,
-				prompt: detectPrompt,
-				config: detectConfig,
-				variables: {
-					...detectVariables,
-					policy_name: file.displayName!
-				},
-				input: history,
-				files: [file, agreementFile],
-				schema: ResponseSchema
-			});
-
-			return response.map(entry => convert(entry, policy));
-		}
-
-		async function merge(issues: ReadonlyArray<Issue>, policy: Attachment): Promise<Issue[]> {
-
-			const response = await process<Response>({
-				model,
-				prompt: mergePrompt,
-				input: format(issues),
-				schema: ResponseSchema
-			});
-
-			return response.map((entry) => convert(entry, policy));
-		}
-
-
-		function convert(entry: Response[number], policy: Attachment): Issue {
-			return {
-
-				id: crypto.randomUUID(),
-				created: new Date().toISOString(),
-				severity: entry.severity === "high" ? 3 : entry.severity === "medium" ? 2 : 1,
-				state: "pending",
-
-				title: entry.reason_title,
-				description: [
-					entry.reason_analysis,
-					{
-						source: "",
-						title: "Agreement",
-						excerpt: entry.document_clash_excerpt,
-						offset: 0, // !!!
-						length: entry.document_clash_excerpt.length // !!!
-					} as Reference,
-					{
-						source: policy.id,
-						title: policy.title.replace(/\.\w+$/, ""), // remove filename extension
-						excerpt: entry.policy_clash_excerpt,
-						offset: 0, // !!!
-						length: entry.policy_clash_excerpt.length // !!!
-					} as Reference
-				]
-
-			};
-		}
-
-
-		// cache results
-
-		await report(Activity.Caching);
-
-		for (const issue of issues) {
-			await kvs.set<Issue>(issueKey(page, issue.id), issue);
-		}
-
-
-		// return all issues (existing + new)
-
-		const result = [
-			...(normalized.map(result => result.value as Issue)),
-			...issues
-		];
-
-		await report(undefined);
-
-		return result;
-
-	});
 
 	} catch ( error ) {
 

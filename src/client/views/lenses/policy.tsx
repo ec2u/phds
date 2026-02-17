@@ -55,7 +55,7 @@ export function ToolPolicy({
 
 	return on(policy, {
 
-		// report only on the manin view
+		// report only on the main view
 
 		state: activity => as === undefined ? <ToolActivity activity={activity}/> : null,
 		trace: trace => as === undefined ? <ToolTrace trace={trace}/> : null,

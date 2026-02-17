@@ -24,7 +24,7 @@ import { Box, Popup, Pressable, Text, xcss } from "@forge/react";
 import React, { useState } from "react";
 import { on } from "../../../shared/index";
 import { Issue, Severities, Severity, State, States } from "../../../shared/items/issues";
-import { IssuesActions } from "../../hooks/issues";
+import { type IssuesActions, useIssues } from "../../hooks/issues";
 import { useStorage } from "../../hooks/storage";
 import { AnalysisNotPerformedPrompt } from "../elements/analyze";
 import ToolKanban, { Lane } from "../layouts/kanban";
@@ -54,21 +54,22 @@ const initialCollapsed = {
  *
  * Persists lane collapse states to browser localStorage for the current page.
  *
+ * Uses {@link useIssues} internally for data and actions.
+ *
  * @param props the component props
  * @param props.page the Confluence page identifier
- * @param props.issues the issues data and action callbacks
  */
 export function ToolDashboard({
 
-	page,
-	issues: [items, actions]
+	page
 
 }: {
 
-	page: string,
-	issues: [ReadonlyArray<Issue>, IssuesActions]
+	page: string
 
 }) {
+
+	const [items, actions] = useIssues();
 
 	const [stateCollapsed, setStateCollapsed] = useStorage<Record<string, boolean>>(
 		page, "dashboard-states", initialCollapsed.states

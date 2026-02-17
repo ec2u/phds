@@ -29,16 +29,15 @@ import { Language } from "../../shared/items/languages";
 import { Request } from "../_index";
 import { getAttachment, listAttachments } from "../tools/attachments";
 import {
+	isLocked,
 	issueKey,
 	issuesKey,
-	isLocked,
 	keyPrefix,
 	keySource,
 	lock,
-	pageKey,
+	ownerKey,
 	policiesKey,
-	policyKey,
-	purge
+	policyKey
 } from "../tools/cache";
 import { pdf } from "../tools/mime";
 
@@ -47,6 +46,31 @@ import { pdf } from "../tools/mime";
  * The Forge event queue for scheduling asynchronous task execution.
  */
 const queue = new Queue({ key: "executor-queue" });
+
+
+/**
+ * Returns the PDF attachments on the current page as a catalogue mapping source identifiers to display titles.
+ *
+ * @param request the resolver request with Confluence context
+ *
+ * @return the attachments catalogue, or an error trace on failure
+ */
+export async function getAttachments({ context }: Request<{}>): Promise<Status<Catalog>> {
+	try {
+
+		const page: string = context.extension.content.id;
+
+		return (await listAttachments(page, pdf)).reduce((catalog, attachment) => ({
+			...catalog,
+			[attachment.id]: attachment.title
+		}), {} as Catalog);
+
+	} catch ( error ) {
+
+		return asTrace(error);
+
+	}
+}
 
 
 /**
@@ -63,7 +87,7 @@ export async function getPolicies({ context }: Request<{}>): Promise<Status<Cata
 	try {
 
 		const page: string = context.extension.content.id;
-		const owner = `getPolicies:${Date.now()}-${(Math.random()*1e4)|0}`;
+		const owner = ownerKey("getPolicies");
 
 		return await lock(owner, policiesKey(page), async () => {
 
@@ -106,6 +130,39 @@ export async function getPolicies({ context }: Request<{}>): Promise<Status<Cata
 }
 
 /**
+ * Clears all cached policy data for the current page.
+ *
+ * Acquires a lock on the policies key to prevent concurrent access, then deletes all policy cache entries for the page.
+ *
+ * @param request The resolver request with Confluence context
+ *
+ * @returns Void on success, or an error trace on failure
+ */
+export async function clearPolicies({ context }: Request<{}>): Promise<Status<void>> {
+	try {
+
+		const page: string = context.extension.content.id;
+		const owner = ownerKey("clearPolicies");
+
+		await lock(owner, policiesKey(page), async () => {
+
+			const cached = await kvs.query()
+				.where("key", WhereConditions.beginsWith(keyPrefix(policiesKey(page))))
+				.limit(100)
+				.getMany();
+
+			await Promise.all(cached.results.map(result => kvs.delete(result.key)));
+
+		});
+
+	} catch ( error ) {
+
+		return asTrace(error);
+
+	}
+}
+
+/**
  * Retrieves or triggers extraction of a single policy document.
  *
  * Reads the resource key from Forge KVS and branches on its state: returns a cached document if fresh, the current
@@ -117,7 +174,10 @@ export async function getPolicies({ context }: Request<{}>): Promise<Status<Cata
  *
  * @return the document, current activity, or an error trace
  */
-export async function getPolicy({ payload: { source, language }, context }: Request<{ source: Source; language?: Language }>): Promise<Status<Document>> {
+export async function getPolicy({ payload: { source, language }, context }: Request<{
+	source: Source;
+	language?: Language
+}>): Promise<Status<Document>> {
 	try {
 
 		const page: string = context.extension.content.id;
@@ -187,17 +247,18 @@ export async function getIssues({ context }: Request<{}>): Promise<Status<Readon
 	try {
 
 		const page: string = context.extension.content.id;
+		const key = issuesKey(page);
 
 		// check for running analysis sentinel
 
-		const sentinel = await kvs.get(issuesKey(page));
+		const sentinel = await kvs.get(key);
 
 		if ( isActivity(sentinel) ) {
 
-			if ( await isLocked(issuesKey(page)) ) {
+			if ( await isLocked(key) ) {
 				return sentinel; // job still running
 			} else {
-				await kvs.delete(issuesKey(page)); // stale sentinel — job crashed
+				await kvs.delete(key); // stale sentinel — job crashed
 			}
 
 		} else if ( isTrace(sentinel) ) {
@@ -215,7 +276,7 @@ export async function getIssues({ context }: Request<{}>): Promise<Status<Readon
 		do {
 
 			const query = kvs.query()
-				.where("key", WhereConditions.beginsWith(keyPrefix(issuesKey(page))))
+				.where("key", WhereConditions.beginsWith(keyPrefix(key)))
 				.limit(100);
 
 			const batch = await (cursor ? query.cursor(cursor) : query).getMany();
@@ -263,6 +324,42 @@ export async function refreshIssues({ context }: Request<{}>): Promise<Status<vo
 }
 
 /**
+ * Clears all cached issue data for the current page.
+ *
+ * Acquires a lock on the issues key to prevent concurrent access, then deletes the issues collection sentinel and all
+ * individual issue cache entries for the page.
+ *
+ * @param request The resolver request with Confluence context
+ *
+ * @returns Void on success, or an error trace on failure
+ */
+export async function clearIssues({ context }: Request<{}>): Promise<Status<void>> {
+	try {
+
+		const page: string = context.extension.content.id;
+		const owner = ownerKey("clearIssues");
+
+		await lock(owner, issuesKey(page), async () => {
+
+			await kvs.delete(issuesKey(page));
+
+			const cached = await kvs.query()
+				.where("key", WhereConditions.beginsWith(keyPrefix(issuesKey(page))))
+				.limit(100)
+				.getMany();
+
+			await Promise.all(cached.results.map(result => kvs.delete(result.key)));
+
+		});
+
+	} catch ( error ) {
+
+		return asTrace(error);
+
+	}
+}
+
+/**
  * Retrieves a single compliance issue by identifier.
  *
  * @param request the resolver request with issue identifier and Confluence context
@@ -274,6 +371,7 @@ export async function getIssue({ payload: { issue }, context }: Request<{ issue:
 
 		const page: string = context.extension.content.id;
 		const key = issueKey(page, issue);
+
 		const cached = await kvs.get<Issue>(key);
 
 		if ( isDefined(cached) ) {
@@ -303,11 +401,13 @@ export async function getIssue({ payload: { issue }, context }: Request<{ issue:
  *
  * @return void on success, or an error trace on failure
  */
-export async function updateIssue({ payload: { issue, ...changes }, context }: Request<{ issue: string } & IssueUpdate>): Promise<Status<void>> {
+export async function updateIssue({ payload: { issue, ...changes }, context }: Request<{
+	issue: string
+} & IssueUpdate>): Promise<Status<void>> {
 	try {
 
 		const page: string = context.extension.content.id;
-		const owner = `updateIssue:${Date.now()}-${(Math.random()*1e4)|0}`;
+		const owner = ownerKey("updateIssue");
 		const key = issueKey(page, issue);
 
 		await lock(owner, key, async () => {
@@ -319,31 +419,6 @@ export async function updateIssue({ payload: { issue, ...changes }, context }: R
 			}
 
 		});
-
-	} catch ( error ) {
-
-		return asTrace(error);
-
-	}
-}
-
-
-/**
- * Clears all cached data for the current page.
- *
- * Acquires a page-level lock to prevent concurrent access, then purges all cache entries for the page.
- *
- * @param request the resolver request with Confluence context
- *
- * @return void on success, or an error trace on failure
- */
-export async function clearCache({ context }: Request<{}>): Promise<Status<void>> {
-	try {
-
-		const page: string = context.extension.content.id;
-		const owner = `clearCache:${Date.now()}-${(Math.random()*1e4)|0}`;
-
-		await lock(owner, pageKey(page), () => purge(page));
 
 	} catch ( error ) {
 

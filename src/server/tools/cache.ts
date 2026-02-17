@@ -104,6 +104,22 @@ interface LockEntry {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
+ * Generates a unique lock owner identifier for the given operation.
+ *
+ * Combines the operation name with a timestamp and random suffix to produce a collision-resistant identifier
+ * suitable for distributed lock ownership tracking.
+ *
+ * @param operation the name of the operation acquiring the lock (e.g. `"getPolicies"`, `"clearCache"`)
+ *
+ * @returns a unique owner key in the format `"{operation}:{timestamp}-{random}"`
+ */
+export function ownerKey(operation: string): string {
+	return `${operation}:${Date.now()}-${(Math.random()*1e4)|0}`;
+}
+
+
+
+/**
  * Page-level lock key
  *
  * @param page - Page id
@@ -340,13 +356,20 @@ async function scan(page?: string) {
  * @returns true if a non-expired lock exists for the key; false otherwise
  */
 export async function isLocked(key: Key): Promise<boolean> {
+
 	const catalog = await kvs.get<LockCatalog>(pageKey(keyPage(key)));
+
 	if ( !catalog ) {
+
 		return false;
+
 	} else {
+
 		const entry = catalog.locks[key];
+
 		return isDefined(entry) && entry.expires > Date.now();
 	}
+
 }
 
 /**
