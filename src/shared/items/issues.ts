@@ -46,6 +46,7 @@ export type State = typeof States[number];
  */
 export type Severity = typeof Severities[number];
 
+
 /**
  * A compliance issue identified during policy analysis.
  */
@@ -55,6 +56,7 @@ export interface Issue {
 	 * The unique issue identifier.
 	 */
 	readonly id: string;
+
 
 	/**
 	 * The creation timestamp.
@@ -66,6 +68,7 @@ export interface Issue {
 	 */
 	readonly updated?: Instant;
 
+
 	/**
 	 * The current workflow state.
 	 */
@@ -75,6 +78,7 @@ export interface Issue {
 	 * The severity level.
 	 */
 	readonly severity: Severity;
+
 
 	/**
 	 * The issue title.
@@ -104,8 +108,7 @@ export type IssueUpdate = Partial<Pick<Issue, "state" | "severity" | "annotation
 /**
  * Defaults missing fields on issues retrieved from the KVS.
  *
- * Guards against store entries that may lack fields added after initial creation. Currently defaults
- * {@link State} to `"pending"` for legacy entries predating the `state` field.
+ * Guards against store entries that may lack fields added after initial creation.
  *
  * @param issue the raw issue from the store
  *
@@ -114,6 +117,9 @@ export type IssueUpdate = Partial<Pick<Issue, "state" | "severity" | "annotation
 export function normalizeIssue(issue: Issue): Issue {
 	return {
 		...issue,
-		state: issue.state || "pending"
+		state: issue.state || "pending",
+		severity: issue.severity || 3,
+		title: issue.title || "",
+		description: issue.description || []
 	};
 }

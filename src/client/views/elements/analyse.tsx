@@ -28,14 +28,14 @@ import React from "react";
  * Renders an empty state prompting the user to run compliance analysis.
  *
  * @param props the component props
- * @param props.onAnalyze the callback to trigger analysis
+ * @param props.onAnalyse the callback to trigger analysis
  */
-export function AnalysisNotPerformedPrompt({ onAnalyze }: { onAnalyze: () => void }) {
+export function AnalysisNotPerformedPrompt({ onAnalyse }: { onAnalyse: () => void }) {
 
 	return <EmptyState
 		header={"Analysis Not Performed"}
 		description={<Text>Check the agreement for compliance with policies.</Text>}
-		primaryAction={<Button appearance={"discovery"} onClick={onAnalyze}>Analyze</Button>}
+		primaryAction={<Button appearance={"discovery"} onClick={onAnalyse}>Analyse</Button>}
 	/>;
 
 }

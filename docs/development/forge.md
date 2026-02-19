@@ -1,8 +1,75 @@
 ---
-title: App Lifecycle Management
+title: Forge Platform
+summary: Platform constraints, Realtime event bus, and app lifecycle management
+description: |
+  Covers Forge platform constraints, Realtime event bus configuration,
+  and app lifecycle management for the EC2U PhD Agreements Tool.
 ---
 
-This guide covers the complete app lifecycle management for the EC2U PhD Agreements Tool using Atlassian Forge.
+# Platform Constraints
+
+| Constraint          | Detail                                                 |
+|---------------------|--------------------------------------------------------|
+| HTTP model          | Request/response only, no streaming (no SSE/WebSocket) |
+| Function timeout    | 55s default, 15 min for queue consumers                |
+| Resolver rate limit | ~20 req/2s                                             |
+| Event payload limit | ~200 KB                                                |
+| Realtime status     | **Preview**                                            |
+
+# Forge Realtime
+
+The application uses [Forge Realtime](https://developer.atlassian.com/platform/forge/realtime/) as the event bus for
+the [event-driven store](../blueprints/architecture.md#event-driven-store). Server resolvers and queue consumers publish
+events via `publishGlobal`; clients subscribe via `subscribeGlobal`.
+
+## Dependencies
+
+- `@forge/realtime` (server-side): `publishGlobal`, `signRealtimeToken`
+- `@forge/bridge` >= 5.x (client-side): `realtime.subscribeGlobal`
+
+Forge Realtime requires no manifest declaration. Adding `realtime` to `app.features` causes a validation error.
+
+## Authentication
+
+Token signing via `signRealtimeToken` is **optional** — `publishGlobal` and `subscribeGlobal` work without explicit
+tokens. `signRealtimeToken` returns an `expiresAt` timestamp for use cases requiring channel-level access control.
+
+## Known Behaviours
+
+- `publishGlobal` returns `eventId: null` and `timestamp: null` when no subscribers are active on the channel — this is
+  documented Forge behaviour, not an error
+- `useProductContext()` resolves asynchronously — subscriptions depending on the page identifier must guard against
+  empty values on the initial render
+- `publish` (non-global) is restricted to functions invoked from the app frontend; `publishGlobal` has **no such
+  restriction** and works from both resolvers and queue consumers
+- Forge functions are stateless and request-scoped — server-side `subscribeGlobal` is **not feasible**; the server
+  package only exposes `publishGlobal` and `signRealtimeToken`
+
+## Preview Status
+
+Forge Realtime remains in **Preview** as of early 2026 (no GA timeline published).
+
+| Aspect                 | Preview                               | GA (for comparison)  |
+|------------------------|---------------------------------------|----------------------|
+| Production use         | Suitable (passed stability standards) | Same                 |
+| Operational support    | Supported                             | Same                 |
+| Breaking change notice | **1 month minimum**                   | 6 months minimum     |
+| Enablement             | Explicit opt-in required              | Available by default |
+
+> [!WARNING]
+> No documented message delivery guarantees (at-least-once, exactly-once) or Realtime-specific quotas (connection
+> limits, throughput, channel count). The 1-month deprecation window requires rapid adaptation if the API changes.
+
+## References
+
+- [Forge Realtime](https://developer.atlassian.com/platform/forge/realtime/)
+- [Realtime Events API](https://developer.atlassian.com/platform/forge/runtime-reference/realtime-events-api/)
+- [Long-Running Functions](https://developer.atlassian.com/platform/forge/use-a-long-running-function/)
+- [Forge Release Phases](https://developer.atlassian.com/platform/forge/whats-coming/)
+
+# App Lifecycle Management
+
+This section covers app lifecycle management using the Forge CLI.
 
 ## Prerequisites
 

@@ -20,13 +20,13 @@
  * @module
  */
 
-import { readFile } from "fs/promises";
+import { readFileSync } from "fs";
 import { join } from "path";
 
 /**
  * Global cache for file contents keyed by resolved path.
  */
-const cache = new Map<string, Promise<string>>();
+const cache = new Map<string, string>();
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -39,12 +39,12 @@ const cache = new Map<string, Promise<string>>();
  *
  * @returns The file contents, served from cache on repeated calls with the same resolved path
  */
-export function file(name: string, base?: string): Promise<string> {
+export function file(name: string, base?: string): string {
 
 	const path = base ? join(base, name) : name;
 
 	if ( !cache.has(path) ) {
-		cache.set(path, readFile(path, "utf-8"));
+		cache.set(path, readFileSync(path, "utf-8"));
 	}
 
 	return cache.get(path)!;

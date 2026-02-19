@@ -23,6 +23,7 @@
 import { Box, Heading, Icon, Popup, Pressable, Stack, Text, xcss } from "@forge/react";
 import React, { useState } from "react";
 import type { Reference } from "../../../shared/items/documents";
+import type { SafeXCSS } from "../index.js";
 
 /**
  * Renders an inline info icon that opens a popup showing the source reference title and excerpt.
@@ -60,10 +61,10 @@ export function ToolReference({
 				paddingInline: "space.025",
 				marginInline: "space.025",
 
-				borderRadius: "border.radius",
+				borderRadius: "radius.medium",
 				backgroundColor: "color.background.neutral"
 
-			})}
+			}) as SafeXCSS}
 
 		>
 

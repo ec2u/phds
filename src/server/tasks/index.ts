@@ -18,59 +18,26 @@
  * Asynchronous task executor for Forge event queue processing.
  *
  * Dispatches long-running tasks (policy extraction, compliance analysis) to their respective handlers, managing
- * status reporting and error recovery. Triggers background cache maintenance after task completion.
+ * error recovery.
  *
  * @module async
  */
 
 import Resolver from "@forge/resolver";
-import { kvs } from "@forge/kvs";
-import type { Status } from "../../shared/index";
-import { purge } from "../tools/cache";
-import type { Task } from "./_index";
-import { analyze } from "./analyze/analyze";
-import { policy } from "./policy/policy";
+import { createServerStore } from "../store";
+import { amalyse, type AnalyseTask } from "./analyse";
+import { convert, type ConvertTask } from "./convert";
 
 
 /**
- * Callback for reporting async task status to the resource key.
+ * Discriminated union of all asynchronous task descriptors.
  *
- * Accepts any {@link Status} value to write progress or results, or `undefined` to delete the key on completion.
+ * Used by the task executor to dispatch to the correct handler and by the server store to compute resource-scoped
+ * job-tracking keys for deduplication.
  */
-export type Report = <T>(status: undefined | Status<T>) => Promise<void>;
-
-
-/**
- * Context provided by the Forge event queue to async task handlers.
- */
-interface AsyncEventContext {
-	jobId: string;
-}
-
-/**
- * Specifications for an asynchronous job, combining the target page and task definition.
- */
-export interface Specs {
-
-	/**
-	 * The Confluence page identifier.
-	 */
-	readonly page: string;
-
-	/**
-	 * The resource key for status reporting and locking.
-	 *
-	 * Computed by the sync resolver and passed through the queue payload so that async handlers don't need to
-	 * recompute it.
-	 */
-	readonly key: string;
-
-	/**
-	 * The task to execute.
-	 */
-	readonly task: Task;
-
-}
+export type Task =
+	| ConvertTask
+	| AnalyseTask;
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -80,71 +47,60 @@ export interface Specs {
  */
 export const handler = new Resolver()
 
-	.define("execute", async function ({
+	.define("execute", async ({
 
-		payload: { page, key, task },
-		context: { jobId }
+		payload: {
+
+			page,
+			task
+
+		},
+
+		context
 
 	}: {
 
-		payload: Specs
-		context: AsyncEventContext
+		payload: {
 
-	}) {
+			readonly page: string;
+			readonly task: Task;
 
-		await dispatch(task, page, key, jobId);
+		};
 
-	} as any)
+		context: Record<string, unknown>;
 
-	.getDefinitions();
+	}) => {
 
+		const { jobId } = context as { jobId: string };
 
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		try {
 
-/**
- * Dispatches an asynchronous task to the appropriate handler.
- *
- * Routes the task based on its type and reports errors to the console. Task handlers are responsible for writing
- * their own status and error traces to the resource key. Triggers background cache maintenance after task completion.
- *
- * @param task the task to execute
- * @param page the Confluence page identifier
- * @param key the resource key for status reporting and locking
- * @param jobId the Forge queue job identifier, used as lock owner
- */
-async function dispatch(task: Task, page: string, key: string, jobId: string): Promise<void> {
-	try {
+			const store = createServerStore(page);
 
-		const owner = `${task.type}:${jobId}`;
+			// worker gate — ignore if a newer job has taken over this resource
 
-		const report: Report = (status) =>
-			status === undefined ? kvs.delete(key) : kvs.set(key, status);
+			if ( await store.isActive(jobId, task) ) {
+				if ( task.type === "convert" ) {
 
-		if ( task.type === "policy" ) {
+					await convert(page, task);
 
-			await policy(owner, key, report, page, task as any);
+				} else if ( task.type === "analyse" ) {
 
-		} else if ( task.type === "analyze" ) {
+					await amalyse(page, task);
 
-			await analyze(owner, key, report, page, task as any);
+				} else {
 
-		} else {
+					console.error("unknown task type:", task);
 
-			console.error("unknown task type:", task);
+				}
+			}
+
+		} catch ( error ) {
+
+			console.error("async task failed:", error);
 
 		}
 
-	} catch ( error ) {
+	})
 
-		console.error("async task failed:", error);
-
-	} finally {
-
-		// fire-and-forget background maintenance; resource locking handles contentions
-
-		purge().catch(error =>
-			console.error("background task failed:", error)
-		);
-
-	}
-}
+	.getDefinitions();

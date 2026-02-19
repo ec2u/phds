@@ -35,15 +35,24 @@ import {
 	xcss
 } from "@forge/react";
 import React, { useState } from "react";
-import { isActivity, isTrace, on } from "../../../shared";
-import { useCache } from "../../hooks/cache";
+import { on } from "../../../shared/store";
 import { usePolicies } from "../../hooks/policies";
-import { PolicyKeyPrefix } from "../../hooks/policy";
 import { useStorage } from "../../hooks/storage";
+import type { SafeXCSS } from "../index.js";
 import ToolSplit from "../layouts/split";
 import { ToolActivity } from "./activity";
 import { ToolPolicy } from "./policy";
 import { ToolTrace } from "./trace";
+
+
+/**
+ * Browser localStorage key for the currently selected policy source, shared between {@link ToolPolicies}
+ * and {@link ToolPoliciesActions}.
+ */
+const SelectedPolicyKey = "selected-policy";
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
  * Renders a split-pane view with a selectable policy list in the sidebar and the selected policy content in the
@@ -52,26 +61,12 @@ import { ToolTrace } from "./trace";
  * Uses {@link usePolicies} internally for data. Persists the selected policy to browser localStorage for the current
  * page.
  *
- * @param props the component props
- * @param props.page the Confluence page identifier
  */
-export function ToolPolicies({
-
-	page
-
-}: {
-
-	page: string
-
-}) {
+export function ToolPolicies() {
 
 	const [policies] = usePolicies();
 
-	const [selected, setSelected] = useStorage<undefined | string>(page, "selected-policy", undefined);
-
-
-	const activity = isActivity(policies);
-	const trace = isTrace(policies);
+	const [selected, setSelected] = useStorage<undefined | string>(SelectedPolicyKey, undefined);
 
 
 	function select(source: string) {
@@ -83,19 +78,23 @@ export function ToolPolicies({
 
 		side={<Stack space={"space.250"}>
 
-			<Stack space={"space.100"}>{(activity || trace ? [] : Object.entries(policies))
+			<Stack space={"space.100"}>{on(policies, {
+				state: [],
+				trace: [],
+				other: catalog => Object.entries(catalog)
+			})
 				.sort(([, x], [, y]) => x.localeCompare(y))
 				.map(([source, title]) => <>
 
 					<Pressable key={source}
 
-						xcss={xcss(({
+						xcss={xcss({
 
-							padding: "space.050",
+							padding: "space.075",
 
 							borderWidth: "border.width",
 							borderStyle: "solid",
-							borderRadius: "border.radius",
+							borderRadius: "radius.medium",
 
 							color: source === selected
 								? "color.text.selected"
@@ -109,7 +108,7 @@ export function ToolPolicies({
 								? "color.background.selected"
 								: "color.background.neutral.subtle"
 
-						}))}
+						}) as SafeXCSS}
 
 						onClick={() => select(source)}
 
@@ -139,17 +138,9 @@ export function ToolPolicies({
 		state: activity => <ToolActivity activity={activity}/>,
 		trace: trace => <ToolTrace trace={trace}/>,
 
-		value: catalog => !selected || !catalog[selected] ? (
-
-			<EmptyState header="No Policy Selected" description={
-				<Text>Choose one from the sidebar.</Text>
-			}/>
-
-		) : (
-
-		<ToolPolicy source={selected}/>
-
-		)
+		value: catalog => !selected || !catalog[selected] ? <EmptyState header="No Policy Selected" description={
+			<Text>Choose one from the sidebar.</Text>
+		}/> : <ToolPolicy source={selected}/>
 
 	})}</ToolSplit>;
 
@@ -164,13 +155,17 @@ export function ToolPolicies({
  */
 export function ToolPoliciesActions() {
 
-	const { someCache } = useCache();
 	const [policies, { clear }] = usePolicies();
+
+	const [, setSelected] = useStorage<undefined | string>(SelectedPolicyKey, undefined);
 
 	const [confirming, setConfirming] = useState(false);
 
-	const busy = someCache(PolicyKeyPrefix, isActivity);
-	const disabled = isActivity(policies) || isTrace(policies) || Object.keys(policies).length === 0 || busy;
+
+	const disabled = on(policies, {
+		value: catalog => Object.keys(catalog).length === 0,
+		other: true
+	});
 
 
 	function cancel() {
@@ -179,6 +174,7 @@ export function ToolPoliciesActions() {
 
 	function confirm() {
 		setConfirming(false);
+		setSelected(undefined);
 		clear();
 	}
 

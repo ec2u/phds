@@ -22,11 +22,12 @@
 
 import { Box, Popup, Pressable, Text, xcss } from "@forge/react";
 import React, { useState } from "react";
-import { on } from "../../../shared/index";
 import { Issue, Severities, Severity, State, States } from "../../../shared/items/issues";
-import { type IssuesActions, useIssues } from "../../hooks/issues";
+import { on } from "../../../shared/store";
+import { useIssues } from "../../hooks/issues";
 import { useStorage } from "../../hooks/storage";
-import { AnalysisNotPerformedPrompt } from "../elements/analyze";
+import { AnalysisNotPerformedPrompt } from "../elements/analyse";
+import type { SafeXCSS } from "../index.js";
 import ToolKanban, { Lane } from "../layouts/kanban";
 import { ToolActivity } from "./activity";
 import ToolIssue, { BlueColors, RedColors, SeverityColors, severityLabel, StateColors, stateLabel } from "./issue";
@@ -56,28 +57,19 @@ const initialCollapsed = {
  *
  * Uses {@link useIssues} internally for data and actions.
  *
- * @param props the component props
- * @param props.page the Confluence page identifier
  */
-export function ToolDashboard({
-
-	page
-
-}: {
-
-	page: string
-
-}) {
+export function ToolDashboard() {
 
 	const [items, actions] = useIssues();
 
 	const [stateCollapsed, setStateCollapsed] = useStorage<Record<string, boolean>>(
-		page, "dashboard-states", initialCollapsed.states
+		"dashboard-states", initialCollapsed.states
 	);
 
 	const [severityCollapsed, setSeverityCollapsed] = useStorage<Record<string, boolean>>(
-		page, "dashboard-severities", initialCollapsed.severities
+		"dashboard-severities", initialCollapsed.severities
 	);
+
 
 	const states: readonly Lane<State>[] = States.map(state => ({
 		value: state,
@@ -112,7 +104,7 @@ export function ToolDashboard({
 
 			return issues.length === 0 ? (
 
-				<AnalysisNotPerformedPrompt onAnalyze={actions.refresh}/>
+				<AnalysisNotPerformedPrompt onAnalyse={actions.analyse}/>
 
 			) : (
 
@@ -125,12 +117,7 @@ export function ToolDashboard({
 					toCol={(issue) => issue.state}
 					toRow={(issue) => issue.severity}
 
-					toCard={(item: Issue) => <Card key={item.id}
-
-						issue={item}
-						actions={actions}
-
-					/>}
+					toCard={(item: Issue) => <Card key={item.id} issue={item}/>}
 
 					onToggleRow={toggleSeverity}
 					onToggleCol={toggleState}
@@ -152,13 +139,11 @@ export function ToolDashboard({
  */
 function Card({
 
-	issue,
-	actions
+	issue
 
 }: {
 
 	issue: Issue;
-	actions: IssuesActions;
 
 }) {
 
@@ -184,13 +169,13 @@ function Card({
 				paddingBlock: "space.050",
 				paddingInline: "space.100",
 
-				borderRadius: "border.radius",
+				borderRadius: "radius.medium",
 				borderWidth: "border.width",
 				borderStyle: "solid",
 
 				...(isOpen ? RedColors : BlueColors)
 
-			})}
+			}) as SafeXCSS}
 
 			onClick={() => setIsOpen(true)}
 
@@ -201,7 +186,7 @@ function Card({
 		</Pressable>}
 
 		content={() => <Box xcss={xcss({ maxWidth: "75em" })}>
-			<ToolIssue issue={issue} actions={actions}/>
+			<ToolIssue id={issue.id}/>
 		</Box>}
 
 		onClose={close}

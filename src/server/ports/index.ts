@@ -23,34 +23,23 @@
  */
 
 import Resolver from "@forge/resolver";
-import {
-	clearIssues,
-	clearPolicies,
-	getAttachments,
-	getIssue,
-	getIssues,
-	getPolicies,
-	getPolicy,
-	refreshIssues,
-	updateIssue
-} from "./resources";
+import { analyseIssues, clearIssues, getIssue, getIssues, updateIssue } from "./issues";
+import { clearPolicies, getPolicies, getPolicy } from "./policies";
+
 
 /**
  * The Forge resolver handler definitions for the macro backend.
  */
 export const handler = new Resolver()
 
-	.define(getAttachments.name, getAttachments as any)
+	.define(getPolicies.name, getPolicies)
+	.define(clearPolicies.name, clearPolicies)
+	.define(getPolicy.name, getPolicy)
 
-	.define(getPolicies.name, getPolicies as any)
-	.define(clearPolicies.name, clearPolicies as any)
-	.define(getPolicy.name, getPolicy as any)
-
-	.define(getIssues.name, getIssues as any)
-	.define(refreshIssues.name, refreshIssues as any)
-	.define(clearIssues.name, clearIssues as any)
-
-	.define(getIssue.name, getIssue as any)
-	.define(updateIssue.name, updateIssue as any)
+	.define(getIssues.name, getIssues)
+	.define(analyseIssues.name, analyseIssues)
+	.define(clearIssues.name, clearIssues)
+	.define(getIssue.name, getIssue)
+	.define(updateIssue.name, updateIssue)
 
 	.getDefinitions();

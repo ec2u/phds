@@ -27,8 +27,8 @@ four rule categories:
 
 - **Accuracy and fidelity**: exact, faithful representation; no additions, omissions, or interpretation
 - **Layout and formatting**: replicate headings, lists, tables, bold/italic, headers/footers, signature blocks
-- **Placeholder handling**: translate descriptive placeholder text (for instance, "First Name Last Name") into the target
-  language while preserving the variable format; three worked examples provided
+- **Placeholder handling**: translate descriptive placeholder text (for instance, "First Name Last Name") into the
+  target language while preserving the variable format; three worked examples provided
 - **Proper nouns**: use official institutional name translations where they exist; retain originals otherwise
 
 The prompt used mixed variable syntax (`{single}` and `{{double}}` braces) and included a three-step "translation
@@ -129,16 +129,16 @@ Markdown, this prompt compared a *proposed translation* against a *ground-truth 
 
 The evaluation prompt followed the same progressive relaxation pattern seen in the PDF extraction evaluator:
 
-| Version | Change | False Positive Addressed |
-|---|---|---|
-| 1 (baseline) | Four criteria: semantic accuracy, terminology, grammar/syntax, omissions/additions | — |
-| 2 | Added exclusions: synonyms, sentence rearrangements, common-noun-to-proper-name substitutions | Trivial variations flagged as errors |
-| 3 | Removed dedicated terminology criterion; broadened synonym exclusion to "equivalent expression" | Terminology criterion overlapped with semantic accuracy; redundant findings |
-| 4 | Added casing exclusion; refined synonym tolerance to "in the common language" | Capitalisation differences flagged as errors |
-| 5 | Simplified output format heading | Prompt hygiene |
+| Version      | Change                                                                                          | False Positive Addressed                                                    |
+|--------------|-------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------|
+| 1 (baseline) | Four criteria: semantic accuracy, terminology, grammar/syntax, omissions/additions              | —                                                                           |
+| 2            | Added exclusions: synonyms, sentence rearrangements, common-noun-to-proper-name substitutions   | Trivial variations flagged as errors                                        |
+| 3            | Removed dedicated terminology criterion; broadened synonym exclusion to "equivalent expression" | Terminology criterion overlapped with semantic accuracy; redundant findings |
+| 4            | Added casing exclusion; refined synonym tolerance to "in the common language"                   | Capitalisation differences flagged as errors                                |
+| 5            | Simplified output format heading                                                                | Prompt hygiene                                                              |
 
-Version 5 also declared a dependency on the `JSON_OUTPUT` prompt (version 1) in its Langfuse resolution graph — the
-only inter-prompt dependency recorded in the entire archive.
+Version 5 also declared a dependency on the `JSON_OUTPUT` prompt (version 1) in its Langfuse resolution graph — the only
+inter-prompt dependency recorded in the entire archive.
 
 ## Outcome
 
@@ -157,8 +157,8 @@ trajectory seen in the [PDF extraction evaluator](pdf-to-md.md).
 
 # Related Resources
 
-- Active prompt: [`policy-translate.sys.md`](../../../src/server/tasks/policy/policy-translate.sys.md)
-- Development log: [`policy-translate.log.md`](../../../src/server/tasks/policy/policy-translate.log.md)
+- Active prompt: [`policy-translate.sys.md`](../../../src/server/tasks/convert/translate.sys.md)
+- Development log: [`policy-translate.log.md`](../../../src/server/tasks/convert/translate.log.md)
 - Translation archive: [`TRANSLATION/`](TRANSLATION/)
 - Drafting archive: [`TRANSLATION_DRAFTING/`](TRANSLATION_DRAFTING/)
 - Improvement archive: [`TRANSLATION_IMPROVEMENT/`](TRANSLATION_IMPROVEMENT/)

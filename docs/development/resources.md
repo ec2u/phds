@@ -27,4 +27,6 @@ description: Curated collection of Atlassian Forge development resources.
 | **Runtime APIs**                                                                                                  | **Backend APIs for Confluence integration**                                                  |
 | [Storage API](https://developer.atlassian.com/platform/forge/runtime-reference/storage-api-basic/)                | Key-value storage                                                                            |
 | [Async Events API](https://developer.atlassian.com/platform/forge/runtime-reference/async-events-api/)            | Queue-based task processing                                                                  |
+| [Realtime Events API](https://developer.atlassian.com/platform/forge/runtime-reference/realtime-events-api/)      | Publish/subscribe realtime events between app instances                                      |
+| [Forge Realtime](https://developer.atlassian.com/platform/forge/realtime/)                                        | Overview of realtime capabilities, channels, and authorisation                               |
 | [Confluence REST API v2](https://developer.atlassian.com/cloud/confluence/rest/v2/intro/)                         | Confluence Cloud REST API                                                                    |

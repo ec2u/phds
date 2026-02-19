@@ -22,7 +22,7 @@
 
 import { EmptyState, Icon } from "@forge/react";
 import React from "react";
-import { Trace } from "../../../shared";
+import type { Trace } from "../../../shared/store";
 
 /**
  * Renders an error trace as an empty state with the error message and status code.
@@ -40,14 +40,14 @@ export function ToolTrace({
 
 }) {
 
-	const code = trace.code;
-	const text = trace.text
-		? trace.text.replace(/^./, c => c.toUpperCase())
+	const text = trace
+		? trace.replace(/^(\(\d+\)\s*)?(.)/, (_, prefix, c) => (prefix ?? "")+c.toUpperCase())
 		: "Unable to process document";
 
 	return <EmptyState width={"narrow"}
 		header={"Processing Error"}
-		description={`${text} (${code})`}
+		description={text}
 		primaryAction={<Icon label={""} glyph={"error"} size={"large"} color={"color.icon.warning"}/>}
 	/>;
+
 }

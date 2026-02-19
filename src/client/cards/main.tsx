@@ -14,28 +14,18 @@
  * limitations under the License.
  */
 
-import ForgeReconciler, {
-	Box,
-	Button,
-	ButtonGroup,
-	Code,
-	EmptyState,
-	Icon,
-	Text,
-	useProductContext,
-	xcss
-} from "@forge/react";
+import ForgeReconciler, { Box, Button, ButtonGroup, Code, EmptyState, Icon, Text, xcss } from "@forge/react";
 import React, { useState } from "react";
-import { Activity } from "../shared/index";
-import { useAttachments } from "./hooks/attachments";
-import { ToolCache } from "./hooks/cache";
-import { useContent } from "./hooks/content";
-import { Rule } from "./views/index";
-import { ToolBar } from "./views/layouts/bar";
-import { ToolActivity } from "./views/lenses/activity";
-import { ToolDashboard } from "./views/lenses/dashboard";
-import { ToolIssues, ToolIssuesActions } from "./views/lenses/issues";
-import { ToolPolicies, ToolPoliciesActions } from "./views/lenses/policies";
+import { Activity, isActivity, isTrace } from "../../shared/store";
+import { useAgreement } from "../hooks/agreement";
+import { usePolicies } from "../hooks/policies";
+import { ToolStore } from "../hooks/store";
+import { Rule } from "../views/index";
+import { ToolBar } from "../views/layouts/bar";
+import { ToolActivity } from "../views/lenses/activity";
+import { ToolDashboard } from "../views/lenses/dashboard";
+import { ToolIssues, ToolIssuesActions } from "../views/lenses/issues";
+import { ToolPolicies, ToolPoliciesActions } from "../views/lenses/policies";
 
 
 /**
@@ -62,22 +52,19 @@ enum Tab {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
- * Root macro component providing tabbed navigation and data loading orchestration.
+ * Main macro providing tabbed navigation and data loading orchestration.
  */
-function ToolMacro() {
+function ToolMain() {
 
-	const context = useProductContext();
-	const page: string = context?.extension?.content?.id ?? "";
-
-	const [agreement] = useContent();
-	const attachments = useAttachments();
+	const [agreement] = useAgreement();
+	const [policies] = usePolicies();
 
 	const [selected, setSelected] = useState(Tab.Agreement);
 
 
-	const ready = !!context && !!agreement && attachments !== undefined;
-	const stocked = !!attachments && Object.keys(attachments).length > 0;
-	const active = !ready || !stocked || selected !== Tab.Agreement;
+	const loading = agreement === undefined || isActivity(policies) || isTrace(policies);
+	const stocked = !loading && Object.keys(policies).length > 0;
+	const active = loading || !stocked || selected !== Tab.Agreement;
 
 
 	function button(tab: Tab, disabled?: boolean) {
@@ -103,9 +90,9 @@ function ToolMacro() {
 			menu={<ButtonGroup>
 
 				{button(Tab.Agreement)}
-				{button(Tab.Policies, !ready)}
-				{button(Tab.Issues, !ready)}
-				{button(Tab.Dashboard, !ready)}
+				{button(Tab.Policies, loading)}
+				{button(Tab.Issues, loading)}
+				{button(Tab.Dashboard, loading)}
 
 			</ButtonGroup>}
 
@@ -119,7 +106,7 @@ function ToolMacro() {
 
 		/>
 
-		{!ready ? (
+		{loading ? (
 
 			<ToolActivity activity={Activity.Fetching}/>
 
@@ -148,15 +135,15 @@ function ToolMacro() {
 
 		) : selected === Tab.Policies ? (
 
-			<ToolPolicies page={page}/>
+			<ToolPolicies/>
 
 		) : selected === Tab.Issues ? (
 
-			<ToolIssues page={page}/>
+			<ToolIssues/>
 
 		) : selected === Tab.Dashboard ? (
 
-			<ToolDashboard page={page}/>
+			<ToolDashboard/>
 
 		) : null}
 
@@ -170,9 +157,9 @@ function ToolMacro() {
 ForgeReconciler.render(
 	<React.StrictMode>
 
-		<ToolCache>
-			<ToolMacro/>
-		</ToolCache>
+		<ToolStore>
+			<ToolMain/>
+		</ToolStore>
 
 	</React.StrictMode>
 );

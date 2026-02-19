@@ -22,8 +22,8 @@ two distinct prompt families managed in Langfuse between June and August 2025, b
 
 ## Version 1 — Raw Markdown Output (10 June 2025)
 
-The initial prompt defined the role as an "expert AI assistant specialising in converting complex documents" and produced
-raw Markdown directly. Key design choices established in this baseline:
+The initial prompt defined the role as an "expert AI assistant specialising in converting complex documents" and
+produced raw Markdown directly. Key design choices established in this baseline:
 
 - **Substance over style**: extract binding terms, definitions, and structural components; omit decorative and
   administrative noise (logos, headers/footers, signature blocks, stamps)
@@ -93,12 +93,12 @@ decorative images, minor formatting differences).
 
 Each iteration expanded the exclusions list to suppress a specific category of false positive:
 
-| Version | Change | False Positive Addressed |
-|---|---|---|
-| 1 (baseline) | "Altered content" defined as "typos, changed wording, or paraphrased sentences" | — |
-| 2 | Narrowed "altered content" to "changed the wording or the meaning"; moved typo corrections to exclusions | Evaluator flagged legitimate typo fixes as content alterations |
-| 3 | Added "bold or italic differences" to exclusions | PDF bold/italic extraction is inherently ambiguous |
-| 4 | Added "differences in symbols used for bullets in lists" to exclusions | Different bullet characters (`-` vs `*` vs Unicode) flagged as errors |
+| Version      | Change                                                                                                   | False Positive Addressed                                              |
+|--------------|----------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------|
+| 1 (baseline) | "Altered content" defined as "typos, changed wording, or paraphrased sentences"                          | —                                                                     |
+| 2            | Narrowed "altered content" to "changed the wording or the meaning"; moved typo corrections to exclusions | Evaluator flagged legitimate typo fixes as content alterations        |
+| 3            | Added "bold or italic differences" to exclusions                                                         | PDF bold/italic extraction is inherently ambiguous                    |
+| 4            | Added "differences in symbols used for bullets in lists" to exclusions                                   | Different bullet characters (`-` vs `*` vs Unicode) flagged as errors |
 
 The trajectory is clear: each version addressed a specific false positive category by relaxing the evaluation criteria,
 progressively eroding the evaluator's discriminating power.
@@ -114,7 +114,7 @@ improving the evaluator's ability to catch genuine errors.
 
 # Related Resources
 
-- Active prompt: [`policy-extract.sys.md`](../../../src/server/tasks/policy/policy-extract.sys.md)
-- Development log: [`policy-extract.log.md`](../../../src/server/tasks/policy/policy-extract.log.md)
+- Active prompt: [`policy-extract.sys.md`](../../../src/server/tasks/convert/extract.sys.md)
+- Development log: [`policy-extract.log.md`](../../../src/server/tasks/convert/extract.log.md)
 - Extraction archive: [`PDF_TO_MD/`](PDF_TO_MD/)
 - Evaluation archive: [`PDF_TO_MD_EVALUATION/`](PDF_TO_MD_EVALUATION/)

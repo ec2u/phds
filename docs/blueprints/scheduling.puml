@@ -1,0 +1,67 @@
+@startuml Two-Stage Gate
+
+skinparam activityDiamondBackgroundColor #F0F0F0
+skinparam activityBackgroundColor #E8F4FD
+
+|Resolver|
+
+start
+
+:kvs.get<JobState>(jobKey);
+
+if (JobState exists?) then (yes)
+
+  :queue.getJob(jobState.id).getStats();
+
+  if (job exists?) then (yes)
+
+    if (inProgress > 0?) then (yes)
+      :Return jobState.activity;
+      stop
+    else (no)
+      :Stale (completed/failed);
+    endif
+
+  else (JobDoesNotExistError)
+    :Expired;
+  endif
+
+  :kvs.delete(jobKey);
+
+else (no)
+endif
+
+:queue.push(payload);
+:kvs.set(jobKey,\n{ id: jobId, activity: Scheduling });
+:Return Activity.Scheduling;
+
+|Worker|
+
+:kvs.get<JobState>(jobKey);
+
+if (no JobState or\nownJobId matches?) then (yes)
+  :Proceed;
+else (different jobId stored)
+
+  :queue.getJob(stored.id).getStats();
+
+  if (inProgress > 0?) then (yes)
+    :Exit silently;
+    stop
+  else (no / expired)
+  endif
+
+endif
+
+:Execute task;
+:store.publish*(activity)\n⤷ report(jobKey, activity);
+
+if (success?) then (yes)
+  :store.publish*(result)\n⤷ writes KVS + publishes event;
+else (no)
+  :store.publish*(error)\n⤷ publishes error event;
+endif
+
+stop
+
+@enduml

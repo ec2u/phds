@@ -24,7 +24,8 @@
  */
 
 import { File, GenerationConfig, GoogleGenAI, Schema } from "@google/genai";
-import { asTrace } from "../../shared";
+
+import { message } from "../../shared/tools/core";
 
 import { json } from "./mime";
 import { secret } from "./secrets";
@@ -104,7 +105,7 @@ export async function upload({
 
 		console.error(error);
 
-		throw asTrace(error);
+		throw message(error);
 
 	}
 
@@ -273,7 +274,7 @@ export async function process({
 
 		console.error(error);
 
-		throw asTrace(error);
+		throw message(error);
 
 	}
 

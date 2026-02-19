@@ -1,5 +1,5 @@
 ---
-title: Prompt Testing Log for @policy-translate.sys.md
+title: Prompt Testing Log for @translate.sys.md
 description: |
   Memory for LLM assistants working with the academic document translation prompt.
   Documents behavioral requirements, known issues, and validation procedures.

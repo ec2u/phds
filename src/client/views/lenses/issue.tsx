@@ -39,11 +39,12 @@ import {
 	xcss
 } from "@forge/react";
 import React, { useRef, useState } from "react";
-import { isString } from "../../../shared";
 import type { Reference } from "../../../shared/items/documents";
 import { Issue, Severities, State, States } from "../../../shared/items/issues";
+import { on } from "../../../shared/store";
+import { isString } from "../../../shared/tools/core";
 import { adf } from "../../../shared/tools/text";
-import { IssuesActions } from "../../hooks/issues";
+import { useIssue } from "../../hooks/issue";
 import { ToolToggle } from "../elements/toggle";
 import { toColors } from "../index";
 import { ToolReference } from "./reference";
@@ -115,19 +116,36 @@ export function severityLabel(value: number) {
 /**
  * Renders a detailed issue card with state/severity controls, description, reference excerpts, and annotation editing.
  *
- * @param props the component props
- * @param props.issue the issue to display
- * @param props.actions the available issue management actions
+ * Uses {@link useIssue} internally for data fetching and update actions.
+ *
+ * @param id The unique issue identifier
  */
-export default function ToolIssue({
+export default function ToolIssue({ id }: { id: string }) {
+
+	const [status, { update }] = useIssue(id);
+
+	return on(status, {
+
+		value: issue => <ToolIssueDetail issue={issue} update={update}/>,
+		other: () => null
+
+	});
+
+}
+
+
+/**
+ * Renders the issue detail card with state/severity controls, description, reference excerpts, and annotation editing.
+ */
+function ToolIssueDetail({
 
 	issue,
-	actions
+	update
 
 }: {
 
 	issue: Issue;
-	actions: IssuesActions
+	update: (update: Partial<Pick<Issue, "state" | "severity" | "annotations">>) => Promise<void>
 
 }) {
 
@@ -156,12 +174,12 @@ export default function ToolIssue({
 
 	function transition(state: State) {
 		setMode("updating");
-		actions.update(issue.id, { state }).then(() => setMode("reading")).then(() => setExpanded(false));
+		update({ state }).then(() => setMode("reading")).then(() => setExpanded(false));
 	}
 
 	function classify(severity: Issue["severity"]) {
 		setMode("updating");
-		actions.update(issue.id, { severity }).then(() => setMode("reading")).then(() => setExpanded(false));
+		update({ severity }).then(() => setMode("reading")).then(() => setExpanded(false));
 	}
 
 	function annotate() {
@@ -175,7 +193,7 @@ export default function ToolIssue({
 
 	function save() {
 		setMode("updating");
-		actions.update(issue.id, { annotations: notes.current }).then(() => setMode("reading"));
+		update({ annotations: notes.current }).then(() => setMode("reading"));
 	}
 
 
@@ -185,7 +203,6 @@ export default function ToolIssue({
 
 		borderStyle: "solid",
 		borderWidth: "border.width",
-		borderRadius: "border.radius",
 
 		...(issue.state === "resolved" ? GrayColors : BlueColors),
 
@@ -220,7 +237,7 @@ export default function ToolIssue({
 
 							borderStyle: "solid",
 							borderWidth: "border.width",
-							borderRadius: "border.radius",
+							borderRadius: "radius.large",
 
 							...(StateColors[issue.state])
 
@@ -244,7 +261,7 @@ export default function ToolIssue({
 
 							borderStyle: "solid",
 							borderWidth: "border.width",
-							borderRadius: "border.radius",
+							borderRadius: "radius.large",
 
 							...(SeverityColors[issue.severity])
 
@@ -298,7 +315,7 @@ export default function ToolIssue({
 
 			<Text>{issue.description.map((item, index) => isString(item)
 				? <React.Fragment key={index}>{item} </React.Fragment>
-				: <ToolReference key={`${item.source}:${item.offset}`} reference={item}/>
+				: <ToolReference key={item.excerpt.slice(0, 50)} reference={item}/>
 			)}</Text>
 
 			{mode === "annotating" ? (

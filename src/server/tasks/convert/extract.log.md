@@ -1,5 +1,5 @@
 ---
-title: Prompt Testing Log for @policy-extract.sys.md
+title: Prompt Testing Log for @extract.sys.md
 description: |
   Memory for LLM assistants working with the document extraction prompt.
   Documents behavioral requirements, known issues, and validation procedures.

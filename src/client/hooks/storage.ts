@@ -15,30 +15,40 @@
  */
 
 /**
- * Browser localStorage persistence hook with cross-tab synchronisation.
+ * Browser localStorage persistence hook.
  *
  * @module
  */
 
-import { useEffect, useState } from "react";
-import { State } from "./index";
+import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
+import { useStore } from "./store";
 
 
 /**
- * Manages state persisted to browser localStorage with automatic cross-tab synchronisation.
+ * A React state tuple containing the current value and its setter function.
  *
- * Values are stored as JSON under a namespaced key incorporating the page identifier. Changes in other browser tabs
- * are automatically synchronised via the `storage` event.
+ * @typeParam T the type of the state value
+ */
+export type State<T> = [T, Dispatch<SetStateAction<T>>];
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * Manages state persisted to browser localStorage.
+ *
+ * Values are stored as JSON under a namespaced key incorporating the page identifier.
  *
  * @typeParam T the type of the stored value
  *
- * @param page the Confluence page identifier for key namespacing
  * @param name the storage key name
  * @param initial the default value when no stored entry exists
  *
  * @return a React state tuple for the persisted value
  */
-export function useStorage<T>(page: string, name: string, initial: T): State<T> {
+export function useStorage<T>(name: string, initial: T): State<T> {
+
+	const { page } = useStore();
 
 	const key = `ec2u-phds-${page}-${name}`;
 
@@ -65,11 +75,17 @@ export function useStorage<T>(page: string, name: string, initial: T): State<T> 
 
 	});
 
-	useEffect(() => { // save to storage when value changes
+	useEffect(() => {
 
 		try {
 
-			localStorage.setItem(key, JSON.stringify(value));
+			const serialized = JSON.stringify(value) ?? null;
+
+			if ( serialized === null ) {
+				localStorage.removeItem(key);
+			} else {
+				localStorage.setItem(key, serialized);
+			}
 
 		} catch ( error ) {
 
@@ -77,32 +93,6 @@ export function useStorage<T>(page: string, name: string, initial: T): State<T> 
 		}
 
 	}, [key, value]);
-
-	useEffect(() => { // sync changes from other tabs
-
-		function handler(event: StorageEvent) {
-
-			if ( event.key === key && event.storageArea === localStorage ) {
-
-				try {
-
-					setValue(event.newValue ? JSON.parse(event.newValue) : initial);
-
-				} catch ( error ) {
-
-					console.error(`failed to sync storage for key <${key}>:`, error);
-
-					setValue(initial);
-				}
-
-			}
-		}
-
-		window.addEventListener("storage", handler);
-
-		return () => window.removeEventListener("storage", handler);
-
-	}, [key, initial]);
 
 	return [value, setValue];
 }

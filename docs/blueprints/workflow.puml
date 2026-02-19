@@ -1,91 +1,155 @@
-@startuml EC2U PhD Agreements Tool Flow
+@startuml Event-Driven Workflow
 !theme plain
 
-participant "Client" as client
-participant "Resolver" as resolver
-participant "KVS" as kvs
-participant "Queue Consumer" as consumer
+participant "Client A" as clientA
+participant "Client B" as clientB
+participant "Client Store" as cstore
+participant "Server" as server
+participant "Server Store" as sstore
+participant "Event Bus" as bus
+participant "Async Task" as task
 participant "Gemini" as gemini
 
 == Read (Cache Hit) ==
 
-client -> resolver: get resource
-activate resolver
-resolver -> kvs: read resource key
-kvs --> resolver: value (fresh)
-resolver --> client: 200 value
-deactivate resolver
+clientA -> cstore: get resource
+activate cstore
+cstore -> server: read resource
+activate server
+server -> sstore: read
+sstore --> server: value (fresh)
+server --> cstore: 200 value
+deactivate server
+cstore --> clientA: value
+deactivate cstore
 
-== Read (Cache Miss) ==
+== Sync Update ==
 
-client -> resolver: get resource
-activate resolver
-resolver -> kvs: read resource key
-kvs --> resolver: empty / stale
-resolver -> kvs: write Activity.Scheduling
-resolver -> consumer: queue async task
-resolver --> client: 202 Activity.Scheduling
-deactivate resolver
+clientA -> cstore: submit update
+activate cstore
 
-par
+cstore -> cstore: optimistic update
+cstore --> clientA: optimistic value
 
-    group async task
-        consumer -> kvs: acquire lock
-        activate consumer
+cstore -> server: submit update
+activate server
+server -> sstore: write result
+server ->> bus: event(Updated, result)
+activate bus
+server --> cstore: 200 accepted
+deactivate server
+deactivate cstore
 
-        consumer -> kvs: write Activity.Fetching
-        consumer -> gemini: execute prompt
-        activate gemini
-        gemini --> consumer: response
-        deactivate gemini
+bus ->> cstore: event(Updated, result)
+note right: server writes KVS and\npublishes event within\nthe same resolver call
+deactivate bus
 
-        consumer -> kvs: write Activity.Extracting
-        consumer -> gemini: execute prompt
-        activate gemini
-        gemini --> consumer: response
-        deactivate gemini
+== Async Action Request ==
 
-        consumer -> kvs: write result
-        consumer -> kvs: release lock
-        deactivate consumer
-    end
+clientA -> cstore: request action
+activate cstore
 
-else
+cstore -> cstore: purge & optimistically\nupdate to Submitting
+cstore --> clientA: Submitting
 
-    group polling
-        client -> resolver: get resource
-        activate resolver
-        resolver -> kvs: read resource key
-        kvs --> resolver: Activity
+cstore -> server: submit action
+activate server
 
-        alt lock held
-            resolver --> client: 202 Activity
-        else lock not held (crashed job)
-            resolver -> kvs: purge stale sentinel
-            resolver -> kvs: write Activity.Scheduling
-            resolver -> consumer: re-queue async task
-            resolver --> client: 202 Activity.Scheduling
-        end
+server -> sstore: write JobState(Scheduling)
+server -> task: push to queue
+activate task
 
-        deactivate resolver
-    end
+server --> cstore: Activity.Scheduling
+deactivate server
+deactivate cstore
 
-end
+note right of server: no event published\nfor scheduling — the\nresponse carries the activity
 
-client -> resolver: get resource
-activate resolver
-resolver -> kvs: read resource key
-kvs --> resolver: value
-resolver --> client: 200 value
-deactivate resolver
+== Async Task Execution ==
+
+note over task: Worker gate:\nread JobState + getStats(jobId)\nexit if another worker active
+
+task -> gemini: execute prompt
+activate gemini
+
+task -> sstore: report(Fetching)
+task ->> bus: event(Fetching)
+activate bus
+bus ->> cstore: event(Fetching)
+deactivate bus
+
+gemini --> task: response
+deactivate gemini
+
+task -> gemini: execute prompt
+activate gemini
+
+task -> sstore: report(Extracting)
+task ->> bus: event(Extracting)
+activate bus
+bus ->> cstore: event(Extracting)
+deactivate bus
+
+gemini --> task: response
+deactivate gemini
+
+task -> sstore: write result to cache
+task ->> bus: event(Complete, result)
+activate bus
+bus ->> cstore: event(Complete, result)
+note right: events carry full state;\nno server roundtrip needed
+deactivate bus
+deactivate task
+
+cstore --> clientA: value
+
+== Idempotent Duplicate Request ==
+
+clientB -> cstore: request action
+activate cstore
+cstore -> server: submit action
+activate server
+
+note over server: Resolver gate:\nread JobState + getStats(jobId)
+server -> server: inProgress > 0 → skip queue
+
+server --> cstore: stored activity
+deactivate server
+cstore --> clientB: current progress
+deactivate cstore
+
+note over bus: Client B receives\nongoing events from bus
+
+== Stale Task Recovery ==
+
+note over server: Triggered during schedule()\nwhen JobState exists but\njob is done or expired
+
+server -> server: getStats() → inProgress === 0\nor JobDoesNotExistError
+server -> sstore: delete stale JobState
+
+note over server: Falls through to re-queue\ntransparently — no event published
 
 == Error ==
 
-client -> resolver: get resource
-activate resolver
-resolver -> kvs: read resource key
-kvs --> resolver: Trace
-resolver --> client: error
-deactivate resolver
+task ->> bus: event(Error, trace)
+activate bus
+bus ->> cstore: event(Error, trace)
+note right: UI components\nhandle error display
+deactivate bus
+
+note over sstore: JobState remains in KVS;\ncleaned up by next schedule() call
+
+== New Client Joins ==
+
+clientB -> cstore: get resource
+activate cstore
+cstore -> server: read resource
+activate server
+server -> sstore: read JobState
+note right of server: schedule() detects\nrunning job via getStats()
+server --> cstore: stored activity
+deactivate server
+cstore --> clientB: current progress
+deactivate cstore
 
 @enduml

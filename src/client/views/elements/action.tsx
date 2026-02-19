@@ -22,6 +22,7 @@
 
 import { Icon, Pressable, Tooltip, xcss } from "@forge/react";
 import React from "react";
+import type { SafeXCSS } from "../index.js";
 
 /**
  * Renders an icon button with a tooltip label.
@@ -55,7 +56,7 @@ export function ToolAction({
 
 		xcss={xcss({
 			backgroundColor: "color.background.neutral.subtle"
-		})}
+		}) as SafeXCSS}
 
 		onClick={onClick}
 		isDisabled={disabled}

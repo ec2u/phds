@@ -21,7 +21,8 @@
  */
 
 import type { BackgroundColor, BorderColor } from "@atlaskit/primitives";
-import { xcss } from "@forge/react";
+import { Pressable, xcss } from "@forge/react";
+import React from "react";
 
 
 /**
@@ -29,6 +30,21 @@ import { xcss } from "@forge/react";
  */
 export type XCSS =
 	Parameters<typeof xcss>[0];
+
+/**
+ * The style type accepted by the `xcss` prop on interactive Forge components like {@link Pressable}.
+ *
+ * Works around a Forge type-system bug where `xcss()` returns a `SafeCSSObject` inferred from `BoxProps` that is
+ * structurally incompatible with the narrower `SafeCSSObject` expected by `PressableProps`. Use as a type assertion
+ * on `xcss()` results passed to `Pressable`:
+ *
+ * ```tsx
+ * <Pressable xcss={xcss({ ... }) as SafeXCSS} />
+ * ```
+ */
+export type SafeXCSS =
+	React.ComponentProps<typeof Pressable>["xcss"];
+
 
 /**
  * A pair of Atlassian Design Token colours for background and border styling.

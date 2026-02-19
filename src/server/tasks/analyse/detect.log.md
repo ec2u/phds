@@ -1,5 +1,5 @@
 ---
-title: Prompt Testing Log for @analyze-detect.sys.md
+title: Prompt Testing Log for @detect.sys.md
 description: |
   Memory for LLM assistants working with the compliance clash detection prompt.
   Documents behavioral requirements, known issues, and validation procedures.
@@ -7,7 +7,7 @@ description: |
 
 # Overview
 
-This log serves as memory for LLM assistants when asked to modify or validate the analyze-detect prompt.
+This log serves as memory for LLM assistants when asked to modify or validate the analyse-detect prompt.
 
 It provides documentation of behavioral expectations, known issues and their fixes, and regression prevention guidance.
 
@@ -20,8 +20,8 @@ maintenance principles, and improvement procedures.
 
 - Content placeholders (`{{target_language}}`, `{{document_name}}`, `{{policy_name}}`) are embedded in the prompt;
   evaluate whether these should be passed as dedicated messages instead
-- Known issues input structure (title, severity, analysis, excerpts) is described in the `INPUT DATA` section but has
-  no formal schema validation; evaluate whether a JSON schema or example block would improve adherence
+- Known issues input structure (title, severity, analysis, excerpts) is described in the `INPUT DATA` section but has no
+  formal schema validation; evaluate whether a JSON schema or example block would improve adherence
 - Typo on line 9: "wil" should be "will"
 
 ---

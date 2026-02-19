@@ -24,27 +24,26 @@
  */
 
 import type { DocNode, LayoutSectionDefinition } from "@atlaskit/adf-schema";
-import { ParagraphDefinition as Paragraph } from "@atlaskit/adf-schema/dist/types/schema/nodes/paragraph.js";
+import { ParagraphDefinition as Paragraph } from "@atlaskit/adf-schema/dist/types/schema/nodes/paragraph";
 import { requestConfluence } from "@forge/bridge";
-import { useProductContext } from "@forge/react";
 import { useEffect, useState } from "react";
 import { adf as toAdf, AdfBlock, markdown } from "../../shared/tools/text";
+import { useStore } from "./store";
 
 /**
- * Manages the markdown content of the current Confluence page.
+ * Reads and writes the agreement content of the current Confluence page as markdown.
  *
- * Returns a tuple of the extracted markdown content and a setter function for updating it. The content is extracted
- * from the right column of the last two-column layout section on the page.
+ * Extracts markdown from the page's two-column layout and provides a setter for persisting updates back via the
+ * Confluence REST API. The setter replaces the content in the right column and increments the page version.
  *
- * @return a tuple of `[content, setContent]` where content is `undefined` while loading, `null` if unavailable,
+ * @returns A tuple of `[content, setContent]` where content is `undefined` while loading, `null` if unavailable,
  *     or the markdown string
  */
-export function useContent(): [undefined | null | string, (value: string) => Promise<void>] {
+export function useAgreement(): [undefined | null | string, (value: string) => Promise<void>] {
 
 	const [adf, setAdf] = useState<undefined | null | DocNode>();
 
-	const context = useProductContext();
-	const pageId = context?.extension?.content?.id;
+	const { page } = useStore();
 
 
 	function parse(data: any): DocNode {
@@ -54,8 +53,8 @@ export function useContent(): [undefined | null | string, (value: string) => Pro
 
 	useEffect(() => {
 
-		if ( pageId ) {
-			requestConfluence(`/wiki/api/v2/pages/${pageId}?body-format=atlas_doc_format`, {
+		if ( page ) {
+			requestConfluence(`/wiki/api/v2/pages/${page}?body-format=atlas_doc_format`, {
 				headers: { "Accept": "application/json" }
 			})
 				.then(response => response.json())
@@ -63,14 +62,15 @@ export function useContent(): [undefined | null | string, (value: string) => Pro
 				.catch(() => setAdf(null));
 		}
 
-	}, [pageId]);
+	}, [page]);
+
 
 	const extracted = adf ? content(adf) : null;
 	const text = adf === undefined ? undefined : extracted ? markdown(extracted) : null;
 
 	return [text, async (text: string) => {
 
-		if ( !pageId ) {
+		if ( !page ) {
 			throw new Error("page id not available");
 		}
 
@@ -80,13 +80,13 @@ export function useContent(): [undefined | null | string, (value: string) => Pro
 
 		const updatedAdf = content(adf, toAdf(text).content);
 
-		const version = await requestConfluence(`/wiki/api/v2/pages/${pageId}`).then(r => r.json());
+		const version = await requestConfluence(`/wiki/api/v2/pages/${page}`).then(r => r.json());
 
-		const response = await requestConfluence(`/wiki/api/v2/pages/${pageId}`, {
+		const response = await requestConfluence(`/wiki/api/v2/pages/${page}`, {
 			method: "PUT",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({
-				id: pageId,
+				id: page,
 				status: "current",
 				title: version.title,
 				body: {

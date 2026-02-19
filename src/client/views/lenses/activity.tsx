@@ -22,7 +22,7 @@
 
 import { EmptyState, Spinner } from "@forge/react";
 import React from "react";
-import { Activity } from "../../../shared/index";
+import { Activity } from "../../../shared/store";
 
 /**
  * Renders a loading spinner with a human-readable message for the current activity state.
@@ -44,14 +44,10 @@ export function ToolActivity({
 
 		[Activity.Submitting]: "Submitting Request…",
 		[Activity.Scheduling]: "Scheduling Request…",
-		[Activity.Locking]: "Acquiring Resources…",
 
-		[Activity.Scanning]: "Scanning Attachments…",
 		[Activity.Fetching]: "Fetching Content…",
-		[Activity.Caching]: "Caching Content…",
-		[Activity.Purging]: "Purging Content…",
-
 		[Activity.Uploading]: "Uploading Content…",
+
 		[Activity.Extracting]: "Extracting Text…",
 		[Activity.Translating]: "Translating…",
 		[Activity.Analyzing]: "Analyzing…"

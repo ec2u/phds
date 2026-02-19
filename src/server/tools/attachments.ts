@@ -24,9 +24,8 @@
  */
 
 import api, { route } from "@forge/api";
-import { asTrace } from "../../shared";
 import { Document } from "../../shared/items/documents";
-import { query } from "../_index";
+import { query } from "../../shared/tools/core";
 
 
 /**
@@ -212,10 +211,7 @@ export async function listAttachments(page: string, mime?: string): Promise<Atta
 
 		console.error(response);
 
-		throw asTrace({
-			code: response.status,
-			text: response.statusText
-		});
+		throw `(${response.status}) ${response.statusText}`;
 
 	}
 
@@ -247,10 +243,7 @@ export async function getAttachment(page: string, id: string): Promise<Attachmen
 
 		console.error(response);
 
-		throw asTrace({
-			code: response.status,
-			text: response.statusText
-		});
+		throw `(${response.status}) ${response.statusText}`;
 
 	}
 }
@@ -281,10 +274,7 @@ export async function fetchAttachment(page: string, id: string): Promise<Buffer>
 
 		console.error(response);
 
-		throw asTrace({
-			code: response.status,
-			text: response.statusText
-		});
+		throw `(${response.status}) ${response.statusText}`;
 
 	}
 }
@@ -321,10 +311,7 @@ export async function uploadAttachment(page: string, document: Document): Promis
 
 		console.error(response);
 
-		throw asTrace({
-			code: response.status,
-			text: response.statusText
-		});
+		throw `(${response.status}) ${response.statusText}`;
 
 	}
 
@@ -371,10 +358,7 @@ export async function deleteAttachment(page: string, id: string): Promise<void> 
 
 		console.error(response);
 
-		throw asTrace({
-			code: response.status,
-			text: response.statusText
-		});
+		throw `(${response.status}) ${response.statusText}`;
 
 	}
 }

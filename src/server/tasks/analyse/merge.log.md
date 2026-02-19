@@ -1,5 +1,5 @@
 ---
-title: Prompt Testing Log for @analyze-merge.sys.md
+title: Prompt Testing Log for @merge.sys.md
 description: |
   Memory for LLM assistants working with the inconsistency deduplication/merge prompt.
   Documents behavioral requirements, known issues, and validation procedures.
@@ -7,7 +7,7 @@ description: |
 
 # Overview
 
-This log serves as memory for LLM assistants when asked to modify or validate the analyze-merge prompt.
+This log serves as memory for LLM assistants when asked to modify or validate the analyse-merge prompt.
 
 It provides documentation of behavioral expectations, known issues and their fixes, and regression prevention guidance.
 
@@ -35,7 +35,8 @@ maintenance principles, and improvement procedures.
 - A single canonical description is produced per group
 - The canonical description summarizes the core conflict clearly and concisely
 
-**Validation**: Verify that differently worded reports about the same factual discrepancy produce exactly one output entry
+**Validation**: Verify that differently worded reports about the same factual discrepancy produce exactly one output
+entry
 
 ## Distinct Issue Preservation
 

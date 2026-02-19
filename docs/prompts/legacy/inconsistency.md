@@ -28,8 +28,8 @@ The baseline established the core task: analyse a document against a policy, rep
 clash types were defined: direct contradiction, non-compliance, procedural mismatch, significant omission, and ambiguity
 or definitional conflict.
 
-- **Version 1**: documents embedded inline via template variables; flat output with policy excerpt, document excerpt, and
-  a monolithic "reason" field
+- **Version 1**: documents embedded inline via template variables; flat output with policy excerpt, document excerpt,
+  and a monolithic "reason" field
 - **Version 2**: externalised document content; added `document_name` and `policy_name` variables for labelling
 - **Version 3**: split the monolithic "reason" into separate title and description fields for better UI rendering
 
@@ -63,8 +63,8 @@ The clash taxonomy was further reduced to 3 types: direct contradiction, sub-com
 
 Versions 8–9 addressed a different noise source — **hallucinated findings**:
 
-- **Version 8**: added explicit permission for empty output ("feel free to return an empty list"), addressing the model's
-  tendency to force findings even when none existed
+- **Version 8**: added explicit permission for empty output ("feel free to return an empty list"), addressing the
+  model's tendency to force findings even when none existed
 - **Version 9**: added explicit prohibition ("Never invent irrelevant or inexistent inconsistencies")
 
 Version 10 strengthened translation enforcement to `MUST` with explicit prohibition of other languages, after the model
@@ -73,12 +73,12 @@ returned excerpts in the original document language instead of translating.
 Versions 11–14 formed a **follow-up pass suppression arc**, progressively raising the threshold for reporting on
 subsequent passes (when known issues already exist):
 
-| Version | Wording | Effect |
-|---|---|---|
-| 11 | "only highlight clashes of critical severity" | Limited to critical |
-| 12 | "only report critical severity clashes — although these are unlikely" | Added rarity hint |
-| 13 | "return an empty list, unless super-critical clashes are found" | Default to empty |
-| 14 | "return an empty list — unless there are extremely critical contradictions, which are unlikely" | Strongest suppression |
+| Version | Wording                                                                                         | Effect                |
+|---------|-------------------------------------------------------------------------------------------------|-----------------------|
+| 11      | "only highlight clashes of critical severity"                                                   | Limited to critical   |
+| 12      | "only report critical severity clashes — although these are unlikely"                           | Added rarity hint     |
+| 13      | "return an empty list, unless super-critical clashes are found"                                 | Default to empty      |
+| 14      | "return an empty list — unless there are extremely critical contradictions, which are unlikely" | Strongest suppression |
 
 Each version raised the bar further, suggesting the previous wording was still not sufficient to suppress marginal
 findings on follow-up passes.
@@ -142,12 +142,12 @@ taxonomy (Contradiction + Insufficiency) is the simplest partition that covers t
 
 Document content alternated between inline embedding and external passing:
 
-| Versions | Architecture | Rationale |
-|---|---|---|
-| 1 | Inline (template variables) | Initial design |
-| 2–14 | External (separate input) | Prompt-length management |
-| 15–19 | Inline (`<policy>`/`<document>` XML tags) | Cross-referencing accuracy |
-| 22–23 | External (separate mechanism) + metadata labels | Prompt caching; names for output labelling |
+| Versions | Architecture                                    | Rationale                                  |
+|----------|-------------------------------------------------|--------------------------------------------|
+| 1        | Inline (template variables)                     | Initial design                             |
+| 2–14     | External (separate input)                       | Prompt-length management                   |
+| 15–19    | Inline (`<policy>`/`<document>` XML tags)       | Cross-referencing accuracy                 |
+| 22–23    | External (separate mechanism) + metadata labels | Prompt caching; names for output labelling |
 
 Each direction addressed a real trade-off: inline embedding improves the model's ability to cross-reference specific
 clauses, while external passing keeps the prompt cacheable and avoids token limits with long documents.
@@ -164,20 +164,20 @@ The merging prompt operates downstream of detection, consolidating raw inconsist
 evolution was minimal:
 
 - **Version 1** (July 2025): defined the "Expert Analyst in Academic Policy and Compliance" role with deduplication
-  criteria, three worked examples illustrating duplicate vs unique findings, and JSON output. Input was a flat text block
-  via `{{inconsistencies}}` template variable.
+  criteria, three worked examples illustrating duplicate vs unique findings, and JSON output. Input was a flat text
+  block via `{{inconsistencies}}` template variable.
 - **Version 2** (October 2025): replaced the template variable with a structured input description (title, severity,
   analysis, excerpts per entry), reflecting the upstream detection prompt's evolution to richer output fields. Reordered
   sections to "context first, then task."
 
-The merging prompt's stability (2 versions vs detection's 23) suggests that deduplication was a well-defined problem from
-the start, while the detection task required extensive iteration to calibrate precision and recall.
+The merging prompt's stability (2 versions vs detection's 23) suggests that deduplication was a well-defined problem
+from the start, while the detection task required extensive iteration to calibrate precision and recall.
 
 # Related Resources
 
-- Active detection prompt: [`analyze-detect.sys.md`](../../../src/server/tasks/analyze/analyze-detect.sys.md)
-- Active merging prompt: [`analyze-merge.sys.md`](../../../src/server/tasks/analyze/analyze-merge.sys.md)
-- Detection development log: [`analyze-detect.log.md`](../../../src/server/tasks/analyze/analyze-detect.log.md)
-- Merging development log: [`analyze-merge.log.md`](../../../src/server/tasks/analyze/analyze-merge.log.md)
+- Active detection prompt: [`analyse-detect.sys.md`](../../../src/server/tasks/analyse/detect.sys.md)
+- Active merging prompt: [`analyse-merge.sys.md`](../../../src/server/tasks/analyse/merge.sys.md)
+- Detection development log: [`analyse-detect.log.md`](../../../src/server/tasks/analyse/detect.log.md)
+- Merging development log: [`analyse-merge.log.md`](../../../src/server/tasks/analyse/merge.log.md)
 - Detection archive: [`INCONSISTENCY_DETECTION/`](INCONSISTENCY_DETECTION/)
 - Merging archive: [`INCONSISTENCY_MERGING/`](INCONSISTENCY_MERGING/)

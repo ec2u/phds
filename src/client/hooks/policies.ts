@@ -21,17 +21,9 @@
  */
 
 import { useEffect, useState } from "react";
-import { Activity, asTrace, isActivity, type Status } from "../../shared/index";
-import { Catalog } from "../../shared/items/documents";
-import { clearPolicies, getPolicies } from "../ports/resources";
-import { useCache } from "./cache";
-import { PolicyKeyPrefix } from "./policy";
-
-
-/**
- * Cache key for the policies catalogue.
- */
-export const PoliciesKey = "policies";
+import type { Catalog } from "../../shared/items/documents";
+import { Activity, type Status } from "../../shared/store";
+import { useStore } from "./store";
 
 
 /**
@@ -40,7 +32,7 @@ export const PoliciesKey = "policies";
 export interface PoliciesActions {
 
 	/**
-	 * Clears all cached policy data and resets the policies state.
+	 * Clears all cached policy data. State transitions are handled reactively by the store.
 	 */
 	clear: () => Promise<void>;
 
@@ -50,57 +42,26 @@ export interface PoliciesActions {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
- * Fetches and caches the catalogue of available policy documents.
+ * Fetches the catalogue of available policy documents and subscribes to reactive updates.
  *
- * Returns the current status of the policies catalogue and actions for cache management, loading from the in-memory
- * cache on subsequent renders.
+ * Returns the current status of the policies catalogue and actions for cache management.
  *
  * @return a tuple of `[status, actions]` where status is the catalogue mapping, an activity state, or an error trace
  */
 export function usePolicies(): [Status<Catalog>, PoliciesActions] {
 
-	const { getCache, setCache, deleteCache } = useCache();
+	const store = useStore();
 
-	const key = PoliciesKey;
-	const cached = getCache<Catalog>(key);
+	const [policies, setPolicies] = useState<Status<Catalog>>(Activity.Submitting);
 
-	const [policies, setPolicies] = useState<Status<Catalog>>(cached ?? Activity.Submitting);
+
+	useEffect(() => store.observePolicies(setPolicies), [store]);
 
 
 	async function clear(): Promise<void> {
-
-		setPolicies(Activity.Submitting);
-
-		await clearPolicies().catch(asTrace);
-
-		deleteCache(PolicyKeyPrefix);
-		deleteCache(key);
-
+		await store.clearPolicies();
 	}
 
-	useEffect(() => {
-
-		if ( cached && !isActivity(cached) ) {
-
-			setPolicies(cached);
-
-		} else {
-
-			setPolicies(cached ?? Activity.Submitting);
-
-			getPolicies().catch(asTrace).then(status => {
-
-				setPolicies(status);
-
-				if ( !isActivity(status) ) {
-					setCache(key, status);
-				}
-
-			});
-
-		}
-
-	}, [cached]);
 
 	return [
 		policies,

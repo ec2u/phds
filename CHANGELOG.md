@@ -18,6 +18,17 @@ Changes deployed to development, pending production promotion.
 - Stale policy content shown when switching between policies in sidebar (#6)
 - Progress spinner stuck on "Scheduling Request…" during policy extraction and translation (#6)
 - Flash of "No Policy Documents" empty state on page reload (#6)
+- Selected policy not cleared when clearing all policies (#26)
+- "Clear Policies" incorrectly showing empty state instead of preserving policy catalogue (#26)
+- Translated policy documents not cached on server across page reloads (#26)
+- Status pattern matcher routing activities and traces to value handler when specific handler is missing (#26)
+- Stale issue count shown in sidebar after clearing issues (#26)
+- Bogus empty issues included in analysis results (#26)
+- Stale issues surviving across re-analysis runs (#26)
+- Server crash on legacy issues missing description field (#26)
+- Issues list not re-sorting after issue state or severity update (#26)
+- Event-driven issue and policy updates not propagating to catalogue observers across windows (#26)
+- Clear policies and clear issues events not propagating across windows (#26)
 
 ### Added
 

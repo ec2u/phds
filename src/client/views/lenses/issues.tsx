@@ -35,11 +35,11 @@ import {
 	Text
 } from "@forge/react";
 import React, { useState } from "react";
-import { isActivity, isTrace, on } from "../../../shared/index";
 import { Issue, Severities, Severity, State, States } from "../../../shared/items/issues";
+import { isActivity, isTrace, on } from "../../../shared/store";
 import { useIssues } from "../../hooks/issues";
 import { useStorage } from "../../hooks/storage";
-import { AnalysisNotPerformedPrompt } from "../elements/analyze";
+import { AnalysisNotPerformedPrompt } from "../elements/analyse";
 import ToolSplit from "../layouts/split";
 import { ToolActivity } from "./activity";
 import ToolIssue, { severityLabel, stateLabel } from "./issue";
@@ -64,23 +64,13 @@ const CatalogStateOrder: Record<State, number> = {
  * Uses {@link useIssues} internally for data and actions. Persists filter selections to browser localStorage for the
  * current page.
  *
- * @param props the component props
- * @param props.page the Confluence page identifier
  */
-export function ToolIssues({
-
-	page
-
-}: {
-
-	page: string
-
-}) {
+export function ToolIssues() {
 
 	const [items, actions] = useIssues();
 
-	const [state, setState] = useStorage<readonly State[]>(page, "issues-states", []);
-	const [severity, setSeverity] = useStorage<readonly Severity[]>(page, "issues-severities", []);
+	const [state, setState] = useStorage<readonly State[]>("issues-states", []);
+	const [severity, setSeverity] = useStorage<readonly Severity[]>("issues-severities", []);
 
 
 	function select(issues: readonly Issue[]): readonly Issue[] {
@@ -110,7 +100,6 @@ export function ToolIssues({
 	}
 
 
-
 	return <ToolSplit
 
 		side={on(items, {
@@ -133,7 +122,7 @@ export function ToolIssues({
 
 			return total === 0 ? (
 
-				<AnalysisNotPerformedPrompt onAnalyze={actions.refresh}/>
+				<AnalysisNotPerformedPrompt onAnalyse={actions.analyse}/>
 
 			) : sorted.length === 0 ? (
 
@@ -147,7 +136,7 @@ export function ToolIssues({
 
 				<Stack space="space.200">{sorted.map(issue => <ToolIssue
 					key={`${issue.id}-${issue.state}-${issue.severity}`} /* ;( dom not reordered w/out state/severity */
-					issue={issue} actions={actions}/>)
+					id={issue.id}/>)
 				}</Stack>
 
 			);
@@ -156,7 +145,7 @@ export function ToolIssues({
 	})}</ToolSplit>;
 
 
-	function Sidebar({ disabled, issues=[] }: { disabled: boolean, issues?: readonly Issue[] }) {
+	function Sidebar({ disabled, issues = [] }: { disabled: boolean, issues?: readonly Issue[] }) {
 
 		const sorted = select(issues);
 
@@ -252,7 +241,7 @@ export function ToolIssues({
  */
 export function ToolIssuesActions() {
 
-	const [issues, { refresh, clear }] = useIssues();
+	const [issues, { analyse, clear }] = useIssues();
 
 	const [confirming, setConfirming] = useState(false);
 
@@ -275,7 +264,7 @@ export function ToolIssuesActions() {
 
 			isDisabled={busy || issues.length === 0}
 
-			onClick={refresh}
+			onClick={analyse}
 
 		>Refresh Analysis</Button>
 

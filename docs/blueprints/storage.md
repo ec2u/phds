@@ -1,7 +1,7 @@
 ---
 title: Storage Layout
 summary: KVS key patterns, data lifecycle, and concurrency control
-description: Describes the hierarchical key-value storage schema, caching strategies, and locking mechanism.
+description: Describes the key-value storage schema, caching strategies, and job tracking namespace.
 ---
 
 The EC2U PhD Agreements Tool uses Atlassian Forge's key-value storage (KVS) with a hierarchical naming convention. All
@@ -31,15 +31,16 @@ content keys are page-scoped — the page identifier is the root segment.
 **Pattern:** `{page}:issues`
 
 - **Data Type:** `Status<void>` — `Activity` during analysis, `Trace` on failure, empty on success
-- **Purpose:** signals analysis progress on the issues collection (see
-  [Issue Collection](api.md#issue-collection))
+- **Purpose:** signals analysis progress on the issues collection
 
-## Lock Catalogues
+## Job Tracking
 
-**Pattern:** `{page}`
+**Pattern:** `{page}:convert:{source}[:{language}]` | `{page}:analyse`
 
-- **Data Type:** `LockCatalog` (defined in `src/server/tools/cache.ts`)
-- **Purpose:** stores all active locks for a page with optimistic concurrency control via version tracking
+- **Data Type:** `JobState` — job identifier and current `Activity`
+- **Purpose:** tracks active async jobs for deduplication and progress reporting
+- **Namespace isolation:** keys use `:convert:` and `:analyse` prefixes, deliberately outside `:policies:` and
+  `:issues:` to avoid collisions with `beginsWith` scans on data keys
 
 ## System Metadata
 
@@ -47,15 +48,6 @@ content keys are page-scoped — the page identifier is the root segment.
 
 - **Purge tracking:** `system:purged` stores the last global purge timestamp
 - **Purpose:** global system state and maintenance information
-
-# Data Structures
-
-Data types stored in KVS are defined in the shared layer:
-
-- **Document:** `src/shared/items/documents.ts`
-- **Issue:** `src/shared/items/issues.ts`
-- **Language:** `src/shared/items/languages.ts`
-- **Status, Activity, Trace:** `src/shared/index.ts`
 
 # Caching Strategies
 
@@ -97,68 +89,18 @@ Analyse → Store → [Update state] → [Update severity] → [Annotate]
 
 - Issues are append-only — new analysis adds issues without overwriting existing ones
 - Individual issue mutations write directly to the per-issue key
-- See [Issue Collection](api.md#issue-collection) for collection key semantics
+- Collection semantics: the collection sentinel signals progress; individual issue keys hold the data
 
 # Query Patterns
 
 - **Page scope:** `{page}:*` — all data for a page
 - **Policies only:** `{page}:policies:*` — all policies for a page
 - **Issues only:** `{page}:issues:*` — all issues for a page
+- **Job tracking:** `{page}:convert:*` and `{page}:analyse` — active async jobs
 - **System data:** `system:*` — global metadata
 
 # Concurrency Control
 
-## Lock Hierarchy
-
-The system implements hierarchical locking with prefix-based conflict detection. Locks are stored in a page-scoped
-`LockCatalog` entry.
-
-### Page Level (most restrictive)
-
-**Key:** `{page}`
-
-- **Purpose:** operations affecting the entire page (for example `clearCache`)
-- **Conflicts with:** all other locks on the same page
-
-### Catalogue Level
-
-**Key:** `{page}:policies` | `{page}:issues`
-
-- **Purpose:** bulk operations on resource catalogues (for example `getPolicies`, `refreshIssues`)
-- **Conflicts with:** individual resource locks of the same type and page-level locks
-
-### Resource Level (most granular)
-
-**Key:** `{page}:policies:{source}[:{language}]` | `{page}:issues:{issueId}`
-
-- **Purpose:** operations on individual resources (for example `getPolicy`, `updateIssue`)
-- **Conflicts with:** catalogue-level locks of the same type and page-level locks
-
-## Conflict Detection
-
-Lock conflicts occur when either key is a prefix of the other, or the keys are identical. This provides bidirectional
-blocking — both upward (fine → coarse) and downward (coarse → fine) — ensuring that bulk and individual operations on
-the same resource type are mutually exclusive.
-
-## Lock Ownership
-
-Each lock entry carries an **owner** identifier (for example `getPolicies:1738000000000-4821` or `policy:job-abc123`)
-and an expiration timestamp. The owner string includes the caller site name and a unique code for diagnostics.
-
-## Cooperative Caching
-
-When multiple users request the same resource concurrently:
-
-1. First request acquires the lock and starts processing
-1. Subsequent requests wait for the lock to be released
-1. On release, waiters find the cached result and skip duplicate work
-
-Only one AI operation is triggered; all users receive consistent results.
-
-## Platform Limitations
-
-Forge KVS lacks compare-and-swap primitives, so `acquire()` and `release()` use a write-then-verify pattern — write
-the lock entry unconditionally, then re-read to confirm ownership. This narrows the race window compared to the earlier
-read-check-write approach. Additional mitigations include hierarchical design to reduce conflict probability, 15-minute
-lock timeout aligned to the Forge platform limit, full-jitter exponential backoff, stale sentinel recovery via
-`isLocked()`, and resource-level deduplication via `Activity` sentinels.
+Concurrent access to the same resource is handled by lockless two-stage job deduplication — see
+[Job Scheduling](scheduling.md) for the full design. Job tracking keys (`{page}:convert:*`, `{page}:analyse`) store the
+current `JobState`, which the resolver gate and worker gate both check before proceeding.

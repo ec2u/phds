@@ -21,70 +21,33 @@
  */
 
 import { useEffect, useState } from "react";
-import { Activity, asTrace, isActivity, type Status } from "../../shared/index";
-import { Document, Source } from "../../shared/items/documents";
-import { Language } from "../../shared/items/languages";
-import { getPolicy } from "../ports/resources";
-import { useCache } from "./cache";
-import { poll } from "./index";
-
-
-/**
- * Cache key prefix for individual policy documents.
- */
-export const PolicyKeyPrefix = "policy:";
+import { Document, type Language, Source } from "../../shared/items/documents";
+import { Activity, type Status } from "../../shared/store";
+import { useStore } from "./store";
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
- * Fetches and caches a single policy document in the requested language.
+ * Fetches a single policy document in the requested language and subscribes to reactive updates.
  *
- * Returns the current status of the document retrieval, loading from the in-memory cache on subsequent renders.
- * Triggers extraction and translation via the backend when no cached version is available.
+ * Returns the current status of the document retrieval. Triggers extraction and translation via the backend
+ * when no cached version is available.
  *
  * @param source The source attachment identifier
  * @param language The target language code (defaults to `"en"`)
  *
- * @returns A tuple of `[status, actions]` where status is the document, an activity state, or an error trace
+ * @returns The document status: the document, an activity state, or an error trace
  */
 export function usePolicy(source: Source, language: Language = "en"): Status<Document> {
 
-	const { getCache, setCache, deleteCache } = useCache();
+	const store = useStore();
 
-	const key = `${PolicyKeyPrefix}${source}-${language}`;
-	const cached = getCache<Document>(key);
-
-	const [policy, setPolicy] = useState<Status<Document>>(cached ?? Activity.Submitting);
+	const [policy, setPolicy] = useState<Status<Document>>(Activity.Submitting);
 
 
-	useEffect(() => {
+	useEffect(() => store.observePolicy(source, language, setPolicy), [store, source, language]);
 
-		if ( cached && !isActivity(cached) ) {
-
-			setPolicy(cached);
-
-			return () => {};
-
-		} else {
-
-			setPolicy(cached ?? Activity.Submitting);
-
-			return poll(() => getPolicy(source, language).catch(asTrace).then(status => {
-
-				setPolicy(status);
-
-				if ( !isActivity(status) ) {
-					setCache(key, status);
-				}
-
-				return status;
-
-			}));
-
-		}
-
-	}, [cached, source, language]);
 
 	return policy;
 
