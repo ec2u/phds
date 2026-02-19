@@ -15,20 +15,23 @@
     "url": "https://www.ec2u.eu/"
   },
   "type": "commonjs",
-  "main": "index.js",
+  "main": "index",
   "scripts": {
     "clean": "rm -rf .forge node_modules",
     "setup": "npm install --legacy-peer-deps",
-    "issue": "forge deploy -e development && forge install --non-interactive --upgrade -s https://ec2u.atlassian.net/ -p confluence -e development",
-    "serve": "npx dotenv -- forge tunnel --debug --debugStartingPort 9229 --debugFunctionHandlers server/ports/index.handler server/tasks/index.handler"
+    "check": "npx vitest --typecheck run",
+    "serve": "npx dotenv -- forge tunnel --debug --debugStartingPort 9229 --debugFunctionHandlers server/ports/index.handler server/tasks/index.handler",
+    "issue": "forge deploy -e development && forge install --non-interactive --upgrade -s https://ec2u.atlassian.net/ -p confluence -e development"
   },
   "dependencies": {
-    "@forge/bridge": "^4.5.2",
+    "@forge/bridge": "^5.9.1",
     "@forge/events": "^1.0.3",
     "@forge/kvs": "^1.0.4",
     "@forge/react": "^11.2.5",
+    "@forge/realtime": "^0.3.2",
     "@forge/resolver": "^1.6.10",
     "@google/genai": "1.30.0",
+    "bignumber.js": "^9.3.1",
     "react": "^18.2.0",
     "remark": "^15.0.1",
     "remark-gfm": "^4.0.1",
@@ -39,7 +42,8 @@
     "@types/node": "^22.15.18",
     "@types/react": "^19.1.4",
     "dotenv-cli": "^8.0.0",
+    "supports-color": "^10.2.2",
     "typescript": "^5.8.3",
-    "supports-color": "^10.2.2"
+    "vitest": "^4.0.18"
   }
 }

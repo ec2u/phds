@@ -34,7 +34,7 @@ modules:
 resources:
 
   - key: macro
-    path: src/client/macro.tsx
+    path: src/client/cards/main.tsx
 
 app:
 
