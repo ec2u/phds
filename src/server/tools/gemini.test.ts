@@ -19,7 +19,7 @@ import type { Schema } from "@google/genai";
 import { Type } from "@google/genai";
 import { describe, expect, it } from "vitest";
 
-import { matches } from "./gemini.core";
+import { matches, trace } from "./gemini.core";
 
 
 describe("matches", () => {
@@ -635,6 +635,96 @@ describe("matches", () => {
 				expect(matches(42, {} as Schema)).toBeFalsy();
 			});
 
+		});
+
+	});
+
+});
+
+describe("trace", () => {
+
+	function apiError(status: number, apiMessage: string): Error & { status: number } {
+
+		const error = new Error(JSON.stringify({
+			error: { code: status, message: apiMessage, status: "SOME_STATUS" }
+		})) as Error & { status: number };
+
+		error.status = status;
+
+		return error;
+
+	}
+
+	describe("ApiError with known status codes", () => {
+
+		it("should format 400 errors with hint", () => {
+			expect(trace(apiError(400, "Invalid argument"))).toBe("(400) invalid argument; check request parameters");
+		});
+
+		it("should format 401 errors with hint", () => {
+			expect(trace(apiError(401, "API key not valid"))).toBe("(401) api key not valid; check the API key");
+		});
+
+		it("should format 403 errors with hint", () => {
+			expect(trace(apiError(403, "Permission denied"))).toBe("(403) permission denied; check API key permissions");
+		});
+
+		it("should format 429 errors with hint", () => {
+			expect(trace(apiError(429, "Resource has been exhausted"))).toBe("(429) resource has been exhausted; rate limit exceeded, retry later");
+		});
+
+		it("should format 500 errors with hint", () => {
+			expect(trace(apiError(500, "Internal error"))).toBe("(500) internal error; Gemini internal error, retry later");
+		});
+
+		it("should format 503 errors with hint", () => {
+			expect(trace(apiError(503, "Service unavailable"))).toBe("(503) service unavailable; Gemini temporarily unavailable, retry later");
+		});
+
+	});
+
+	describe("ApiError with unknown status codes", () => {
+
+		it("should format without hint for unmapped status codes", () => {
+			expect(trace(apiError(418, "I'm a teapot"))).toBe("(418) i'm a teapot");
+		});
+
+	});
+
+	describe("ApiError with malformed JSON message", () => {
+
+		it("should use raw message when JSON is invalid", () => {
+
+			const error = new Error("not json at all") as Error & { status: number };
+			error.status = 500;
+
+			expect(trace(error)).toBe("(500) not json at all; Gemini internal error, retry later");
+
+		});
+
+		it("should use raw message when JSON lacks error.message", () => {
+
+			const error = new Error(JSON.stringify({ unexpected: "shape" })) as Error & { status: number };
+			error.status = 400;
+
+			expect(trace(error)).toBe("(400) {\"unexpected\":\"shape\"}; check request parameters");
+
+		});
+
+	});
+
+	describe("non-API errors", () => {
+
+		it("should pass through plain Error via message()", () => {
+			expect(trace(new Error("something went wrong"))).toBe("something went wrong");
+		});
+
+		it("should pass through string errors", () => {
+			expect(trace("a string error")).toBe("a string error");
+		});
+
+		it("should pass through unknown objects as JSON", () => {
+			expect(trace({ code: 42 })).toBe("{\n  \"code\": 42\n}");
 		});
 
 	});

@@ -40,7 +40,22 @@
  */
 
 import { Schema, Type } from "@google/genai";
-import { isArray, isBoolean, isNumber, isObject, isString } from "../../shared/tools/core.js";
+import { isArray, isBoolean, isNumber, isObject, isString, message } from "../../shared/tools/core.js";
+
+/**
+ * Actionable hints for known HTTP status codes.
+ */
+const hints: Record<number, string> = {
+	400: "check request parameters",
+	401: "check the API key",
+	403: "check API key permissions",
+	429: "rate limit exceeded, retry later",
+	500: "Gemini internal error, retry later",
+	503: "Gemini temporarily unavailable, retry later"
+};
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
  * Checks if a value matches a Gemini {@link Schema} definition at runtime.
@@ -122,6 +137,48 @@ export function matches(value: unknown, schema: Schema): boolean {
 				return false;
 
 		}
+
+	}
+
+}
+
+/**
+ * Converts a Gemini API error to a human-readable trace string.
+ *
+ * For `ApiError` instances (duck-typed as `Error` with a numeric `status` property), extracts the HTTP status code
+ * and the human-readable message from the JSON-encoded response body, appending an actionable hint when available.
+ *
+ * For non-API errors, falls back to {@link message}.
+ *
+ * @param error The error to trace
+ *
+ * @returns A formatted trace string like `(429) resource has been exhausted; retry later`
+ *
+ * @see {@link https://github.com/googleapis/js-genai/blob/main/src/errors.ts ApiError source}
+ * @see {@link https://ai.google.dev/gemini-api/docs/troubleshooting Gemini API error codes}
+ */
+export function trace(error: unknown): string {
+
+	if ( error instanceof Error && isNumber((error as any).status) ) {
+
+		const status = (error as any).status as number;
+		const hint = hints[status];
+
+		// extract human-readable message from JSON-encoded API response body
+
+		const detail = parse(error.message);
+		const text = (isString(detail) ? detail : error.message).toLowerCase();
+
+		return `(${status}) ${text}${hint ? `; ${hint}` : ""}`;
+
+
+		function parse(body: string): unknown {
+			try { return JSON.parse(body)?.error?.message; } catch { return undefined; }
+		}
+
+	} else {
+
+		return message(error);
 
 	}
 

@@ -16,6 +16,7 @@ Changes deployed to development, pending production promotion.
 
 ### Fixed
 
+- Gemini API errors reported as raw JSON dumps instead of human-readable messages with actionable hints (#8)
 - Spurious whitespace and newlines in issue title and description from LLM output
 
 - "Refresh Analysis" button disabled when no analysis has been performed (#18)

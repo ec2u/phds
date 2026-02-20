@@ -27,7 +27,7 @@ import { File, GenerationConfig, GoogleGenAI, Schema } from "@google/genai";
 
 import { message } from "../../shared/tools/core";
 
-import { matches } from "./gemini.core";
+import { matches, trace } from "./gemini.core";
 import { json } from "./mime";
 import { secret } from "./secrets";
 
@@ -106,7 +106,7 @@ export async function upload({
 
 		console.error(error);
 
-		throw message(error);
+		throw trace(error);
 
 	}
 
@@ -275,7 +275,7 @@ export async function process({
 
 		console.error(error);
 
-		throw message(error);
+		throw trace(error);
 
 	}
 
