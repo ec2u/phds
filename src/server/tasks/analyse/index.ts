@@ -139,9 +139,7 @@ export async function amalyse(page: string, {}: AnalyseTask): Promise<void> {
 
 						const merged = await merge(rounds.flat());
 
-						return merged
-							.filter(entry => entry.reason_title?.trim())
-							.map(entry => convert(entry, policies[index]));
+						return merged.map(entry => convert(entry, policies[index]));
 
 					})
 				);

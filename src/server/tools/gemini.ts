@@ -27,6 +27,7 @@ import { File, GenerationConfig, GoogleGenAI, Schema } from "@google/genai";
 
 import { message } from "../../shared/tools/core";
 
+import { matches } from "./gemini.core";
 import { json } from "./mime";
 import { secret } from "./secrets";
 
@@ -252,15 +253,15 @@ export async function process({
 
 		if ( schema ) {
 
-			try {
+			const parsed = responseText.trim() ? JSON.parse(responseText) : {};
 
-				return responseText.trim() ? JSON.parse(responseText) : {};
+			if ( matches(parsed, schema) ) {
 
-			} catch ( parseError ) {
+				return parsed;
 
-				console.warn(`malformed JSON response <${responseText}>`);
+			} else {
 
-				return {};
+				throw message(new Error(`invalid gemini response <${responseText.substring(0, 500)}>`));
 
 			}
 

@@ -9,7 +9,14 @@ date-based releases.
 
 Changes deployed to development, pending production promotion.
 
+### Added
+
+- Runtime schema validation for Gemini structured responses, replacing silent fallback on invalid output
+- Non-blank pattern constraints on Gemini analysis response schema
+
 ### Fixed
+
+- Spurious whitespace and newlines in issue title and description from LLM output
 
 - "Refresh Analysis" button disabled when no analysis has been performed (#18)
 - "Clear Policies" button enabled while individual policy extraction is in progress (#18)

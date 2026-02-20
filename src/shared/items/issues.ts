@@ -119,7 +119,7 @@ export function normalizeIssue(issue: Issue): Issue {
 		...issue,
 		state: issue.state || "pending",
 		severity: issue.severity || 3,
-		title: issue.title || "",
-		description: issue.description || []
+		title: (issue.title || "").replace(/\s+/g, " ").trim(),
+		description: (issue.description || []).map(item => typeof item === "string" ? item.trim() : item)
 	};
 }

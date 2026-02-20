@@ -86,8 +86,6 @@ export async function detect(
 
 	});
 
-	return response
-		.filter(entry => entry.reason_title?.trim())
-		.map(entry => convert(entry, policy));
+	return response.map(entry => convert(entry, policy));
 
 }

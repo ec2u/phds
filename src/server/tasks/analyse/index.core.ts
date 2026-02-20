@@ -51,19 +51,23 @@ export const ResponseSchema: Schema = {
 			},
 			reason_title: {
 				type: Type.STRING,
-				description: "A short title explaining why the sections are incompatible"
+				description: "A short title explaining why the sections are incompatible",
+				pattern: "\\S"
 			},
 			reason_analysis: {
 				type: Type.STRING,
-				description: "A more verbose description explaining why the sections are incompatible"
+				description: "A more verbose description explaining why the sections are incompatible",
+				pattern: "\\S"
 			},
 			policy_clash_excerpt: {
 				type: Type.STRING,
-				description: "The full text of the excerpt of the policy that clashes with the document"
+				description: "The full text of the excerpt of the policy that clashes with the document",
+				pattern: "\\S"
 			},
 			document_clash_excerpt: {
 				type: Type.STRING,
-				description: "The full text of the excerpt of the document that clashes with the policy"
+				description: "The full text of the excerpt of the document that clashes with the policy",
+				pattern: "\\S"
 			}
 		},
 		required: [
