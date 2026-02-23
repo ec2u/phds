@@ -73,6 +73,8 @@ describe("createClientStore", () => {
 
 			page,
 
+			getAgreement: vi.fn(async () => testDocument as Status<null | Document>),
+
 			getPolicies: vi.fn(async () => ({}) as Status<Catalogue>),
 			getPolicy: vi.fn(async () => ("(404) not found")),
 			clearPolicy: vi.fn(async () => undefined as Status<void>),
@@ -590,7 +592,7 @@ describe("createClientStore", () => {
 
 	});
 
-	describe("optimistic submission", () => {
+	describe("submission guard", () => {
 
 		it("should mark issues as submitting on clearIssues", async () => {
 
@@ -630,12 +632,12 @@ describe("createClientStore", () => {
 
 		});
 
-		it("should replace optimistic submitting with event data", async () => {
+		it("should replace submitting guard with event data", async () => {
 
 			const delegate = mockDelegate();
 			const { observable, dispatcher } = createClientStore(page, delegate);
 
-			// submit (optimistic)
+			// submit
 			await observable.analyseIssues();
 
 			// event arrives with progression
@@ -654,7 +656,7 @@ describe("createClientStore", () => {
 
 		});
 
-		it("should notify catalogue observer on optimistic submission", async () => {
+		it("should notify catalogue observer on submission", async () => {
 
 			const { observable } = createClientStore(page, mockDelegate());
 			const callback = vi.fn();
@@ -772,6 +774,178 @@ describe("createClientStore", () => {
 
 			expect(callback).toHaveBeenCalledOnce();
 			expect(await observable.getIssues()).toBe(Activity.Submitting);
+
+		});
+
+	});
+
+	describe("reset methods", () => {
+
+		it("should clear cached policies and re-fetch from delegate on resetPolicies", async () => {
+
+			const delegate = mockDelegate({ getPolicies: vi.fn(async () => testCatalog) });
+			const { observable } = createClientStore(page, delegate);
+
+			// populate cache
+
+			observable.getPolicies();
+			await flush();
+
+			expect(delegate.getPolicies).toHaveBeenCalledOnce();
+
+			// reset and re-read
+
+			observable.resetPolicies();
+			observable.getPolicies();
+			await flush();
+
+			expect(delegate.getPolicies).toHaveBeenCalledTimes(2);
+
+		});
+
+		it("should notify policies observer on resetPolicies", async () => {
+
+			const delegate = mockDelegate({ getPolicies: vi.fn(async () => testCatalog) });
+			const { observable } = createClientStore(page, delegate);
+			const callback = vi.fn();
+
+			observable.observePolicies(callback);
+			await flush();
+			callback.mockClear();
+
+			observable.resetPolicies();
+			await flush();
+
+			expect(callback).toHaveBeenCalled();
+
+		});
+
+		it("should clear cached policy and re-fetch from delegate on resetPolicy", async () => {
+
+			const delegate = mockDelegate({ getPolicy: vi.fn(async () => testDocument) });
+			const { observable } = createClientStore(page, delegate);
+
+			// populate cache
+
+			observable.getPolicy("source-1", "en");
+			await flush();
+
+			expect(delegate.getPolicy).toHaveBeenCalledOnce();
+
+			// reset and re-read
+
+			observable.resetPolicy("source-1", "en");
+			observable.getPolicy("source-1", "en");
+			await flush();
+
+			expect(delegate.getPolicy).toHaveBeenCalledTimes(2);
+
+		});
+
+		it("should notify policy observer on resetPolicy", async () => {
+
+			const delegate = mockDelegate({ getPolicy: vi.fn(async () => testDocument) });
+			const { observable } = createClientStore(page, delegate);
+			const callback = vi.fn();
+
+			observable.observePolicy("source-1", "en", callback);
+			await flush();
+			callback.mockClear();
+
+			observable.resetPolicy("source-1", "en");
+			await flush();
+
+			expect(callback).toHaveBeenCalled();
+
+		});
+
+		it("should clear cached issues and re-fetch from delegate on resetIssues", async () => {
+
+			const delegate = mockDelegate({ getIssues: vi.fn(async () => testIssues) });
+			const { observable } = createClientStore(page, delegate);
+
+			// populate cache
+
+			observable.getIssues();
+			await flush();
+
+			expect(delegate.getIssues).toHaveBeenCalledOnce();
+
+			// reset and re-read
+
+			observable.resetIssues();
+			observable.getIssues();
+			await flush();
+
+			expect(delegate.getIssues).toHaveBeenCalledTimes(2);
+
+		});
+
+		it("should notify issues observer on resetIssues", async () => {
+
+			const delegate = mockDelegate({ getIssues: vi.fn(async () => testIssues) });
+			const { observable } = createClientStore(page, delegate);
+			const callback = vi.fn();
+
+			observable.observeIssues(callback);
+			await flush();
+			callback.mockClear();
+
+			observable.resetIssues();
+			await flush();
+
+			expect(callback).toHaveBeenCalled();
+
+		});
+
+		it("should clear cached agreement and re-fetch from delegate on resetAgreement", async () => {
+
+			const delegate = mockDelegate({ getAgreement: vi.fn(async () => testDocument) });
+			const { observable } = createClientStore(page, delegate);
+
+			// populate cache
+
+			observable.getAgreement();
+			await flush();
+
+			expect(delegate.getAgreement).toHaveBeenCalledOnce();
+
+			// reset and re-read
+
+			observable.resetAgreement();
+			observable.getAgreement();
+			await flush();
+
+			expect(delegate.getAgreement).toHaveBeenCalledTimes(2);
+
+		});
+
+		it("should clear trace and transition through submitting on resetIssues", async () => {
+
+			const delegate = mockDelegate({ getIssues: vi.fn(async () => testIssues) });
+			const { observable, dispatcher } = createClientStore(page, delegate);
+			const states: Status<ReadonlyArray<Issue>>[] = [];
+
+			// put issues in trace state
+
+			dispatcher(issuesUpdated("analysis failed"));
+
+			observable.observeIssues(status => states.push(status));
+			await flush();
+
+			// first observation sees the trace
+
+			expect(states).toContain("analysis failed");
+			states.length = 0;
+
+			// reset clears trace, triggers re-fetch
+
+			observable.resetIssues();
+			await flush();
+
+			// should have transitioned through submitting to fresh data
+
+			expect(states).toContain(Activity.Submitting);
 
 		});
 

@@ -36,6 +36,11 @@ export interface PolicyActions {
 	 */
 	clear: () => Promise<void>;
 
+	/**
+	 * Dismisses errors and resets the policy document cache, triggering a re-fetch from the server.
+	 */
+	reset: () => void;
+
 }
 
 
@@ -84,6 +89,12 @@ export function usePolicy(source: undefined | Source, language: Language = "en")
 		async clear(): Promise<void> {
 			if ( source ) {
 				await store.clearPolicy(source, language);
+			}
+		},
+
+		reset(): void {
+			if ( source ) {
+				store.resetPolicy(source, language);
 			}
 		}
 

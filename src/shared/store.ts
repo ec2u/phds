@@ -209,7 +209,9 @@ export type Status<T> =
 export enum Activity {
 
 	/**
-	 * Client-side optimistic state signalling that a request has been submitted.
+	 * Client-side guard state signalling that a request has been submitted.
+	 *
+	 * Prevents duplicate submissions while the request is in flight.
 	 */
 	Submitting,
 

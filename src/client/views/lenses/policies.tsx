@@ -66,9 +66,10 @@ export function ToolPolicies({
 
 }) {
 
-	const policies = usePolicies();
 
 	const [selected, setSelected] = useState<undefined | string>();
+
+	const [policies, policiesActions] = usePolicies();
 	const [policy, policyActions] = usePolicy(selected);
 
 
@@ -102,7 +103,7 @@ export function ToolPolicies({
 
 							borderWidth: "border.width",
 							borderStyle: "solid",
-							borderRadius: "radius.medium",
+							borderRadius: "radius.small",
 
 							color: source === selected
 								? "color.text.selected"
@@ -151,12 +152,12 @@ export function ToolPolicies({
 	>{on(policies, {
 
 		state: activity => <ToolActivity activity={activity}/>,
-		trace: trace => <ToolTrace trace={trace}/>,
+		trace: trace => <ToolTrace trace={trace} onDismiss={policiesActions.reset}/>,
 
 		value: () => !selected ? <PolicyNotSelectedPrompt/> : on(policy, {
 
 			state: activity => <ToolActivity activity={activity}/>,
-			trace: trace => <ToolTrace trace={trace}/>,
+			trace: trace => <ToolTrace trace={trace} onDismiss={policyActions.reset}/>,
 
 			value: document => document ? <ToolPolicy document={document}/> : null
 

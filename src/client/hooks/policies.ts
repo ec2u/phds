@@ -20,18 +20,33 @@
  * @module
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Catalogue } from "../../shared/items/documents";
 import { Activity, type Status } from "../../shared/store";
 import { useStore } from "./store";
 
 
 /**
+ * Available actions for managing the policies catalogue.
+ */
+export interface PoliciesActions {
+
+	/**
+	 * Dismisses errors and resets the policies catalogue cache, triggering a re-fetch from the server.
+	 */
+	reset: () => void;
+
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
  * Fetches the catalogue of available policy documents and subscribes to reactive updates.
  *
- * @return the current status of the policies catalogue
+ * @return a tuple of `[status, actions]` where status is the current policies catalogue or activity/error state
  */
-export function usePolicies(): Status<Catalogue> {
+export function usePolicies(): [Status<Catalogue>, PoliciesActions] {
 
 	const store = useStore();
 
@@ -41,5 +56,16 @@ export function usePolicies(): Status<Catalogue> {
 	useEffect(() => store.observePolicies(setPolicies), [store]);
 
 
-	return policies;
+	// ;) stable ref prevents render loops in consumers that include actions in useEffect deps
+
+	const actions = useMemo(() => ({
+
+		reset(): void {
+			store.resetPolicies();
+		}
+
+	}), [store]);
+
+
+	return [policies, actions];
 }

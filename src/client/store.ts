@@ -41,6 +41,7 @@ import {
 	Activity,
 	agreementKey,
 	isActivity,
+	isTrace,
 	issueKey,
 	issuesKey,
 	type PageEvent,
@@ -61,6 +62,30 @@ import { createCache } from "./store.core";
  * avoiding round-trips through the corresponding read methods.
  */
 export interface ClientStore extends PageStore {
+
+	/**
+	 * Resets the agreement cache entry, triggering a re-fetch from the server.
+	 */
+	resetAgreement(): void;
+
+	/**
+	 * Resets the policies catalogue cache entry, triggering a re-fetch from the server.
+	 */
+	resetPolicies(): void;
+
+	/**
+	 * Resets a policy document cache entry, triggering a re-fetch from the server.
+	 *
+	 * @param source The source attachment identifier
+	 * @param language The target language tag
+	 */
+	resetPolicy(source: string, language?: string): void;
+
+	/**
+	 * Resets the issues catalogue cache entry, triggering a re-fetch from the server.
+	 */
+	resetIssues(): void;
+
 
 	/**
 	 * Observes changes to the agreement document.
@@ -153,6 +178,11 @@ export function createClientStore(page: string, store: PageStore): {
 			clearIssues,
 			updateIssues,
 
+			resetAgreement,
+			resetPolicies,
+			resetPolicy,
+			resetIssues,
+
 			observeAgreement,
 			observePolicies,
 			observePolicy,
@@ -226,7 +256,9 @@ export function createClientStore(page: string, store: PageStore): {
 
 			cache.insert(key, Activity.Submitting);
 
-			return store.analyseIssues();
+			return store.analyseIssues().catch(message).then(status => {
+				if ( isTrace(status) ) { cache.insert(key, status); }
+			});
 
 		}
 
@@ -241,7 +273,9 @@ export function createClientStore(page: string, store: PageStore): {
 
 			cache.insert(key, Activity.Submitting);
 
-			return store.clearIssues();
+			return store.clearIssues().catch(message).then(status => {
+				if ( isTrace(status) ) { cache.insert(key, status); }
+			});
 
 		}
 
@@ -256,12 +290,33 @@ export function createClientStore(page: string, store: PageStore): {
 
 			cache.insert(key, Activity.Submitting);
 
-			return store.updateIssues(issue, update);
+			// escalate errors to catalogue key so catalogue observers see the trace;
+			// on success the server publishes `issues-updated` which inserts at the catalogue key directly
+
+			return store.updateIssues(issue, update).catch(message).then(status => {
+				if ( isTrace(status) ) { cache.insert(issuesKey(page), status); }
+			});
 
 		}
 
 	}
 
+
+	function resetAgreement(): void {
+		cache.remove(agreementKey(page));
+	}
+
+	function resetPolicies(): void {
+		cache.remove(policiesKey(page));
+	}
+
+	function resetPolicy(source: string, language?: string): void {
+		cache.remove(policyKey(page, source, language));
+	}
+
+	function resetIssues(): void {
+		cache.remove(issuesKey(page));
+	}
 
 
 	function observeAgreement(observer: StatusObserver<null | Document>): () => void {

@@ -189,6 +189,7 @@ export default function ToolIssue({
 
 		borderStyle: "solid",
 		borderWidth: "border.width",
+		borderRadius: "radius.small",
 
 		...(issue.state === "resolved" ? GrayColors : BlueColors),
 
@@ -223,7 +224,7 @@ export default function ToolIssue({
 
 							borderStyle: "solid",
 							borderWidth: "border.width",
-							borderRadius: "radius.large",
+							borderRadius: "radius.small",
 
 							...(StateColors[issue.state])
 
@@ -247,7 +248,7 @@ export default function ToolIssue({
 
 							borderStyle: "solid",
 							borderWidth: "border.width",
-							borderRadius: "radius.large",
+							borderRadius: "radius.small",
 
 							...(SeverityColors[issue.severity])
 
@@ -434,7 +435,7 @@ function ToolReference({
 				paddingInline: "space.025",
 				marginInline: "space.025",
 
-				borderRadius: "radius.medium",
+				borderRadius: "radius.small",
 				backgroundColor: "color.background.neutral"
 
 			}) as SafeXCSS}
@@ -442,7 +443,7 @@ function ToolReference({
 		>
 
 			<Icon glyph={"info"} label={reference.title}
-				size={"small"} primaryColor={"color.icon.accent.blue"}
+				size={"small"} color={"color.icon.accent.blue"}
 			/>
 
 		</Pressable>}
@@ -452,8 +453,7 @@ function ToolReference({
 			padding: "space.200",
 			maxWidth: "30em"
 
-		})}
-		>
+		})}>
 
 			<Stack space={"space.100"}>
 

@@ -125,7 +125,7 @@ export function ToolIssues({
 	>{on(items, {
 
 		state: activity => <ToolActivity activity={activity}/>,
-		trace: trace => <ToolTrace trace={trace}/>,
+		trace: trace => <ToolTrace trace={trace} onDismiss={actions.reset}/>,
 
 		value: issues => {
 

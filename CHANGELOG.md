@@ -13,18 +13,16 @@ Changes deployed to development, pending production promotion.
 
 - Server-side agreement content management with observable store integration (#28)
 - Distinct error states for agreement and policy retrieval failures (#28)
+- Dismiss action on error traces across all views (#18)
 - Runtime schema validation for Gemini structured responses, replacing silent fallback on invalid output
 - Non-blank pattern constraints on Gemini analysis response schema
-
-### Removed
-
-- Unused client-side reset methods (`resetPolicies`, `resetPolicy`, `resetIssues`) (#31)
 
 ### Fixed
 
 - Gemini API errors reported as raw JSON dumps instead of human-readable messages with actionable hints (#8)
 - Spurious whitespace and newlines in issue title and description from LLM output
 
+- Issue mutation errors (rejections and server-reported traces) leaving UI stuck on activity spinner (#18)
 - "Refresh Analysis" button disabled when no analysis has been performed (#18)
 - Stale issues and sidebar controls shown during refresh and clear operations
 - Annotation text area blank when entering edit mode after cross-window sync (#31)
@@ -50,6 +48,7 @@ Changes deployed to development, pending production promotion.
 
 ### Changed
 
+- Tighten border radii across UI components from medium/large to small
 - Error traces cached uniformly — errors persist until explicitly dismissed instead of silently retried (#18)
 - Reassign state colors: pending=red, active=yellow
 - Use catalog-specific state ordering (blocked < active < pending < resolved) in issues list

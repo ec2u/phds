@@ -51,6 +51,11 @@ export interface IssuesActions {
 	 */
 	clear: () => Promise<void>;
 
+	/**
+	 * Dismisses errors and resets the issues cache, triggering a re-fetch from the server.
+	 */
+	reset: () => void;
+
 }
 
 
@@ -88,6 +93,10 @@ export function useIssues(): [Status<ReadonlyArray<Issue>>, IssuesActions] {
 
 		async clear(): Promise<void> {
 			await store.clearIssues();
+		},
+
+		reset(): void {
+			store.resetIssues();
 		}
 
 	}), [store]);

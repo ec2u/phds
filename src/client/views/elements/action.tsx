@@ -65,7 +65,7 @@ export function ToolAction({
 
 		<Tooltip content={label}>
 
-			<Icon primaryColor={disabled ? "color.icon.disabled" : "color.icon"}
+			<Icon color={disabled ? "color.icon.disabled" : "color.icon"}
 
 				label={label}
 				glyph={icon}

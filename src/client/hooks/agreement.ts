@@ -20,18 +20,33 @@
  * @module
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Document } from "../../shared/items/documents";
 import { Activity, type Status } from "../../shared/store";
 import { useStore } from "./store";
 
 
 /**
+ * Available actions for managing the agreement document.
+ */
+export interface AgreementActions {
+
+	/**
+	 * Dismisses errors and resets the agreement cache, triggering a re-fetch from the server.
+	 */
+	reset: () => void;
+
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
  * Fetches the agreement document and subscribes to reactive updates.
  *
- * @return the current status of the agreement document
+ * @return a tuple of `[status, actions]` where status is the current agreement or activity/error state
  */
-export function useAgreement(): Status<null | Document> {
+export function useAgreement(): [Status<null | Document>, AgreementActions] {
 
 	const store = useStore();
 
@@ -41,5 +56,16 @@ export function useAgreement(): Status<null | Document> {
 	useEffect(() => store.observeAgreement(setAgreement), [store]);
 
 
-	return agreement;
+	// ;) stable ref prevents render loops in consumers that include actions in useEffect deps
+
+	const actions = useMemo(() => ({
+
+		reset(): void {
+			store.resetAgreement();
+		}
+
+	}), [store]);
+
+
+	return [agreement, actions];
 }

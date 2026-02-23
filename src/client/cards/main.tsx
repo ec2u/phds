@@ -26,6 +26,7 @@ import { ToolActivity } from "../views/lenses/activity";
 import { ToolDashboard } from "../views/lenses/dashboard";
 import { ToolIssues } from "../views/lenses/issues";
 import { ToolPolicies } from "../views/lenses/policies";
+import { ToolTrace } from "../views/lenses/trace";
 
 
 /**
@@ -56,8 +57,8 @@ enum Tab {
  */
 function ToolMain() {
 
-	const agreement = useAgreement();
-	const policies = usePolicies();
+	const [agreement, agreementActions] = useAgreement();
+	const [policies, policiesActions] = usePolicies();
 
 	const [tab, setTab] = useState(Tab.Agreement);
 	const [actions, setActions] = useState<ReactNode>();
@@ -74,7 +75,12 @@ function ToolMain() {
 
 	const loading = isActivity(agreement) || isActivity(policies);
 	const stocked = !loading && Object.keys(policies).length > 0;
-	const active = loading || !stocked || tab !== Tab.Agreement;
+
+	const expanded = loading
+		|| !stocked
+		|| tab !== Tab.Agreement
+		|| isTrace(agreement)
+		|| isTrace(policies);
 
 
 	function button(value: Tab, disabled?: boolean) {
@@ -91,7 +97,7 @@ function ToolMain() {
 
 	return <Box xcss={xcss({
 
-		...(active ? Rule : {})
+		...(expanded ? Rule : {})
 
 	})}>
 
@@ -116,30 +122,18 @@ function ToolMain() {
 
 		) : isTrace(agreement) ? (
 
-			<EmptyState
-				header={"Agreement Unavailable"}
-				description={"Failed to retrieve the agreement content.\n"+
-					"Try reloading the page or contact support if the problem persists."
-				}
-				primaryAction={<Icon label={""} glyph={"error"} size={"large"} color={"color.icon.danger"}/>}
-			/>
+			<ToolTrace trace={agreement} onDismiss={agreementActions.reset}/>
 
 		) : isTrace(policies) ? (
 
-			<EmptyState
-				header={"Policies Unavailable"}
-				description={"Failed to retrieve the policy catalogue.\n"+
-					"Try reloading the page or contact support if the problem persists."
-				}
-				primaryAction={<Icon label={""} glyph={"error"} size={"large"} color={"color.icon.danger"}/>}
-			/>
+			<ToolTrace trace={policies} onDismiss={policiesActions.reset}/>
 
-		) :agreement === null ? (
+		) : agreement === null ? (
 
 			<EmptyState
 				header={"Corrupted Document"}
-				description={"The expected document structure was corrupted.\n"+
-					"Save content and attachments and recreate from scratch."
+				description={"The expected document structure was corrupted.\n"
+					+"Save content and attachments and recreate from scratch."
 				}
 				primaryAction={<Icon label={""} glyph={"error"} size={"large"} color={"color.icon.warning"}/>}
 			/>

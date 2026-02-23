@@ -112,7 +112,7 @@ export function ToolDashboard({
 	return on(items, {
 
 		state: activity => <ToolActivity activity={activity}/>,
-		trace: trace => <ToolTrace trace={trace}/>,
+		trace: trace => <ToolTrace trace={trace} onDismiss={actions.reset}/>,
 
 		value: issues => {
 
@@ -188,7 +188,7 @@ function Card({
 				paddingBlock: "space.050",
 				paddingInline: "space.100",
 
-				borderRadius: "radius.medium",
+				borderRadius: "radius.small",
 				borderWidth: "border.width",
 				borderStyle: "solid",
 
