@@ -42,7 +42,8 @@ Long-running operations (policy extraction, compliance analysis) use the Forge q
 ## Task Execution
 
 1. **Worker gate** checks the `JobState` — if another worker is active, exits silently
-1. **Task** executes, publishing progress events via the store at each stage (`Fetching`, `Extracting`, `Analysing`)
+1. **Task** executes, publishing progress events via the store at each stage (`Fetching`, `Uploading`, `Extracting`,
+   `Translating`, `Analyzing`)
 1. Each publish call updates the `JobState` activity via `report()` and publishes an event carrying the current status
 1. On completion, the task writes the final result to KVS and publishes a completion event
 
@@ -70,16 +71,48 @@ Recovery is on-demand, triggered during `schedule()`:
 
 The next client request proceeds as if no previous job existed.
 
-# Error
+# Error Handling
+
+## Server-Side
+
+Server-side operations follow three principles:
+
+- **Best-effort transactional mutations**: mutations use write-before-delete ordering so that resource state is never
+  lost on partial failure. New values are written first; stale entries are cleaned up afterwards. If cleanup fails,
+  stale data lingers harmlessly until the next operation.
+- **Resource state is never altered until task completion**: during async execution, progress stages do not modify
+  resource keys in KVS. The actual resource data (policy documents, issues) is written only on the final success call.
+- **Progress reports and traces are published but not stored as resources**: activities are tracked in a separate
+  `JobState` entry (via `report()`), not in the resource key. Traces are delivered to clients as events and the
+  `JobState` is deleted — nothing is written to the resource key on error.
+
+### Async Task Error
 
 When an async task throws:
 
-1. **Task** publishes an error event via the store (for instance `publishIssuesAnalysed(trace)`)
+1. **Task** publishes an error event via the store (for instance `publishIssuesUpdated(trace)`)
+1. **Store** deletes the `JobState` from KVS, then publishes the error event
 1. **Event** reaches connected clients; UI components display the error
-1. The `JobState` remains in KVS — it is cleaned up by the next `schedule()` call (stale task recovery)
 
 Errors are transient. Clearing the error on the client resets the resource, allowing the next request to trigger a fresh
 job.
+
+### Mutation Resilience
+
+- **Issue caching** (`publishIssuesUpdated`): writes new issue entries first, then deletes stale keys not present in the
+  new set. If the writes fail mid-way, old entries survive intact. If the deletes fail, stale entries linger harmlessly
+  until the next analysis run.
+- **Issue update** (`updateIssues`): reads the current value, builds the update in memory, then writes back. If the
+  write fails, the previous KVS value is preserved.
+
+## Client-Side
+
+The client cache holds `Status<T>` values — activities and traces are integral to store state, not metadata kept
+alongside it. All status types are cached uniformly.
+
+- **Activities** are cached and notified like any other value. Observers see `Submitting` immediately on mutation or
+  initial fetch, then receive progress updates as events arrive.
+- **Traces** are cached and notified — errors are sticky until the cache entry is evicted or overwritten.
 
 # New Client Joins
 

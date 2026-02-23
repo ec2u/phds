@@ -24,7 +24,7 @@
  * @module
  */
 
-import type { Catalog, Document } from "./items/documents";
+import type { Catalogue, Document } from "./items/documents";
 import type { Issue, IssueUpdate } from "./items/issues";
 import { isFunction, isNumber, isString } from "./tools/core";
 
@@ -34,7 +34,7 @@ import { isFunction, isNumber, isString } from "./tools/core";
  *
  * Operations are grouped by resource type:
  *
- * - **Policies**: read and cache management for policy documents
+ * - **Policies**: catalogue derived from attachments; read and cache management for extracted policy content
  * - **Issues**: full CRUD and async analysis for compliance issues
  *
  * Each side binds the page identifier from its own context — the client from the component prop, the server from the
@@ -44,23 +44,24 @@ import { isFunction, isNumber, isString } from "./tools/core";
 export interface PageStore {
 
 	/**
-	 * Retrieves the catalog of cached policy documents.
-	 *
-	 * @returns A {@link Status} wrapping the policy {@link Catalog}
+	 * The Confluence page identifier.
 	 */
-	getPolicies(): Promise<Status<Catalog>>;
+	readonly page: string;
+
 
 	/**
-	 * Clears cached policy documents.
+	 * Retrieves the policy catalogue derived from attached policy documents.
 	 *
-	 * Purges the policy store; the attachment catalog remains unaffected.
-	 *
-	 * @returns A {@link Status} wrapping void on success
+	 * @returns A {@link Status} wrapping the policy {@link Catalogue}
 	 */
-	clearPolicies(): Promise<Status<void>>;
+	getPolicies(): Promise<Status<Catalogue>>;
+
 
 	/**
-	 * Retrieves a specific policy document, optionally translated to the given language.
+	 * Retrieves cached policy content, optionally translated to the given language.
+	 *
+	 * Content is extracted and converted from the policy attachment identified by `source`.
+	 * Publishes a {@link PolicyUpdated} event with the resulting status on completion.
 	 *
 	 * @param source The source attachment identifier
 	 * @param language The target language tag; omit for original language
@@ -70,6 +71,18 @@ export interface PageStore {
 	 * @see {@link https://www.rfc-editor.org/info/bcp47 BCP 47 language tags}
 	 */
 	getPolicy(source: string, language?: string): Promise<Status<Document>>;
+
+	/**
+	 * Clears cached policy content for the given language or for the original one, if none is provided.
+	 *
+	 * Publishes a {@link PolicyUpdated} event with `null` status on completion.
+	 *
+	 * @param source The source attachment identifier
+	 * @param language The target language tag; omit for original language
+	 *
+	 * @returns A {@link Status} wrapping void on success
+	 */
+	clearPolicy(source: string, language?: string): Promise<Status<void>>;
 
 
 	/**
@@ -96,15 +109,6 @@ export interface PageStore {
 	clearIssues(): Promise<Status<void>>;
 
 	/**
-	 * Retrieves a specific compliance issue.
-	 *
-	 * @param issue The unique issue identifier
-	 *
-	 * @returns A {@link Status} wrapping the matching {@link Issue}
-	 */
-	getIssue(issue: string): Promise<Status<Issue>>;
-
-	/**
 	 * Updates mutable fields on a compliance issue.
 	 *
 	 * @param issue The unique issue identifier
@@ -112,7 +116,7 @@ export interface PageStore {
 	 *
 	 * @returns A {@link Status} wrapping void on success
 	 */
-	updateIssue(issue: string, update: IssueUpdate): Promise<Status<void>>;
+	updateIssues(issue: string, update: IssueUpdate): Promise<Status<void>>;
 
 }
 
@@ -122,65 +126,35 @@ export interface PageStore {
 /**
  * Event published on the page channel after a state mutation.
  *
- * Flat discriminated union keyed on `type`. Async operations publish completion, error, and timeout
- * events; sync mutations publish completion events only (failures are returned directly to the caller via
- * {@link Status}).
- *
- * - `policies` — catalogue cleared by {@link PageStore.clearPolicies clearPolicies}
- * - `policy` — async extraction/translation by {@link PageStore.getPolicy getPolicy} (`source` + `language`)
- * - `issues` — async analysis pipeline by {@link PageStore.analyseIssues analyseIssues},
- *   including progress stages; catalogue cleared by {@link PageStore.clearIssues clearIssues}
- * - `issue` — individual issue updated by {@link PageStore.updateIssue updateIssue} (`issue`)
- *
- * Completion events carry full updated resource state so client caches update without server roundtrips. Error and
- * timeout events are transient — delivered to all clients currently subscribed to the page channel, not persisted
- * in resource state.
+ * Discriminated union keyed on `type`. Completion events carry full resource state so client caches update
+ * without server round-trips. Error and timeout events are transient and not persisted.
  */
 export type PageEvent =
-
-	| PoliciesCleared
-	| PolicyConverted
-
-	| IssuesAnalysed
-	| IssuesCleared
-	| IssueUpdated;
+	| PolicyUpdated
+	| IssuesUpdated;
 
 
 /**
- * Notifies that the policies catalogue was cleared by {@link PageStore.clearPolicies clearPolicies}.
+ * Notifies the outcome of an async policy update by {@link PageStore.getPolicy getPolicy}.
  */
-export type PoliciesCleared = {
+export type PolicyUpdated = {
 
-	readonly type: "policies-cleared";
-
-	readonly page: string
-
-	readonly status: Status<void>
-
-};
-
-/**
- * Notifies the outcome of an async policy conversion by {@link PageStore.getPolicy getPolicy}.
- */
-export type PolicyConverted = {
-
-	readonly type: "policy-converted";
+	readonly type: "policy-updated";
 
 	readonly page: string;
 	readonly source: string;
 	readonly language?: string;
 
-	readonly status: Status<Document>
+	readonly status: Status<null | Document>
 
 };
 
-
 /**
- * Notifies the outcome of an async issue analysis by {@link PageStore.analyseIssues analyseIssues}.
+ * Notifies an update to the issues catalogue after any mutation operation on the issues resource.
  */
-export type IssuesAnalysed = {
+export type IssuesUpdated = {
 
-	readonly type: "issues-analysed";
+	readonly type: "issues-updated";
 
 	readonly page: string;
 
@@ -188,38 +162,11 @@ export type IssuesAnalysed = {
 
 };
 
-/**
- * Notifies that the issues catalogue was cleared by {@link PageStore.clearIssues clearIssues}.
- */
-export type IssuesCleared = {
-
-	readonly type: "issues-cleared";
-
-	readonly page: string
-
-	readonly status: Status<void>
-
-};
-
-/**
- * Notifies the outcome of an issue update by {@link PageStore.updateIssue updateIssue}.
- */
-export type IssueUpdated = {
-
-	readonly type: "issue-updated";
-
-	readonly page: string;
-	readonly issue: string;
-
-	readonly status: Status<Issue>
-
-};
-
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
- * Operation outcome as either an in-progress activity, a result value, or an error trace.
+ * Current state of an operation: either an in-progress activity, an error trace, or a result value.
  *
  * @typeParam T The type of result data
  */
@@ -230,9 +177,6 @@ export type Status<T> =
 
 /**
  * Enumeration of in-progress activity states.
- *
- * > [!IMPORTANT]
- * > Activity stages are currently issues-specific; separate common vs resource-specific stages during implementation.
  */
 export enum Activity {
 
@@ -283,15 +227,24 @@ export type Trace =
 
 
 /**
+ * Observer callback receiving the current {@link Status} of a resource.
+ */
+export type StatusObserver<T> = {
+
+	(status: Status<T>): void;
+
+}
+
+/**
  * Exhaustive handler mapping for {@link Status} pattern matching via {@link on}.
  *
  * Each field handles one variant of the {@link Status} union. Fields accept either a static value or a callback
  * receiving the narrowed variant.
  *
- * @typeParam R The return type of all handlers
  * @typeParam T The type of the result value
+ * @typeParam R The return type of all handlers
  */
-export type StatusHandler<R, T> = {
+export type StatusHandler<T, R> = {
 
 	/**
 	 * Handles an in-progress {@link Activity} variant.
@@ -314,16 +267,113 @@ export type StatusHandler<R, T> = {
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
- * Returns the realtime channel key for a page.
+ * Checks whether a key is a direct or transitive descendant of another key in the colon-separated hierarchy.
+ *
+ * A key is considered nested if it starts with the parent key followed by a colon separator, as produced by
+ * {@link prefixKey}. Used on the client side to locate and reset cache entries and observers scoped under a
+ * parent resource key.
+ *
+ * @param key The parent resource key
+ * @param nested The candidate descendant key to test
+ *
+ * @returns true if `nested` starts with `key` followed by a colon separator; false otherwise
+ */
+export function isNestedKey(key: string, nested: string): boolean {
+	return nested.startsWith(prefixKey(key));
+}
+
+
+/**
+ * Returns the prefix used to identify descendant keys in the colon-separated hierarchy.
+ *
+ * Appends a colon separator to the given key so that prefix queries (for example `startsWith`) match only genuine
+ * descendants and never the parent key itself. Used by {@link isNestedKey} for client-side cache scoping and by
+ * server-side storage scans to enumerate entries under a resource key.
+ *
+ * @param key The resource key to prefix
+ *
+ * @returns The key followed by a colon separator
+ */
+export function prefixKey(key: string) {
+	return `${key}:`;
+}
+
+
+/**
+ * Returns the root resource key for a page.
+ *
+ * All page-scoped resource keys are descendants of this key. Child keys are formed by appending a colon separator
+ * and additional segments.
  *
  * @param page The Confluence page identifier
  *
- * @returns The channel key
+ * @returns The resource key
  */
-export function channel(page: string): string {
+export function pageKey(page: string): string {
 	return `${page}`;
 }
 
+
+/**
+ * Returns the resource key for the policies catalogue.
+ *
+ * Child keys are formed by appending a colon separator and additional segments. Scan sites append the colon
+ * explicitly so that prefix queries never match the catalogue key itself.
+ *
+ * @param page The Confluence page identifier
+ *
+ * @returns The resource key
+ */
+export function policiesKey(page: string): string {
+	return `${page}:policies`;
+}
+
+/**
+ * Returns the resource key for an individual policy document.
+ *
+ * Placed under the {@link policiesKey} prefix to be reachable by prefix scans.
+ *
+ * @param page The Confluence page identifier
+ * @param source The source attachment identifier
+ * @param language The target language tag for translated documents
+ *
+ * @returns The resource key
+ */
+export function policyKey(page: string, source: string, language?: string): string {
+	return language ? `${policiesKey(page)}:${source}:${language}` : `${policiesKey(page)}:${source}`;
+}
+
+
+/**
+ * Returns the resource key for the issues catalogue.
+ *
+ * Child keys are formed by appending a colon separator and additional segments. Scan sites append the colon
+ * explicitly so that prefix queries never match the catalogue key itself.
+ *
+ * @param page The Confluence page identifier
+ *
+ * @returns The resource key
+ */
+export function issuesKey(page: string): string {
+	return `${page}:issues`;
+}
+
+/**
+ * Returns the resource key for an individual issue.
+ *
+ * Placed under the {@link issuesKey} prefix to be reachable by prefix scans.
+ *
+ * @param page The Confluence page identifier
+ * @param issue The issue identifier
+ *
+ * @returns The resource key
+ */
+export function issueKey(page: string, issue: string): string {
+	return `${issuesKey(page)}:${issue}`;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
  * Checks if a value is a valid {@link Activity} enum member.
@@ -332,7 +382,7 @@ export function channel(page: string): string {
  *
  * @returns true if the value is a finite number within the {@link Activity} range; false otherwise
  */
-export function isActivity(value: unknown): value is Activity {
+export function isActivity<T>(value: Status<T>): value is Activity {
 	return isNumber(value) && Activity[value] !== undefined;
 }
 
@@ -343,8 +393,19 @@ export function isActivity(value: unknown): value is Activity {
  *
  * @returns true if the value is a string; false otherwise
  */
-export function isTrace(value: unknown): value is Trace {
+export function isTrace<T>(value: Status<T>): value is Trace {
 	return isString(value);
+}
+
+/**
+ * Checks if a {@link Status} holds a result value, narrowing out {@link Activity} and {@link Trace} variants.
+ *
+ * @param value The status to check
+ *
+ * @returns true if the value is a result; false if it is an activity or a trace
+ */
+export function isContent<T>(value: Status<T>): value is T {
+	return !isActivity(value) && !isTrace(value);
 }
 
 
@@ -363,7 +424,7 @@ export function isTrace(value: unknown): value is Trace {
  *
  * @returns The result of applying the matching handler
  */
-export function on<T, R>(status: Status<T>, handler: StatusHandler<R, T> | Partial<StatusHandler<R, T>> & {
+export function on<T, R>(status: Status<T>, handler: StatusHandler<T, R> | Partial<StatusHandler<T, R>> & {
 
 	readonly other: R | ((status: Status<T>) => R),
 

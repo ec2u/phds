@@ -21,7 +21,7 @@
  */
 
 import type { Request } from "@forge/resolver";
-import type { Catalog, Document } from "../../shared/items/documents";
+import type { Catalogue, Document } from "../../shared/items/documents";
 import type { Status } from "../../shared/store";
 import { createServerStore } from "../store";
 
@@ -29,15 +29,8 @@ import { createServerStore } from "../store";
 /**
  * Retrieves the catalogue of available policy documents for the given page.
  */
-export async function getPolicies({ payload: { page } }: Request<{ page: string }>): Promise<Status<Catalog>> {
+export async function getPolicies({ payload: { page } }: Request<{ page: string }>): Promise<Status<Catalogue>> {
 	return createServerStore(page).getPolicies();
-}
-
-/**
- * Clears all cached policy data for the given page.
- */
-export async function clearPolicies({ payload: { page } }: Request<{ page: string }>): Promise<Status<void>> {
-	return createServerStore(page).clearPolicies();
 }
 
 /**
@@ -49,4 +42,15 @@ export async function getPolicy({ payload: { page, source, language } }: Request
 	language?: string;
 }>): Promise<Status<Document>> {
 	return createServerStore(page).getPolicy(source, language);
+}
+
+/**
+ * Clears cached policy content.
+ */
+export async function clearPolicy({ payload: { page, source, language } }: Request<{
+	page: string;
+	source: string;
+	language?: string;
+}>): Promise<Status<void>> {
+	return createServerStore(page).clearPolicy(source, language);
 }

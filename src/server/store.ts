@@ -28,32 +28,46 @@
  */
 
 import { JobDoesNotExistError, Queue } from "@forge/events";
-import { kvs, WhereConditions } from "@forge/kvs";
 import { publishGlobal } from "@forge/realtime";
-import type { Catalog, Document } from "../shared/items/documents";
+import type { Catalogue, Document } from "../shared/items/documents";
 import type { Issue, IssueUpdate } from "../shared/items/issues";
 import { normalizeIssue } from "../shared/items/issues";
 import {
 	Activity,
-	channel,
 	isActivity,
-	isTrace,
+	isContent,
+	issueKey,
+	issuesKey,
 	on,
 	type PageEvent,
+	pageKey,
 	type PageStore,
+	policiesKey,
+	policyKey,
+	prefixKey,
 	type Status
 } from "../shared/store";
 import { immutable, message } from "../shared/tools/core";
 import type { Task } from "./tasks";
 import { getAttachment, listAttachments } from "./tools/attachments";
+import { deleteMatches, deleteValue, getMatches, getValue, setValue } from "./tools/kvs";
 import { pdf } from "./tools/mime";
 import { checkPage } from "./tools/pages";
 
 
 /**
+ * The KVS key prefix for system-level entries.
+ *
+ * Separates housekeeping keys (for example {@link purgeKey}) from page-scoped cache entries, so that global scans can
+ * skip system entries when grouping by page.
+ */
+const systemKey = "system";
+
+
+/**
  * The KVS key for tracking the last global purge timestamp.
  */
-const purgeKey = "system:purged";
+const purgeKey = `${systemKey}:purged`;
 
 /**
  * The minimum interval between global purge operations in milliseconds.
@@ -83,7 +97,7 @@ interface JobState {
 
 //// Housekeeping //////////////////////////////////////////////////////////////////////////////////////////////////////
 
-purge(); // background maintenance on cold start
+purge().catch(error => console.error("background purge failed:", error));
 
 
 //// API ///////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -110,20 +124,20 @@ export interface ServerStore extends PageStore {
 
 
 	/**
-	 * Publishes a {@link PolicyConverted} event on the page channel.
+	 * Publishes a {@link PolicyUpdated} event on the page channel.
 	 *
 	 * @param source The source attachment identifier
 	 * @param language The target language tag
 	 * @param status The current status
 	 */
-	publishPolicyConverted(source: string, language: string | undefined, status: Status<Document>): Promise<void>;
+	publishPolicyUpdated(source: string, language: string | undefined, status: Status<null | Document>): Promise<void>;
 
 	/**
-	 * Publishes an {@link IssuesAnalysed} event on the page channel.
+	 * Publishes an {@link IssuesUpdated} event on the page channel.
 	 *
 	 * @param status The current status
 	 */
-	publishIssuesAnalysed(status: Status<ReadonlyArray<Issue>>): Promise<void>;
+	publishIssuesUpdated(status: Status<ReadonlyArray<Issue>>): Promise<void>;
 
 }
 
@@ -146,157 +160,94 @@ export interface ServerStore extends PageStore {
 export function createServerStore(page: string): ServerStore {
 	return immutable({
 
+		page,
+
 		getPolicies: () => getPolicies(page),
-		clearPolicies: () => clearPolicies(page),
+
 		getPolicy: (source, language) => getPolicy(page, source, language),
+		clearPolicy: (source, language) => clearPolicy(page, source, language),
 
 		getIssues: () => getIssues(page),
 		analyseIssues: () => analyseIssues(page),
 		clearIssues: () => clearIssues(page),
-
-		getIssue: (issue) => getIssue(page, issue),
-		updateIssue: (issue, update) => updateIssue(page, issue, update),
+		updateIssues: (issue, update) => updateIssues(page, issue, update),
 
 		isActive: (jobId, task) => isActive(page, jobId, task),
 
-		publishPolicyConverted: (source, language, status) => publishPolicyConverted(page, source, language, status),
-		publishIssuesAnalysed: (status) => publishIssuesAnalysed(page, status)
+		publishPolicyUpdated: (source, language, status) => publishPolicyUpdated(page, source, language, status),
+		publishIssuesUpdated: (status) => publishIssuesUpdated(page, status)
 
 	});
 }
 
 
-//// KVS Keys //////////////////////////////////////////////////////////////////////////////////////////////////////////
+//// Async Job Keys ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
- * Builds the KVS key for the policies catalogue.
+ * Returns the resource key for tracking the active convert job.
  *
  * > [!IMPORTANT]
- * > Job tracking keys (e.g. {@link policyConvertKey}) MUST be placed outside the `{page}:policies:*` prefix,
- * > as {@link getPolicies} uses a `beginsWith` query on that prefix to scan cached documents.
- *
- * @param page The Confluence page identifier
- *
- * @returns The colon-separated KVS key
- */
-function policiesKey(page: string): string {
-	return `${page}:policies`;
-}
-
-/**
- * Builds the KVS key for an individual policy document.
- *
- * Placed under the `{page}:policies:*` prefix to be reachable by the {@link getPolicies} scan.
- *
- * @param page The Confluence page identifier
- * @param source The source attachment identifier
- * @param language The target language tag for translated documents
- *
- * @returns The colon-separated KVS key
- */
-function policyKey(page: string, source: string, language?: string): string {
-	return language ? `${policiesKey(page)}:${source}:${language}` : `${policiesKey(page)}:${source}`;
-}
-
-/**
- * Builds the KVS key for tracking the active convert job.
- *
- * Placed outside the `{page}:policies:*` prefix to avoid colliding with the {@link getPolicies} scan.
+ * > MUST be placed outside the {@link policiesKey} prefix. Prefix scans on policy documents would otherwise match
+ * > job-tracking entries.
  *
  * @param page The Confluence page identifier
  * @param source The source attachment identifier
  * @param language The target language tag
  *
- * @returns The colon-separated KVS key
+ * @returns The resource key
  */
 function policyConvertKey(page: string, source: string, language?: string): string {
 	return language ? `${page}:convert:${source}:${language}` : `${page}:convert:${source}`;
 }
 
-
 /**
- * Builds the KVS key for the issues catalogue.
+ * Returns the resource key for tracking the active analyse job.
  *
  * > [!IMPORTANT]
- * > Job tracking keys (e.g. {@link issuesAnalyseKey}) MUST be placed outside the `{page}:issues:*` prefix,
- * > as {@link getIssues} uses a `beginsWith` query on that prefix to scan individual issue entries.
+ * > MUST be placed outside the {@link issuesKey} prefix. Prefix scans on issue entries would otherwise match
+ * > job-tracking entries.
  *
  * @param page The Confluence page identifier
  *
- * @returns The colon-separated KVS key
- */
-function issuesKey(page: string): string {
-	return `${page}:issues`;
-}
-
-/**
- * Builds the KVS key for tracking the active analyse job.
- *
- * Placed outside the `{page}:issues:*` prefix to avoid colliding with the {@link getIssues} scan.
- *
- * @param page The Confluence page identifier
- *
- * @returns The colon-separated KVS key
+ * @returns The resource key
  */
 function issuesAnalyseKey(page: string): string {
 	return `${page}:analyse`;
-}
-
-/**
- * Builds the KVS key for an individual issue.
- *
- * Placed under the `{page}:issues:*` prefix to be reachable by the {@link getIssues} scan.
- *
- * @param page The Confluence page identifier
- * @param issue The issue identifier
- *
- * @returns The colon-separated KVS key
- */
-function issueKey(page: string, issue: string): string {
-	return `${page}:issues:${issue}`;
 }
 
 
 //// Store Operations //////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
- * Retrieves the catalogue of available policy documents for the current page.
+ * Retrieves the policy catalogue for the current page, derived dynamically from PDF attachments.
  *
- * Lists PDF attachments, purges stale cache entries for removed or updated attachments, and returns a mapping from
- * source identifiers to display titles.
+ * Lists PDF attachments, purges stale content cache entries for removed or updated attachments, and returns a mapping
+ * from source identifiers to display titles.
  *
  * @param page The Confluence page identifier
  *
  * @returns The catalogue mapping, or an error trace on failure
  */
-async function getPolicies(page: string): Promise<Status<Catalog>> {
+async function getPolicies(page: string): Promise<Status<Catalogue>> {
 	try {
 
 		const attachments = await listAttachments(page, pdf);
 
-		const cached = await kvs.query()
-			.where("key", WhereConditions.beginsWith(`${policiesKey(page)}:`))
-			.limit(100)
-			.getMany();
-
 		// purge entries for removed or updated attachments
 
-		await Promise.all(cached.results
-			.filter(result => {
+		await deleteMatches(policiesKey(page), result => {
 
-				const source = result.key.split(":")[2];
-				const attachment = attachments.find(a => source === a.id);
+			const source = result.key.split(":")[2];
+			const attachment = attachments.find(a => source === a.id);
 
-				if ( attachment === undefined ) {
-					return true;
-				} else {
-					const document = result.value as Document;
-					return new Date(document.created).getTime() < new Date(attachment.createdAt).getTime();
-				}
+			if ( attachment === undefined ) {
+				return true;
+			} else {
+				const document = result.value as Document;
+				return new Date(document.created).getTime() < new Date(attachment.createdAt).getTime();
+			}
 
-			})
-			.map(result => kvs.delete(result.key))
-		);
+		});
 
 		return attachments.reduce((catalog, attachment) => ({
 			...catalog,
@@ -311,25 +262,19 @@ async function getPolicies(page: string): Promise<Status<Catalog>> {
 }
 
 /**
- * Clears all cached policy data for the current page.
- *
- * Deletes all policy cache entries for the page, then publishes a {@link PageEvent} to notify connected clients.
+ * Clears a cached policy document and publishes a {@link PolicyUpdated} event with `null` status.
  *
  * @param page The Confluence page identifier
+ * @param source The source attachment identifier
+ * @param language The target language tag; omit for original language
  *
  * @returns Void on success, or an error trace on failure
  */
-async function clearPolicies(page: string): Promise<Status<void>> {
+async function clearPolicy(page: string, source: string, language?: string): Promise<Status<void>> {
 	try {
 
-		const cached = await kvs.query()
-			.where("key", WhereConditions.beginsWith(`${policiesKey(page)}:`))
-			.limit(100)
-			.getMany();
-
-		await Promise.all(cached.results.map(result => kvs.delete(result.key)));
-
-		await publish(page, { type: "policies-cleared", page, status: undefined });
+		await deleteValue(policyKey(page, source, language));
+		await publishPolicyUpdated(page, source, language, null);
 
 	} catch ( error ) {
 
@@ -354,7 +299,7 @@ async function getPolicy(page: string, source: string, language?: string): Promi
 	try {
 
 		const key = policyKey(page, source, language);
-		const cached: undefined | Document = await kvs.get(key);
+		const cached = await getValue<Document>(key);
 
 		if ( cached != null ) {
 
@@ -363,7 +308,7 @@ async function getPolicy(page: string, source: string, language?: string): Promi
 			if ( new Date((cached).created).getTime() >= new Date(attachment.createdAt).getTime() ) {
 				return cached;
 			} else {
-				await kvs.delete(key);
+				await deleteValue(key);
 			}
 
 		}
@@ -395,24 +340,32 @@ async function getPolicy(page: string, source: string, language?: string): Promi
 async function getIssues(page: string): Promise<Status<ReadonlyArray<Issue>>> {
 	try {
 
-		const results: Array<{ key: string; value: unknown }> = [];
+		// check for in-progress analysis job
 
-		let cursor: string | undefined;
+		const running = await getValue<JobState>(issuesAnalyseKey(page));
 
-		do {
+		if ( running ) {
+			try {
 
-			const query = kvs.query()
-				.where("key", WhereConditions.beginsWith(`${issuesKey(page)}:`))
-				.limit(100);
+				const response = await queue.getJob(running.id).getStats();
+				const stats = await response.json();
 
-			const batch = await (cursor ? query.cursor(cursor) : query).getMany();
+				if ( stats.inProgress > 0 ) {
+					return running.activity;
+				}
 
-			results.push(...batch.results);
-			cursor = batch.nextCursor;
+			} catch ( error ) {
 
-		} while ( cursor );
+				if ( !(error instanceof JobDoesNotExistError) ) {
+					throw error;
+				}
 
-		return results.map(result => normalizeIssue(result.value as Issue));
+			}
+		}
+
+		// no active job — return cached issues
+
+		return readIssues(page);
 
 	} catch ( error ) {
 
@@ -448,8 +401,8 @@ async function analyseIssues(page: string): Promise<Status<void>> {
 /**
  * Clears all cached issue data for the current page.
  *
- * Deletes the issues collection sentinel and all individual issue cache entries for the page, then publishes a
- * {@link PageEvent} to notify connected clients.
+ * Deletes all individual issue cache entries for the page, then publishes a {@link PageEvent} to notify connected
+ * clients.
  *
  * @param page The Confluence page identifier
  *
@@ -458,44 +411,9 @@ async function analyseIssues(page: string): Promise<Status<void>> {
 async function clearIssues(page: string): Promise<Status<void>> {
 	try {
 
-		const key = issuesKey(page);
+		await deleteMatches(issuesKey(page));
 
-		await kvs.delete(key);
-
-		const cached = await kvs.query()
-			.where("key", WhereConditions.beginsWith(`${key}:`))
-			.limit(100)
-			.getMany();
-
-		await Promise.all(cached.results.map(result => kvs.delete(result.key)));
-
-		await publish(page, { type: "issues-cleared", page, status: undefined });
-
-	} catch ( error ) {
-
-		return message(error);
-
-	}
-}
-
-/**
- * Retrieves a single compliance issue by identifier.
- *
- * @param page The Confluence page identifier
- * @param issue The unique issue identifier
- *
- * @returns The issue, or an error trace if not found or on failure
- */
-async function getIssue(page: string, issue: string): Promise<Status<Issue>> {
-	try {
-
-		const cached = await kvs.get<Issue>(issueKey(page, issue));
-
-		if ( cached === undefined ) {
-			return message(new Error(`issue not found: ${issue}`));
-		} else {
-			return normalizeIssue(cached);
-		}
+		await publish(page, { type: "issues-updated", page, status: [] });
 
 	} catch ( error ) {
 
@@ -507,8 +425,8 @@ async function getIssue(page: string, issue: string): Promise<Status<Issue>> {
 /**
  * Updates mutable fields of a compliance issue.
  *
- * Reads the current value, merges the changes with an updated timestamp, writes back, and publishes a
- * {@link PageEvent} with the full updated issue to notify connected clients.
+ * Reads the current value, merges the changes with an updated timestamp, writes back, and publishes an
+ * {@link IssuesUpdated} event with the full catalogue to notify connected clients.
  *
  * @param page The Confluence page identifier
  * @param issue The unique issue identifier
@@ -516,19 +434,21 @@ async function getIssue(page: string, issue: string): Promise<Status<Issue>> {
  *
  * @returns Void on success, or an error trace on failure
  */
-async function updateIssue(page: string, issue: string, update: IssueUpdate): Promise<Status<void>> {
+async function updateIssues(page: string, issue: string, update: IssueUpdate): Promise<Status<void>> {
 	try {
 
 		const key = issueKey(page, issue);
-		const current = await kvs.get<Issue>(key);
+		const current = await getValue<Issue>(key);
 
 		if ( current ) {
 
 			const updated: Issue = { ...current, ...update, updated: new Date().toISOString() };
 
-			await kvs.set<Issue>(key, updated);
+			await setValue<Issue>(key, updated);
 
-			await publish(page, { type: "issue-updated", page, issue, status: normalizeIssue(updated) });
+			const catalogue = await readIssues(page);
+
+			await publish(page, { type: "issues-updated", page, status: catalogue });
 
 		}
 
@@ -543,9 +463,10 @@ async function updateIssue(page: string, issue: string, update: IssueUpdate): Pr
 //// Event Publishing //////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
- * Publishes a {@link PolicyConverted} event, reactively caching the document on success.
+ * Publishes a {@link PolicyUpdated} event, reactively caching the document on success.
  *
  * When the status is a {@link Document}, writes it to KVS before publishing the event.
+ * When `null`, deletes the cached document from KVS.
  * {@link Activity} and {@link Trace} statuses are published without modifying the store.
  *
  * @param page The Confluence page identifier
@@ -553,23 +474,31 @@ async function updateIssue(page: string, issue: string, update: IssueUpdate): Pr
  * @param language The target language tag
  * @param status The current status
  */
-async function publishPolicyConverted(page: string, source: string, language: undefined | string, status: Status<Document>): Promise<void> {
+async function publishPolicyUpdated(
+	page: string, source: string, language: undefined | string, status: Status<null | Document>
+): Promise<void> {
 
 	if ( isActivity(status) ) {
 
 		await report(policyConvertKey(page, source, language), status);
 
-	} else if ( !isTrace(status) ) {
+	} else {
 
-		await kvs.set<Document>(policyKey(page, source, language), status);
+		await deleteValue(policyConvertKey(page, source, language));
+
+		if ( status === null ) {
+			await deleteValue(policyKey(page, source, language));
+		} else if ( isContent(status) ) {
+			await setValue<Document>(policyKey(page, source, language), status);
+		}
 
 	}
 
-	await publish(page, { type: "policy-converted", page, source, language, status });
+	await publish(page, { type: "policy-updated", page, source, language, status });
 }
 
 /**
- * Publishes an {@link IssuesAnalysed} event, reactively caching the issues on success.
+ * Publishes an {@link IssuesUpdated} event, reactively caching the issues on success.
  *
  * When the status is an issue array, writes each issue to KVS before publishing the event.
  * {@link Activity} and {@link Trace} statuses are published without modifying the store.
@@ -577,28 +506,37 @@ async function publishPolicyConverted(page: string, source: string, language: un
  * @param page The Confluence page identifier
  * @param status The current status
  */
-async function publishIssuesAnalysed(page: string, status: Status<ReadonlyArray<Issue>>): Promise<void> {
+async function publishIssuesUpdated(
+	page: string, status: Status<ReadonlyArray<Issue>>
+): Promise<void> {
 
 	if ( isActivity(status) ) {
 
 		await report(issuesAnalyseKey(page), status);
 
-	} else if ( !isTrace(status) ) {
+	} else {
 
-		// clear old issue entries before writing the new set to avoid stale/bogus issues
+		await deleteValue(issuesAnalyseKey(page));
 
-		const cached = await kvs.query()
-			.where("key", WhereConditions.beginsWith(`${issuesKey(page)}:`))
-			.limit(100)
-			.getMany();
+		if ( isContent(status) ) {
 
-		await Promise.all(cached.results.map(result => kvs.delete(result.key)));
+			// write new issues first (overwrites existing keys in place)
 
-		await Promise.all(status.map(issue => kvs.set<Issue>(issueKey(page, issue.id), issue)));
+			await Promise.all(status.map(issue =>
+				setValue<Issue>(issueKey(page, issue.id), issue)
+			));
+
+			// then delete stale keys not present in the new set
+
+			const fresh = new Set(status.map(issue => issueKey(page, issue.id)));
+
+			await deleteMatches(issuesKey(page), result => !fresh.has(result.key));
+
+		}
 
 	}
 
-	await publish(page, { type: "issues-analysed", page, status });
+	await publish(page, { type: "issues-updated", page, status });
 }
 
 
@@ -615,13 +553,12 @@ async function publish(page: string, event: PageEvent): Promise<void> {
 
 		console.debug([event.type, target(event), status(event)].filter(Boolean).join(" > "));
 
-		await publishGlobal(channel(page), event);
+		await publishGlobal(pageKey(page), event);
 
 
 		function target(event: PageEvent): undefined | string {
-			return event.type === "policy-converted" ? event.language ? `${event.source}/${event.language}`
-				: event.source : event.type === "issue-updated" ? event.issue
-				: undefined;
+			return event.type === "policy-updated" ? event.language ? `${event.source}/${event.language}`
+				: event.source : undefined;
 		}
 
 		function status(event: PageEvent): string {
@@ -634,7 +571,7 @@ async function publish(page: string, event: PageEvent): Promise<void> {
 
 	} catch ( error ) {
 
-		console.error(`event publish failed on channel ${channel(page)}:`, error);
+		console.error(`event publish failed on channel ${pageKey(page)}:`, error);
 
 	}
 }
@@ -671,7 +608,7 @@ async function isActive(page: string, jobId: string, task: Task): Promise<boolea
 
 	async function check(jobKey: string, jobId: string): Promise<boolean> {
 
-		const running = await kvs.get<JobState>(jobKey);
+		const running = await getValue<JobState>(jobKey);
 
 		if ( !running || running.id === jobId ) { return true; } else {
 			try {
@@ -712,7 +649,7 @@ async function isActive(page: string, jobId: string, task: Task): Promise<boolea
  */
 async function schedule(jobKey: string, payload: unknown): Promise<Activity> {
 
-	const running = await kvs.get<JobState>(jobKey);
+	const running = await getValue<JobState>(jobKey);
 
 	if ( running ) {
 		try {
@@ -736,12 +673,12 @@ async function schedule(jobKey: string, payload: unknown): Promise<Activity> {
 
 		}
 
-		await kvs.delete(jobKey);
+		await deleteValue(jobKey);
 	}
 
 	const jobId = await queue.push(payload as any);
 
-	await kvs.set<JobState>(jobKey, { id: jobId, activity: Activity.Scheduling });
+	await setValue<JobState>(jobKey, { id: jobId, activity: Activity.Scheduling });
 
 	return Activity.Scheduling;
 }
@@ -757,10 +694,10 @@ async function schedule(jobKey: string, payload: unknown): Promise<Activity> {
  */
 async function report(jobKey: string, activity: Activity): Promise<void> {
 
-	const running = await kvs.get<JobState>(jobKey);
+	const running = await getValue<JobState>(jobKey);
 
 	if ( running ) {
-		await kvs.set<JobState>(jobKey, { ...running, activity });
+		await setValue<JobState>(jobKey, { ...running, activity });
 	}
 
 }
@@ -774,95 +711,55 @@ async function report(jobKey: string, activity: Activity): Promise<void> {
  * Performs a global scan of all cache entries, groups them by page, checks which pages still exist, and deletes
  * entries for deleted pages. Rate-limited to once per 24-hour period via {@link dirty}.
  */
-function purge(): void {
-	dirty().then(async (needed) => {
+async function purge(): Promise<void> {
 
-		if ( needed ) {
+	// rate-limit to one purge per 24-hour period
 
-			const results = await scan();
-
-			// group cache entries by page
-
-			const entriesByPage = results.reduce((entries, result) => {
-
-				const page = result.key.split(":")[0];
-
-				return { ...entries, [page]: [...(entries[page] || []), result] };
-
-			}, {} as Record<string, Array<{ key: string; value: unknown }>>);
-
-			// check which pages still exist and delete entries for deleted pages
-
-			await Promise.all(Object.entries(entriesByPage).map(async ([pageId, entries]) => {
-
-				if ( !await checkPage(pageId) ) {
-					await Promise.all(entries.map(result => {
-
-						console.info(`deleting cache key <${result.key}> for deleted page <${pageId}>`);
-
-						return kvs.delete(result.key);
-
-					}));
-				}
-
-			}));
-		}
-
-	}).catch(error => {
-
-		console.error("background purge failed:", error);
-
-	});
-}
-
-/**
- * Checks if a global purge is needed and claims the purge period atomically.
- *
- * Uses a check-and-set pattern to prevent multiple concurrent global purges. Only one process per 24-hour period
- * can successfully claim the purge.
- *
- * @returns true if this process should proceed with the purge; false otherwise
- */
-async function dirty(): Promise<boolean> {
-
-	const last = await kvs.get<string>(purgeKey);
+	const last = await getValue<string>(purgeKey);
 	const next = Date.now();
 
 	if ( !last || (next-parseInt(last)) > purgePeriod ) {
 
-		await kvs.set<string>(purgeKey, next.toString());
+		await setValue<string>(purgeKey, next.toString());
 
-		return true;
+		// collect distinct page IDs from non-system entries
 
-	} else {
+		const pages = new Set(
+			(await getMatches(undefined, result => !result.key.startsWith(prefixKey(systemKey))))
+				.map(result => result.key.split(":")[0])
+		);
 
-		return false;
+		// delete all entries for pages that no longer exist
+
+		await Promise.all(Array.from(pages, async (pageId) => {
+
+			if ( !await checkPage(pageId) ) {
+
+				console.info(`purging cache entries for deleted page <${pageId}>`);
+
+				await deleteMatches(pageId);
+			}
+
+		}));
 
 	}
+
 }
 
+
+
+//// Raw Data Access ///////////////////////////////////////////////////////////////////////////////////////////////////
+
 /**
- * Scans the KVS for all non-system cache entries with pagination.
+ * Reads all compliance issues from KVS for the given page.
  *
- * @returns All user cache entries
+ * Performs a prefix scan on the page's issue entries and normalizes each result to handle legacy KVS entries missing
+ * `state` or `severity` fields.
+ *
+ * @param page The Confluence page identifier
+ *
+ * @returns The raw issue array from KVS
  */
-async function scan(): Promise<Array<{ key: string; value: unknown }>> {
-
-	const results: Array<{ key: string; value: unknown }> = [];
-
-	let cursor: string | undefined;
-
-	do {
-
-		const query = kvs.query().limit(100);
-
-		const batch = await (cursor ? query.cursor(cursor) : query).getMany();
-
-		results.push(...batch.results.filter(result => !result.key.startsWith("system:")));
-
-		cursor = batch.nextCursor;
-
-	} while ( cursor );
-
-	return results;
+export async function readIssues(page: string): Promise<ReadonlyArray<Issue>> {
+	return (await getMatches(issuesKey(page))).map(result => normalizeIssue(result.value as Issue));
 }

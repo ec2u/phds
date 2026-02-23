@@ -22,8 +22,8 @@
  * @module
  */
 
-import { useEffect, useState } from "react";
-import type { Issue } from "../../shared/items/issues";
+import { useEffect, useMemo, useState } from "react";
+import type { Issue, IssueUpdate } from "../../shared/items/issues";
 import { Activity, type Status } from "../../shared/store";
 import { useStore } from "./store";
 
@@ -32,6 +32,14 @@ import { useStore } from "./store";
  * Available actions for managing compliance issues.
  */
 export interface IssuesActions {
+
+	/**
+	 * Persists changes to a compliance issue. State transitions are handled reactively by the store.
+	 *
+	 * @param issue The unique issue identifier
+	 * @param update The mutable fields to update
+	 */
+	update: (issue: string, update: IssueUpdate) => Promise<void>;
 
 	/**
 	 * Triggers a new compliance analysis. State transitions are handled reactively by the store.
@@ -66,21 +74,25 @@ export function useIssues(): [Status<ReadonlyArray<Issue>>, IssuesActions] {
 	useEffect(() => store.observeIssues(setIssues), [store]);
 
 
-	async function analyse(): Promise<void> {
-		await store.analyseIssues();
-	}
+	// ;) stable ref prevents render loops in consumers that include actions in useEffect deps
 
-	async function clear(): Promise<void> {
-		await store.clearIssues();
-	}
+	const actions = useMemo(() => ({
 
+		async update(issue: string, changes: IssueUpdate): Promise<void> {
+			await store.updateIssues(issue, changes);
+		},
 
-	return [
-		issues,
-		{
-			analyse,
-			clear
+		async analyse(): Promise<void> {
+			await store.analyseIssues();
+		},
+
+		async clear(): Promise<void> {
+			await store.clearIssues();
 		}
-	];
+
+	}), [store]);
+
+
+	return [issues, actions];
 
 }

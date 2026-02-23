@@ -24,7 +24,7 @@
 /**
  * Mapping from source identifiers to their display titles.
  */
-export type Catalog =
+export type Catalogue =
 	| Readonly<Record<Source, Title>>;
 
 /**

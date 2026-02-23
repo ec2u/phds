@@ -21,52 +21,25 @@
  */
 
 import { useEffect, useState } from "react";
-import type { Catalog } from "../../shared/items/documents";
+import type { Catalogue } from "../../shared/items/documents";
 import { Activity, type Status } from "../../shared/store";
 import { useStore } from "./store";
 
 
 /**
- * Available actions for managing policy data.
- */
-export interface PoliciesActions {
-
-	/**
-	 * Clears all cached policy data. State transitions are handled reactively by the store.
-	 */
-	clear: () => Promise<void>;
-
-}
-
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-/**
  * Fetches the catalogue of available policy documents and subscribes to reactive updates.
  *
- * Returns the current status of the policies catalogue and actions for cache management.
- *
- * @return a tuple of `[status, actions]` where status is the catalogue mapping, an activity state, or an error trace
+ * @return the current status of the policies catalogue
  */
-export function usePolicies(): [Status<Catalog>, PoliciesActions] {
+export function usePolicies(): [Status<Catalogue>] {
 
 	const store = useStore();
 
-	const [policies, setPolicies] = useState<Status<Catalog>>(Activity.Submitting);
+	const [policies, setPolicies] = useState<Status<Catalogue>>(Activity.Submitting);
 
 
 	useEffect(() => store.observePolicies(setPolicies), [store]);
 
 
-	async function clear(): Promise<void> {
-		await store.clearPolicies();
-	}
-
-
-	return [
-		policies,
-		{
-			clear
-		}
-	];
+	return [policies];
 }

@@ -53,22 +53,12 @@ export function clearIssues(page: string): Promise<Status<void>> {
 }
 
 /**
- * Retrieves a single compliance issue by identifier.
- *
- * @param page The Confluence page identifier
- * @param issue The issue identifier
- */
-export function getIssue(page: string, issue: string): Promise<Status<Issue>> {
-	return invoke("getIssue", { page, issue });
-}
-
-/**
  * Updates mutable fields of a compliance issue.
  *
  * @param page The Confluence page identifier
  * @param issue The issue identifier
  * @param update The fields to update
  */
-export function updateIssue(page: string, issue: string, update: IssueUpdate): Promise<Status<void>> {
-	return invoke("updateIssue", { page, issue, ...update });
+export function updateIssues(page: string, issue: string, update: IssueUpdate): Promise<Status<void>> {
+	return invoke("updateIssues", { page, issue, ...update });
 }

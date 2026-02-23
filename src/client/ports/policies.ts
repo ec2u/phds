@@ -21,7 +21,7 @@
  */
 
 import { invoke } from "@forge/bridge";
-import { Catalog, Document, type Language, Source } from "../../shared/items/documents";
+import { Catalogue, Document, type Language, Source } from "../../shared/items/documents";
 import type { Status } from "../../shared/store";
 
 
@@ -30,18 +30,10 @@ import type { Status } from "../../shared/store";
  *
  * @param page The Confluence page identifier
  */
-export function getPolicies(page: string): Promise<Status<Catalog>> {
+export function getPolicies(page: string): Promise<Status<Catalogue>> {
 	return invoke("getPolicies", { page });
 }
 
-/**
- * Clears all cached policy data for the current page.
- *
- * @param page The Confluence page identifier
- */
-export function clearPolicies(page: string): Promise<Status<void>> {
-	return invoke("clearPolicies", { page });
-}
 
 /**
  * Retrieves or triggers extraction of a single policy document.
@@ -52,4 +44,15 @@ export function clearPolicies(page: string): Promise<Status<void>> {
  */
 export function getPolicy(page: string, source: Source, language?: Language): Promise<Status<Document>> {
 	return invoke("getPolicy", { page, source, language });
+}
+
+/**
+ * Clears cached policy content.
+ *
+ * @param page The Confluence page identifier
+ * @param source The policy source identifier
+ * @param language The optional target language
+ */
+export function clearPolicy(page: string, source: Source, language?: Language): Promise<Status<void>> {
+	return invoke("clearPolicy", { page, source, language });
 }

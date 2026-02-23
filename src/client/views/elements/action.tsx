@@ -22,7 +22,7 @@
 
 import { Icon, Pressable, Tooltip, xcss } from "@forge/react";
 import React from "react";
-import type { SafeXCSS } from "../index.js";
+import type { SafeXCSS } from "../index";
 
 /**
  * Renders an icon button with a tooltip label.

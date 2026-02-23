@@ -22,7 +22,8 @@ Again search open suggestions and, if something is found, just add any additiona
 
 # Submitting Pull Requests
 
-All pull requests must reference an open issue. If one doesn't exist yet, create it first using the appropriate template.
+All pull requests must reference an open issue. If one doesn't exist yet, create it first using the appropriate
+template.
 
 ## Branching Model
 

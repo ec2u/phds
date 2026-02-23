@@ -40,7 +40,7 @@
  */
 
 import { Schema, Type } from "@google/genai";
-import { isArray, isBoolean, isNumber, isObject, isString, message } from "../../shared/tools/core.js";
+import { isArray, isBoolean, isNumber, isObject, isString, message } from "../../shared/tools/core";
 
 /**
  * Actionable hints for known HTTP status codes.

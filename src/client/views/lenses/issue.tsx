@@ -30,7 +30,10 @@ import {
 	ButtonGroup,
 	DynamicTable,
 	Heading,
+	Icon,
 	Inline,
+	Popup,
+	Pressable,
 	Select,
 	Stack,
 	Text,
@@ -40,14 +43,12 @@ import {
 } from "@forge/react";
 import React, { useRef, useState } from "react";
 import type { Reference } from "../../../shared/items/documents";
+import type { IssueUpdate } from "../../../shared/items/issues";
 import { Issue, Severities, State, States } from "../../../shared/items/issues";
-import { on } from "../../../shared/store";
 import { isString } from "../../../shared/tools/core";
 import { adf } from "../../../shared/tools/text";
-import { useIssue } from "../../hooks/issue";
 import { ToolToggle } from "../elements/toggle";
-import { toColors } from "../index";
-import { ToolReference } from "./reference";
+import { type SafeXCSS, toColors } from "../index";
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -116,42 +117,26 @@ export function severityLabel(value: number) {
 /**
  * Renders a detailed issue card with state/severity controls, description, reference excerpts, and annotation editing.
  *
- * Uses {@link useIssue} internally for data fetching and update actions.
- *
- * @param id The unique issue identifier
+ * @param issue The compliance issue to display
+ * @param onUpdate Callback for persisting field changes
  */
-export default function ToolIssue({ id }: { id: string }) {
-
-	const [status, { update }] = useIssue(id);
-
-	return on(status, {
-
-		value: issue => <ToolIssueDetail issue={issue} update={update}/>,
-		other: () => null
-
-	});
-
-}
-
-
-/**
- * Renders the issue detail card with state/severity controls, description, reference excerpts, and annotation editing.
- */
-function ToolIssueDetail({
+export default function ToolIssue({
 
 	issue,
-	update
+
+	onUpdate
 
 }: {
 
 	issue: Issue;
-	update: (update: Partial<Pick<Issue, "state" | "severity" | "annotations">>) => Promise<void>
+
+	onUpdate: (update: IssueUpdate) => Promise<void>;
 
 }) {
 
 	const [mode, setMode] = useState<"reading" | "annotating" | "updating">("reading");
-	const [expanded, setExpanded] = useState<boolean>(false);
-	const notes = useRef<string>(issue.annotations || "");
+	const [expanded, setExpanded] = useState(false);
+	const notes = useRef("");
 
 	const active = mode === "updating";
 	const references = issue.description.filter((entry): entry is Reference => !isString(entry));
@@ -173,27 +158,28 @@ function ToolIssueDetail({
 	}
 
 	function transition(state: State) {
+		onUpdate({ state }).then(() => setMode("reading")).then(() => setExpanded(false));
 		setMode("updating");
-		update({ state }).then(() => setMode("reading")).then(() => setExpanded(false));
 	}
 
 	function classify(severity: Issue["severity"]) {
+		onUpdate({ severity }).then(() => setMode("reading")).then(() => setExpanded(false));
 		setMode("updating");
-		update({ severity }).then(() => setMode("reading")).then(() => setExpanded(false));
 	}
 
 	function annotate() {
+		notes.current = issue.annotations || "";
 		setMode("annotating");
 	}
 
 	function cancel() {
-		setMode("reading");
 		notes.current = issue.annotations || "";
+		setMode("reading");
 	}
 
 	function save() {
+		onUpdate({ annotations: notes.current }).then(() => setMode("reading"));
 		setMode("updating");
-		update({ annotations: notes.current }).then(() => setMode("reading"));
 	}
 
 
@@ -311,7 +297,7 @@ function ToolIssueDetail({
 
 			</Inline>
 
-			{expanded && <ToolReferences references={references}/>}
+			{expanded && <ToolExcerpts references={references}/>}
 
 			<Text>{issue.description.map((item, index) => isString(item)
 				? <React.Fragment key={index}>{item} </React.Fragment>
@@ -356,13 +342,12 @@ function ToolIssueDetail({
 	}</Box>;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
  * Renders a two-column table of agreement and policy source references.
  */
-function ToolReferences({
+function ToolExcerpts({
 
 	references
 
@@ -410,5 +395,75 @@ function ToolReferences({
 			];
 
 		})}/>;
+
+}
+
+/**
+ * Renders an inline info icon that opens a popup showing the source reference title and excerpt.
+ *
+ * @param props the component props
+ * @param props.reference the source reference to display
+ */
+function ToolReference({
+
+	reference
+
+}: {
+
+	reference: Reference
+
+}) {
+
+	const [open, setOpen] = useState<boolean>(false);
+
+	return <Popup
+
+		isOpen={open}
+
+		role={"menu"}
+		placement="bottom-end"
+
+		onClose={() => setOpen(false)}
+
+		trigger={() => <Pressable
+
+			onClick={() => setOpen(!open)}
+
+			xcss={xcss({
+
+				paddingInline: "space.025",
+				marginInline: "space.025",
+
+				borderRadius: "radius.medium",
+				backgroundColor: "color.background.neutral"
+
+			}) as SafeXCSS}
+
+		>
+
+			<Icon glyph={"info"} label={reference.title}
+				size={"small"} primaryColor={"color.icon.accent.blue"}
+			/>
+
+		</Pressable>}
+
+		content={() => <Box xcss={xcss({
+
+			padding: "space.200",
+			maxWidth: "30em"
+
+		})}
+		>
+
+			<Stack space={"space.100"}>
+
+				<Heading size={"small"}>{reference.title}</Heading>
+				<Text>{reference.excerpt}</Text>
+
+			</Stack>
+
+		</Box>}
+
+	/>;
 
 }

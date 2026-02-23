@@ -14,20 +14,21 @@ Changes deployed to development, pending production promotion.
 - Runtime schema validation for Gemini structured responses, replacing silent fallback on invalid output
 - Non-blank pattern constraints on Gemini analysis response schema
 
+### Removed
+
+- Unused client-side reset methods (`resetPolicies`, `resetPolicy`, `resetIssues`) (#31)
+
 ### Fixed
 
 - Gemini API errors reported as raw JSON dumps instead of human-readable messages with actionable hints (#8)
 - Spurious whitespace and newlines in issue title and description from LLM output
 
 - "Refresh Analysis" button disabled when no analysis has been performed (#18)
-- "Clear Policies" button enabled while individual policy extraction is in progress (#18)
 - Stale issues and sidebar controls shown during refresh and clear operations
-- "Clear Policies" not evicting cached individual policy documents from local cache
+- Annotation text area blank when entering edit mode after cross-window sync (#31)
 - Stale policy content shown when switching between policies in sidebar (#6)
 - Progress spinner stuck on "Scheduling Request…" during policy extraction and translation (#6)
 - Flash of "No Policy Documents" empty state on page reload (#6)
-- Selected policy not cleared when clearing all policies (#26)
-- "Clear Policies" incorrectly showing empty state instead of preserving policy catalogue (#26)
 - Translated policy documents not cached on server across page reloads (#26)
 - Status pattern matcher routing activities and traces to value handler when specific handler is missing (#26)
 - Stale issue count shown in sidebar after clearing issues (#26)
@@ -36,14 +37,18 @@ Changes deployed to development, pending production promotion.
 - Server crash on legacy issues missing description field (#26)
 - Issues list not re-sorting after issue state or severity update (#26)
 - Event-driven issue and policy updates not propagating to catalogue observers across windows (#26)
-- Clear policies and clear issues events not propagating across windows (#26)
+- Stale job-tracking entries left in KVS after async task completion (#31)
+- Analysis results lost on partial KVS write failure during issue caching (#31)
+- Issues endpoint returning stale results instead of current progress during analysis (#31)
 
 ### Added
 
-- Separate "Clear Policies" and "Clear Issues" actions replacing the single "Clear" button
+- "Refresh Content" action for clearing individual policy cache, replacing bulk "Clear Policies" (#31)
+- Separate "Clear Issues" action replacing the combined "Clear" button
 
 ### Changed
 
+- Error traces cached uniformly — errors persist until explicitly dismissed instead of silently retried (#18)
 - Reassign state colors: pending=red, active=yellow
 - Use catalog-specific state ordering (blocked < active < pending < resolved) in issues list
 - Migrate prompt management from Langfuse to local codebase files

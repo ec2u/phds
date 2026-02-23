@@ -34,12 +34,11 @@ import {
 	Stack,
 	Text
 } from "@forge/react";
-import React, { useState } from "react";
+import React, { type ReactNode, useEffect, useState } from "react";
 import { Issue, Severities, Severity, State, States } from "../../../shared/items/issues";
-import { isActivity, isTrace, on } from "../../../shared/store";
-import { useIssues } from "../../hooks/issues";
+import { isContent, on, type Status } from "../../../shared/store";
+import { type IssuesActions, useIssues } from "../../hooks/issues";
 import { useStorage } from "../../hooks/storage";
-import { AnalysisNotPerformedPrompt } from "../elements/analyse";
 import ToolSplit from "../layouts/split";
 import { ToolActivity } from "./activity";
 import ToolIssue, { severityLabel, stateLabel } from "./issue";
@@ -65,12 +64,25 @@ const CatalogStateOrder: Record<State, number> = {
  * current page.
  *
  */
-export function ToolIssues() {
+export function ToolIssues({
+
+	onActions
+
+}: {
+
+	onActions: (actions: ReactNode) => () => void;
+
+}) {
 
 	const [items, actions] = useIssues();
 
 	const [state, setState] = useStorage<readonly State[]>("issues-states", []);
 	const [severity, setSeverity] = useStorage<readonly Severity[]>("issues-severities", []);
+
+
+	useEffect(() => onActions(
+		<ToolIssuesActions items={items} actions={actions}/>
+	), [items, actions, onActions]);
 
 
 	function select(issues: readonly Issue[]): readonly Issue[] {
@@ -136,7 +148,8 @@ export function ToolIssues() {
 
 				<Stack space="space.200">{sorted.map(issue => <ToolIssue
 					key={`${issue.id}-${issue.state}-${issue.severity}`} /* ;( dom not reordered w/out state/severity */
-					id={issue.id}/>)
+					issue={issue}
+					onUpdate={update => actions.update(issue.id, update)}/>)
 				}</Stack>
 
 			);
@@ -233,20 +246,19 @@ export function ToolIssues() {
 }
 
 /**
- * Renders the issues toolbar action group with "Refresh Analysis" and "Clear Issues" buttons.
+ * Renders the issues toolbar action group with "Update Analysis" and "Clear Analysis" buttons.
  *
- * Uses {@link useIssues} internally for data and actions. Automatically disabled when issues are loading,
- * in error state, or empty. The "Clear Issues" button prompts for confirmation before purging all cached
- * issue data for the current page.
+ * Automatically disabled when issues are loading, in error state, or empty. The "Clear Issues" button prompts for
+ * confirmation before purging all cached issue data for the current page.
  */
-export function ToolIssuesActions() {
+export function ToolIssuesActions({ items: issues, actions: { analyse, clear } }: {
 
-	const [issues, { analyse, clear }] = useIssues();
+	items: Status<ReadonlyArray<Issue>>;
+	actions: IssuesActions;
+
+}) {
 
 	const [confirming, setConfirming] = useState(false);
-
-	const busy = isActivity(issues) || isTrace(issues);
-
 
 	function cancel() {
 		setConfirming(false);
@@ -262,15 +274,15 @@ export function ToolIssuesActions() {
 
 		<Button
 
-			isDisabled={busy || issues.length === 0}
+			isDisabled={!isContent(issues) || issues.length === 0}
 
 			onClick={analyse}
 
-		>Refresh Analysis</Button>
+		>Update Analysis</Button>
 
 		<Button
 
-			isDisabled={busy || issues.length === 0}
+			isDisabled={!isContent(issues) || issues.length === 0}
 
 			onClick={() => setConfirming(true)}
 
@@ -283,8 +295,8 @@ export function ToolIssuesActions() {
             </ModalHeader>
 
             <ModalBody>
-                Are you sure you want to clear all cached issue data? This action will clear the compliance
-                analysis history for this page and cannot be undone.
+                Are you sure you want to clear all issues? Compliance analysis history for this page
+                will be permanently removed.
             </ModalBody>
 
             <ModalFooter>
@@ -295,4 +307,20 @@ export function ToolIssuesActions() {
         </Modal>}
 
 	</ButtonGroup>;
+}
+
+/**
+ * Renders an empty state prompting the user to run compliance analysis.
+ *
+ * @param props the component props
+ * @param props.onAnalyse the callback to trigger analysis
+ */
+export function AnalysisNotPerformedPrompt({ onAnalyse }: { onAnalyse: () => void }) {
+
+	return <EmptyState
+		header={"Analysis Not Performed"}
+		description={<Text>Check the agreement for compliance with policies.</Text>}
+		primaryAction={<Button appearance={"discovery"} onClick={onAnalyse}>Analyse</Button>}
+	/>;
+
 }

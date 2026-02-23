@@ -26,10 +26,10 @@
 import { realtime } from "@forge/bridge";
 import { useProductContext } from "@forge/react";
 import { createContext, createElement, type ReactNode, useContext, useEffect, useMemo } from "react";
-import { channel, type PageEvent } from "../../shared/store";
+import { type PageEvent, pageKey } from "../../shared/store";
 import { isObject } from "../../shared/tools/core";
-import { analyseIssues, clearIssues, getIssue, getIssues, updateIssue } from "../ports/issues";
-import { clearPolicies, getPolicies, getPolicy } from "../ports/policies";
+import { analyseIssues, clearIssues, getIssues, updateIssues } from "../ports/issues";
+import { clearPolicy, getPolicies, getPolicy } from "../ports/policies";
 import { type ClientStore, createClientStore } from "../store";
 
 
@@ -85,17 +85,18 @@ export function ToolStore({ children }: { children: ReactNode }) {
 
 	const store = useMemo(() => page ? createClientStore(page, {
 
+		page,
+
 		getPolicies: () => getPolicies(page),
-		clearPolicies: () => clearPolicies(page),
 
 		getPolicy: (source, language) => getPolicy(page, source, language),
+		clearPolicy: (source, language) => clearPolicy(page, source, language),
 
 		getIssues: () => getIssues(page),
 		analyseIssues: () => analyseIssues(page),
 		clearIssues: () => clearIssues(page),
 
-		getIssue: (issue) => getIssue(page, issue),
-		updateIssue: (issue, update) => updateIssue(page, issue, update)
+		updateIssues: (issue, update) => updateIssues(page, issue, update)
 
 	}) : undefined, [page]);
 
@@ -104,7 +105,7 @@ export function ToolStore({ children }: { children: ReactNode }) {
 
 		if ( store ) {
 
-			const subscription = realtime.subscribeGlobal(channel(page), payload => {
+			const subscription = realtime.subscribeGlobal(pageKey(page), payload => {
 
 				if ( isPageEvent(payload) ) {
 					store.dispatcher(payload);

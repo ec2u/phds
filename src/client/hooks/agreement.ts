@@ -30,6 +30,7 @@ import { useEffect, useState } from "react";
 import { adf as toAdf, AdfBlock, markdown } from "../../shared/tools/text";
 import { useStore } from "./store";
 
+
 /**
  * Reads and writes the agreement content of the current Confluence page as markdown.
  *

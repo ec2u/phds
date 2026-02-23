@@ -22,10 +22,10 @@
  * @module
  */
 
-import { Activity, isActivity, isTrace } from "../../../shared/store";
+import { Activity } from "../../../shared/store";
 import { message } from "../../../shared/tools/core";
 import { markdown as toMarkdown } from "../../../shared/tools/text";
-import { createServerStore } from "../../store";
+import { createServerStore, readIssues } from "../../store";
 import { fetchAttachment, listAttachments } from "../../tools/attachments";
 import { upload } from "../../tools/gemini";
 import { markdown, pdf } from "../../tools/mime";
@@ -63,97 +63,90 @@ export interface AnalyseTask {
  *
  * @param page The Confluence page identifier
  */
-export async function amalyse(page: string, {}: AnalyseTask): Promise<void> {
+export async function analyse(page: string, {}: AnalyseTask): Promise<void> {
 
 	const store = createServerStore(page);
 
 	try {
 
-		// fetch existing issues
+		// fetch existing issues directly from KVS — bypasses the public API's job-detection safeguard
 
-		await store.publishIssuesAnalysed(Activity.Fetching);
+		await store.publishIssuesUpdated(Activity.Fetching);
 
-		const issues = await store.getIssues();
+		const issues = await readIssues(page);
 
-		if ( isTrace(issues) ) {
+		// fetch agreement content
 
-			throw issues;
+		const pageContent = await fetchPage(page);
+		const agreement = toMarkdown(pageContent.content);
 
-		} else if ( !isActivity(issues) ) { // unexpected
+		if ( agreement.trim() === "" ) {
 
-			// fetch agreement content
+			await store.publishIssuesUpdated([]);
 
-			const pageContent = await fetchPage(page);
-			const agreement = toMarkdown(pageContent.content);
+		} else {
 
-			if ( agreement.trim() === "" ) {
+			// upload agreement and policies to Gemini
 
-				await store.publishIssuesAnalysed([]);
+			await store.publishIssuesUpdated(Activity.Uploading);
 
-			} else {
+			const agreementFile = await upload({
+				name: agreementName,
+				mime: markdown,
+				data: Buffer.from(agreement, "utf-8")
+			});
 
-				// upload agreement and policies to Gemini
+			const policies = await listAttachments(page, pdf);
 
-				await store.publishIssuesAnalysed(Activity.Uploading);
+			const policyFiles = await Promise.all(policies.map(async (attachment) => {
 
-				const agreementFile = await upload({
-					name: agreementName,
-					mime: markdown,
-					data: Buffer.from(agreement, "utf-8")
+				const content = await fetchAttachment(page, attachment.id);
+
+				return await upload({
+					name: attachment.title,
+					mime: attachment.mediaType,
+					data: content
 				});
 
-				const policies = await listAttachments(page, pdf);
-
-				const policyFiles = await Promise.all(policies.map(async (attachment) => {
-
-					const content = await fetchAttachment(page, attachment.id);
-
-					return await upload({
-						name: attachment.title,
-						mime: attachment.mediaType,
-						data: content
-					});
-
-				}));
+			}));
 
 
-				// analyse compliance
+			// analyse compliance
 
-				await store.publishIssuesAnalysed(Activity.Analyzing);
+			await store.publishIssuesUpdated(Activity.Analyzing);
 
 
-				// generate a report detailing all existing issues
+			// generate a report detailing all existing issues
 
-				const history = report(issues);
+			const history = report(issues);
 
-				// detect and merge issues for each policy
+			// detect and merge issues for each policy
 
-				const detected = await Promise.all(
-					policyFiles.map(async (file, index) => {
+			const detected = await Promise.all(
+				policyFiles.map(async (file, index) => {
 
-						const rounds = await Promise.all(
-							Array.from({ length: iterations }, () =>
-								detect(agreementFile, file, policies[index], history)
-							)
-						);
+					const rounds = await Promise.all(
+						Array.from({ length: iterations }, () =>
+							detect(agreementFile, file, policies[index], history)
+						)
+					);
 
-						const merged = await merge(rounds.flat());
+					const merged = await merge(rounds.flat());
 
-						return merged.map(entry => convert(entry, policies[index]));
+					return merged.map(entry => convert(entry, policies[index]));
 
-					})
-				);
+				})
+			);
 
-				// publish all issues (existing + new) — KVS caching handled reactively by the store
+			// publish all issues (existing + new) — KVS caching handled reactively by the store
 
-				await store.publishIssuesAnalysed([...(issues), ...detected.flat()]);
+			await store.publishIssuesUpdated([...issues, ...detected.flat()]);
 
-			}
 		}
 
 	} catch ( error ) {
 
-		await store.publishIssuesAnalysed(message(error));
+		await store.publishIssuesUpdated(message(error));
 
 		throw error;
 

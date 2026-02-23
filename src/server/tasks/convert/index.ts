@@ -60,7 +60,7 @@ export interface ConvertTask {
  * Executes a policy document extraction and translation task.
  *
  * Fetches the PDF attachment from Confluence, extracts content via Gemini, and translates to the target language if
- * needed. Publishes {@link Activity} progress and the final result as {@link PolicyConverted} events.
+ * needed. Publishes {@link Activity} progress and the final result as {@link PolicyUpdated} events.
  *
  * @param page The Confluence page identifier
  * @param payload The task payload containing `source` and `language`
@@ -76,37 +76,37 @@ export async function convert(page: string, {
 
 	try {
 
-		await store.publishPolicyConverted(source, language, Activity.Fetching);
+		await store.publishPolicyUpdated(source, language, Activity.Fetching);
 
 		const buffer = await fetchAttachment(page, source);
 
 
-		await store.publishPolicyConverted(source, language, Activity.Uploading);
+		await store.publishPolicyUpdated(source, language, Activity.Uploading);
 
 		const file = await upload({ name: source, mime: pdf, data: buffer });
 
 
-		await store.publishPolicyConverted(source, language, Activity.Extracting);
+		await store.publishPolicyUpdated(source, language, Activity.Extracting);
 
 		const extracted = await extract(source, file);
 
 		if ( extracted.language === language ) {
 
-			await store.publishPolicyConverted(source, language, extracted);
+			await store.publishPolicyUpdated(source, language, extracted);
 
 		} else {
 
-			await store.publishPolicyConverted(source, language, Activity.Translating);
+			await store.publishPolicyUpdated(source, language, Activity.Translating);
 
 			const translated = await translate(extracted, language);
 
-			await store.publishPolicyConverted(source, language, translated);
+			await store.publishPolicyUpdated(source, language, translated);
 
 		}
 
 	} catch ( error ) {
 
-		await store.publishPolicyConverted(source, language, message(error));
+		await store.publishPolicyUpdated(source, language, message(error));
 
 		throw error;
 

@@ -34,22 +34,16 @@ import {
 	Text,
 	xcss
 } from "@forge/react";
-import React, { useState } from "react";
-import { on } from "../../../shared/store";
+import React, { type ReactNode, useEffect, useState } from "react";
+import type { Catalogue, Document } from "../../../shared/items/documents";
+import { isContent, on, type Status } from "../../../shared/store";
 import { usePolicies } from "../../hooks/policies";
-import { useStorage } from "../../hooks/storage";
-import type { SafeXCSS } from "../index.js";
+import { type PolicyActions, usePolicy } from "../../hooks/policy";
+import type { SafeXCSS } from "../index";
 import ToolSplit from "../layouts/split";
 import { ToolActivity } from "./activity";
 import { ToolPolicy } from "./policy";
 import { ToolTrace } from "./trace";
-
-
-/**
- * Browser localStorage key for the currently selected policy source, shared between {@link ToolPolicies}
- * and {@link ToolPoliciesActions}.
- */
-const SelectedPolicyKey = "selected-policy";
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -62,11 +56,25 @@ const SelectedPolicyKey = "selected-policy";
  * page.
  *
  */
-export function ToolPolicies() {
+export function ToolPolicies({
+
+	onActions
+
+}: {
+
+	onActions: (actions: ReactNode) => () => void;
+
+}) {
+
+	const [selected, setSelected] = useState<undefined | string>();
 
 	const [policies] = usePolicies();
+	const [policy, policyActions] = usePolicy(selected);
 
-	const [selected, setSelected] = useStorage<undefined | string>(SelectedPolicyKey, undefined);
+
+	useEffect(() => onActions(
+		<ToolPoliciesActions policies={policies} policy={[policy, policyActions]}/>
+	), [policies, policy, policyActions, onActions]);
 
 
 	function select(source: string) {
@@ -122,12 +130,19 @@ export function ToolPolicies() {
 				</>)
 			}</Stack>
 
-			{on(selected, {
+			{on(policies, {
 
 				state: undefined,
 				trace: undefined,
 
-				value: document => document && <ToolPolicy source={document} as={"toc"}/>
+				value: () => selected && on(policy, {
+
+					state: undefined,
+					trace: undefined,
+
+					value: document => document && <ToolPolicy document={document} as={"toc"}/>
+
+				})
 
 			})}
 
@@ -138,44 +153,48 @@ export function ToolPolicies() {
 		state: activity => <ToolActivity activity={activity}/>,
 		trace: trace => <ToolTrace trace={trace}/>,
 
-		value: catalog => !selected || !catalog[selected] ? <EmptyState header="No Policy Selected" description={
-			<Text>Choose one from the sidebar.</Text>
-		}/> : <ToolPolicy source={selected}/>
+		value: () => !selected ? <PolicyNotSelectedPrompt/> : on(policy, {
+
+			state: activity => <ToolActivity activity={activity}/>,
+			trace: trace => <ToolTrace trace={trace}/>,
+
+			value: document => document ? <ToolPolicy document={document}/> : null
+
+		})
 
 	})}</ToolSplit>;
 
 }
 
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 /**
- * Renders the policies toolbar action group with a "Clear Policies" button that prompts for confirmation before
- * purging all cached policy data for the current page.
+ * Renders the policies toolbar action group with a "Refresh Content" button that prompts for confirmation before
+ * clearing the selected policy's cached data.
  *
- * Uses {@link usePolicies} internally for scoped cache invalidation. Automatically disabled when policies are loading,
- * in error state, or empty.
+ * Disabled when no policy is selected.
  */
-export function ToolPoliciesActions() {
+function ToolPoliciesActions({
 
-	const [policies, { clear }] = usePolicies();
+	policies,
+	policy: [policy, { clear }]
 
-	const [, setSelected] = useStorage<undefined | string>(SelectedPolicyKey, undefined);
+}: {
+
+	policies: Status<Catalogue>;
+	policy: [Status<undefined | Document>, PolicyActions];
+
+}) {
 
 	const [confirming, setConfirming] = useState(false);
-
-
-	const disabled = on(policies, {
-		value: catalog => Object.keys(catalog).length === 0,
-		other: true
-	});
-
 
 	function cancel() {
 		setConfirming(false);
 	}
 
 	function confirm() {
-		setConfirming(false);
-		setSelected(undefined);
-		clear();
+		try { clear();} finally { setConfirming(false); }
 	}
 
 
@@ -183,29 +202,44 @@ export function ToolPoliciesActions() {
 
 		<Button
 
-			isDisabled={disabled}
+			isDisabled={policy === undefined
+				|| !isContent(policies)
+				|| !isContent(policy)
+		}
 
 			onClick={() => setConfirming(true)}
 
-		>Clear Policies</Button>
+		>Refresh Content</Button>
 
 		{confirming && <Modal onClose={() => setConfirming(false)}>
 
             <ModalHeader>
-                <ModalTitle>Confirm Clear Policies</ModalTitle>
+                <ModalTitle>Confirm Refresh Content</ModalTitle>
             </ModalHeader>
 
             <ModalBody>
-                Are you sure you want to clear all cached policy data? This action will clear the processing
-                history of policy translations for this page and cannot be undone.
+                Are you sure you want to refresh this policy? Content will be re-extracted from the
+                source PDF attachment, replacing the current version.
             </ModalBody>
 
             <ModalFooter>
                 <Button appearance="subtle" autoFocus={true} onClick={cancel}>Cancel</Button>
-                <Button appearance="danger" onClick={confirm}>Clear Policies</Button>
+                <Button appearance="danger" onClick={confirm}>Refresh Content</Button>
             </ModalFooter>
 
         </Modal>}
 
 	</ButtonGroup>;
+}
+
+/**
+ * Renders an empty state prompting the user to select a policy from the sidebar.
+ */
+function PolicyNotSelectedPrompt() {
+
+	return <EmptyState
+		header={"No Policy Selected"}
+		description={<Text>Choose one from the sidebar.</Text>}
+	/>;
+
 }

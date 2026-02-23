@@ -15,7 +15,6 @@
  */
 
 import type { Schema } from "@google/genai";
-
 import { Type } from "@google/genai";
 import { describe, expect, it } from "vitest";
 

@@ -15,8 +15,8 @@
  */
 
 import ForgeReconciler, { Box, Button, ButtonGroup, Code, EmptyState, Icon, Text, xcss } from "@forge/react";
-import React, { useState } from "react";
-import { Activity, isActivity, isTrace } from "../../shared/store";
+import React, { type ReactNode, useCallback, useState } from "react";
+import { Activity, isContent } from "../../shared/store";
 import { useAgreement } from "../hooks/agreement";
 import { usePolicies } from "../hooks/policies";
 import { ToolStore } from "../hooks/store";
@@ -24,8 +24,8 @@ import { Rule } from "../views/index";
 import { ToolBar } from "../views/layouts/bar";
 import { ToolActivity } from "../views/lenses/activity";
 import { ToolDashboard } from "../views/lenses/dashboard";
-import { ToolIssues, ToolIssuesActions } from "../views/lenses/issues";
-import { ToolPolicies, ToolPoliciesActions } from "../views/lenses/policies";
+import { ToolIssues } from "../views/lenses/issues";
+import { ToolPolicies } from "../views/lenses/policies";
 
 
 /**
@@ -59,23 +59,33 @@ function ToolMain() {
 	const [agreement] = useAgreement();
 	const [policies] = usePolicies();
 
-	const [selected, setSelected] = useState(Tab.Agreement);
+	const [tab, setTab] = useState(Tab.Issues);
+	const [actions, setActions] = useState<ReactNode>();
 
 
-	const loading = agreement === undefined || isActivity(policies) || isTrace(policies);
+	const attachActions = useCallback((node: ReactNode) => {
+
+		setActions(node);
+
+		return () => setActions(undefined);
+
+	}, []);
+
+
+	const loading = agreement === undefined || !isContent(policies);
 	const stocked = !loading && Object.keys(policies).length > 0;
-	const active = loading || !stocked || selected !== Tab.Agreement;
+	const active = loading || !stocked || tab !== Tab.Agreement;
 
 
-	function button(tab: Tab, disabled?: boolean) {
+	function button(value: Tab, disabled?: boolean) {
 		return <Button
 
-			isSelected={selected === tab}
+			isSelected={tab === value}
 			isDisabled={disabled}
 
-			onClick={() => setSelected(tab)}
+			onClick={() => setTab(value)}
 
-		>{tab}</Button>;
+		>{value}</Button>;
 	}
 
 
@@ -96,13 +106,7 @@ function ToolMain() {
 
 			</ButtonGroup>}
 
-			more={<>
-
-				{selected === Tab.Policies && <ToolPoliciesActions/>}
-				{selected === Tab.Issues && <ToolIssuesActions/>}
-				{selected === Tab.Dashboard && <ToolIssuesActions/>}
-
-			</>}
+			more={actions}
 
 		/>
 
@@ -133,17 +137,17 @@ function ToolMain() {
 				description={<Text>Upload PDF documents to the <Code>Attachments</Code> area below.</Text>}
 			/>
 
-		) : selected === Tab.Policies ? (
+		) : tab === Tab.Policies ? (
 
-			<ToolPolicies/>
+			<ToolPolicies onActions={attachActions}/>
 
-		) : selected === Tab.Issues ? (
+		) : tab === Tab.Issues ? (
 
-			<ToolIssues/>
+			<ToolIssues onActions={attachActions}/>
 
-		) : selected === Tab.Dashboard ? (
+		) : tab === Tab.Dashboard ? (
 
-			<ToolDashboard/>
+			<ToolDashboard onActions={attachActions}/>
 
 		) : null}
 

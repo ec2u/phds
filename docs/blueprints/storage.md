@@ -53,8 +53,8 @@ content keys are page-scoped — the page identifier is the root segment.
 
 ## Timestamp-Based Validation
 
-- Policy documents validated against attachment modification timestamps
-- Cache entries purged if `cached.created < attachment.createdAt`
+- Policy content validated against attachment modification timestamps
+- Content cache entries purged if `cached.created < attachment.createdAt`
 - Automatic staleness detection on read
 
 ## Lazy Purging

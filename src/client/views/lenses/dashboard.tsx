@@ -21,16 +21,17 @@
  */
 
 import { Box, Popup, Pressable, Text, xcss } from "@forge/react";
-import React, { useState } from "react";
+import React, { type ReactNode, useEffect, useState } from "react";
+import type { IssueUpdate } from "../../../shared/items/issues";
 import { Issue, Severities, Severity, State, States } from "../../../shared/items/issues";
 import { on } from "../../../shared/store";
 import { useIssues } from "../../hooks/issues";
 import { useStorage } from "../../hooks/storage";
-import { AnalysisNotPerformedPrompt } from "../elements/analyse";
-import type { SafeXCSS } from "../index.js";
+import type { SafeXCSS } from "../index";
 import ToolKanban, { Lane } from "../layouts/kanban";
 import { ToolActivity } from "./activity";
 import ToolIssue, { BlueColors, RedColors, SeverityColors, severityLabel, StateColors, stateLabel } from "./issue";
+import { AnalysisNotPerformedPrompt, ToolIssuesActions } from "./issues";
 import { ToolTrace } from "./trace";
 
 
@@ -58,7 +59,15 @@ const initialCollapsed = {
  * Uses {@link useIssues} internally for data and actions.
  *
  */
-export function ToolDashboard() {
+export function ToolDashboard({
+
+	onActions
+
+}: {
+
+	onActions: (actions: ReactNode) => () => void;
+
+}) {
 
 	const [items, actions] = useIssues();
 
@@ -69,6 +78,11 @@ export function ToolDashboard() {
 	const [severityCollapsed, setSeverityCollapsed] = useStorage<Record<string, boolean>>(
 		"dashboard-severities", initialCollapsed.severities
 	);
+
+
+	useEffect(() => onActions(
+		<ToolIssuesActions items={items} actions={actions}/>
+	), [items, actions, onActions]);
 
 
 	const states: readonly Lane<State>[] = States.map(state => ({
@@ -117,7 +131,8 @@ export function ToolDashboard() {
 					toCol={(issue) => issue.state}
 					toRow={(issue) => issue.severity}
 
-					toCard={(item: Issue) => <Card key={item.id} issue={item}/>}
+					toCard={(item: Issue) => <Card key={item.id} issue={item}
+						onUpdate={(changes) => actions.update(item.id, changes)}/>}
 
 					onToggleRow={toggleSeverity}
 					onToggleCol={toggleState}
@@ -139,11 +154,15 @@ export function ToolDashboard() {
  */
 function Card({
 
-	issue
+	issue,
+
+	onUpdate
 
 }: {
 
 	issue: Issue;
+
+	onUpdate: (update: IssueUpdate) => Promise<void>;
 
 }) {
 
@@ -186,7 +205,7 @@ function Card({
 		</Pressable>}
 
 		content={() => <Box xcss={xcss({ maxWidth: "75em" })}>
-			<ToolIssue id={issue.id}/>
+			<ToolIssue issue={issue} onUpdate={onUpdate}/>
 		</Box>}
 
 		onClose={close}

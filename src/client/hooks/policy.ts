@@ -20,10 +20,23 @@
  * @module
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Document, type Language, Source } from "../../shared/items/documents";
 import { Activity, type Status } from "../../shared/store";
 import { useStore } from "./store";
+
+
+/**
+ * Available actions for managing a single policy document.
+ */
+export interface PolicyActions {
+
+	/**
+	 * Clears the cached policy content and retriggers extraction from the source PDF.
+	 */
+	clear: () => Promise<void>;
+
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -31,24 +44,51 @@ import { useStore } from "./store";
 /**
  * Fetches a single policy document in the requested language and subscribes to reactive updates.
  *
- * Returns the current status of the document retrieval. Triggers extraction and translation via the backend
- * when no cached version is available.
+ * Returns the current status of the document retrieval and available actions. Triggers extraction and translation via
+ * the backend when no cached version is available. When `source` is `undefined`, status holds `undefined` and actions
+ * are no-ops.
  *
- * @param source The source attachment identifier
+ * @param source The source attachment identifier, or `undefined` to skip fetching
  * @param language The target language code (defaults to `"en"`)
  *
- * @returns The document status: the document, an activity state, or an error trace
+ * @returns A tuple of `[status, actions]`
  */
-export function usePolicy(source: Source, language: Language = "en"): Status<Document> {
+export function usePolicy(source: undefined | Source, language: Language = "en"): [Status<undefined | Document>, PolicyActions] {
 
 	const store = useStore();
 
-	const [policy, setPolicy] = useState<Status<Document>>(Activity.Submitting);
+	const [policy, setPolicy] = useState<Status<undefined | Document>>(source ? Activity.Submitting : undefined);
 
 
-	useEffect(() => store.observePolicy(source, language, setPolicy), [store, source, language]);
+	useEffect(() => {
+
+		if ( source ) {
+
+			return store.observePolicy(source, language, setPolicy);
+
+		} else {
+
+			setPolicy(undefined);
+
+			return undefined;
+
+		}
+
+	}, [store, source, language]);
 
 
-	return policy;
+	// ;) stable ref prevents render loops in consumers that include actions in useEffect deps
+
+	const actions = useMemo(() => ({
+
+		async clear(): Promise<void> {
+			if ( source ) {
+				await store.clearPolicy(source, language);
+			}
+		}
+
+	}), [store, source, language]);
+
+	return [policy, actions];
 
 }

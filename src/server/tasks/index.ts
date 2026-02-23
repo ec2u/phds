@@ -25,7 +25,7 @@
 
 import Resolver from "@forge/resolver";
 import { createServerStore } from "../store";
-import { amalyse, type AnalyseTask } from "./analyse";
+import { analyse, type AnalyseTask } from "./analyse";
 import { convert, type ConvertTask } from "./convert";
 
 
@@ -86,7 +86,7 @@ export const handler = new Resolver()
 
 				} else if ( task.type === "analyse" ) {
 
-					await amalyse(page, task);
+					await analyse(page, task);
 
 				} else {
 

@@ -43,3 +43,10 @@ npm run issue       # Deploy and install to development environment (see @docs/d
 - Prefer using type checking utilities from `shared/index.ts` (e.g., `isString()`, `isDefined()`) instead of native
   `typeof` checks for consistency
 - Deployment is continuous: changes are deployed to development on each release and later promoted to production
+
+# Architecture Notes
+
+- **Policies catalogue** (`getPolicies`): derived dynamically from attached PDF documents — not cached itself.
+  Individual policy content (`policyKey`) is extracted, optionally translated, and cached independently.
+- **Issues catalogue** (`getIssues`): an aggregate of individual issue entries (`issueKey`). The array is unpacked into
+  individual cache entries on the client. This distinction affects caching and unpacking strategies.

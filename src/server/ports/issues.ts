@@ -66,29 +66,15 @@ export async function clearIssues({ payload: { page } }: Request<{
 }
 
 /**
- * Retrieves a single compliance issue by identifier.
- */
-export async function getIssue({ payload: { page, issue } }: Request<{
-
-	page: string;
-	issue: string
-
-}>): Promise<Status<Issue>> {
-
-	return createServerStore(page).getIssue(issue);
-
-}
-
-/**
  * Updates mutable fields of a compliance issue.
  */
-export async function updateIssue({ payload: { page, issue, ...update } }: Request<{
+export async function updateIssues({ payload: { page, issue, ...update } }: Request<{
 
 	page: string;
 	issue: string;
 
 } & IssueUpdate>): Promise<Status<void>> {
 
-	return createServerStore(page).updateIssue(issue, update);
+	return createServerStore(page).updateIssues(issue, update);
 
 }

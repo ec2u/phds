@@ -163,19 +163,12 @@ describe("on", () => {
 
 		it("should route value to other when value handler is missing", async () => {
 
-			const result = on<string, string>("data" as unknown as Status<string>, {
-				state: activity => `state:${activity}`,
-				other: status => `other:${status}`
-			});
-
-			// "data" is a string, so it matches trace first — test with non-string value
-
-			const result2 = on<{ id: number }, string>({ id: 42 }, {
+			const result = on<{ id: number }, string>({ id: 42 }, {
 				state: () => "state",
 				other: status => `other:${JSON.stringify(status)}`
 			});
 
-			expect(result2).toBe("other:{\"id\":42}");
+			expect(result).toBe("other:{\"id\":42}");
 
 		});
 
