@@ -66,9 +66,9 @@ export function ToolPolicies({
 
 }) {
 
-	const [selected, setSelected] = useState<undefined | string>();
+	const policies = usePolicies();
 
-	const [policies] = usePolicies();
+	const [selected, setSelected] = useState<undefined | string>();
 	const [policy, policyActions] = usePolicy(selected);
 
 

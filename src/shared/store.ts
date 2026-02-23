@@ -50,12 +50,20 @@ export interface PageStore {
 
 
 	/**
+	 * Retrieves the agreement content from the Confluence page body.
+	 *
+	 * @returns A {@link Status} wrapping the agreement {@link Document}, or `null` if the document
+	 *     structure is missing or corrupted
+	 */
+	getAgreement(): Promise<Status<null | Document>>;
+
+
+	/**
 	 * Retrieves the policy catalogue derived from attached policy documents.
 	 *
 	 * @returns A {@link Status} wrapping the policy {@link Catalogue}
 	 */
 	getPolicies(): Promise<Status<Catalogue>>;
-
 
 	/**
 	 * Retrieves cached policy content, optionally translated to the given language.
@@ -130,12 +138,32 @@ export interface PageStore {
  * without server round-trips. Error and timeout events are transient and not persisted.
  */
 export type PageEvent =
+	| AgreementUpdated
 	| PolicyUpdated
 	| IssuesUpdated;
 
 
 /**
- * Notifies the outcome of an async policy update by {@link PageStore.getPolicy getPolicy}.
+ * Notifies the outcome of an agreement retrieval by {@link PageStore.getAgreement getAgreement}.
+ *
+ * The status is `null` when the expected two-column layout structure is missing or corrupted,
+ * or a {@link Document} on success.
+ */
+export type AgreementUpdated = {
+
+	readonly type: "agreement-updated";
+
+	readonly page: string;
+
+	readonly status: Status<null | Document>
+
+};
+
+/**
+ * Notifies the outcome of a policy content operation.
+ *
+ * Published by {@link PageStore.getPolicy getPolicy} with a {@link Document} on success or by
+ * {@link PageStore.clearPolicy clearPolicy} with `null` to signal cache removal.
  */
 export type PolicyUpdated = {
 
@@ -311,6 +339,17 @@ export function prefixKey(key: string) {
  */
 export function pageKey(page: string): string {
 	return `${page}`;
+}
+
+/**
+ * Returns the resource key for the agreement document.
+ *
+ * @param page The Confluence page identifier
+ *
+ * @returns The resource key
+ */
+export function agreementKey(page: string): string {
+	return `${page}:agreement`;
 }
 
 

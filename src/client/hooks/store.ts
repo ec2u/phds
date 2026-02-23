@@ -28,6 +28,7 @@ import { useProductContext } from "@forge/react";
 import { createContext, createElement, type ReactNode, useContext, useEffect, useMemo } from "react";
 import { type PageEvent, pageKey } from "../../shared/store";
 import { isObject } from "../../shared/tools/core";
+import { getAgreement } from "../ports/agreement";
 import { analyseIssues, clearIssues, getIssues, updateIssues } from "../ports/issues";
 import { clearPolicy, getPolicies, getPolicy } from "../ports/policies";
 import { type ClientStore, createClientStore } from "../store";
@@ -87,8 +88,9 @@ export function ToolStore({ children }: { children: ReactNode }) {
 
 		page,
 
-		getPolicies: () => getPolicies(page),
+		getAgreement: () => getAgreement(page),
 
+		getPolicies: () => getPolicies(page),
 		getPolicy: (source, language) => getPolicy(page, source, language),
 		clearPolicy: (source, language) => clearPolicy(page, source, language),
 

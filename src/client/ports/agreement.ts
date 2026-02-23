@@ -15,31 +15,21 @@
  */
 
 /**
- * Policy catalogue retrieval hook.
+ * Forge bridge invocations for agreement content operations.
  *
  * @module
  */
 
-import { useEffect, useState } from "react";
-import type { Catalogue } from "../../shared/items/documents";
-import { Activity, type Status } from "../../shared/store";
-import { useStore } from "./store";
+import { invoke } from "@forge/bridge";
+import type { Document } from "../../shared/items/documents";
+import type { Status } from "../../shared/store";
 
 
 /**
- * Fetches the catalogue of available policy documents and subscribes to reactive updates.
+ * Retrieves the agreement content from the Confluence page body.
  *
- * @return the current status of the policies catalogue
+ * @param page The Confluence page identifier
  */
-export function usePolicies(): Status<Catalogue> {
-
-	const store = useStore();
-
-	const [policies, setPolicies] = useState<Status<Catalogue>>(Activity.Submitting);
-
-
-	useEffect(() => store.observePolicies(setPolicies), [store]);
-
-
-	return policies;
+export function getAgreement(page: string): Promise<Status<Document>> {
+	return invoke("getAgreement", { page });
 }

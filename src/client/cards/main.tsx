@@ -16,7 +16,7 @@
 
 import ForgeReconciler, { Box, Button, ButtonGroup, Code, EmptyState, Icon, Text, xcss } from "@forge/react";
 import React, { type ReactNode, useCallback, useState } from "react";
-import { Activity, isContent } from "../../shared/store";
+import { Activity, isActivity, isTrace } from "../../shared/store";
 import { useAgreement } from "../hooks/agreement";
 import { usePolicies } from "../hooks/policies";
 import { ToolStore } from "../hooks/store";
@@ -56,14 +56,14 @@ enum Tab {
  */
 function ToolMain() {
 
-	const [agreement] = useAgreement();
-	const [policies] = usePolicies();
+	const agreement = useAgreement();
+	const policies = usePolicies();
 
-	const [tab, setTab] = useState(Tab.Issues);
+	const [tab, setTab] = useState(Tab.Agreement);
 	const [actions, setActions] = useState<ReactNode>();
 
 
-	const attachActions = useCallback((node: ReactNode) => {
+	const showActions = useCallback((node: ReactNode) => {
 
 		setActions(node);
 
@@ -72,7 +72,7 @@ function ToolMain() {
 	}, []);
 
 
-	const loading = agreement === undefined || !isContent(policies);
+	const loading = isActivity(agreement) || isActivity(policies);
 	const stocked = !loading && Object.keys(policies).length > 0;
 	const active = loading || !stocked || tab !== Tab.Agreement;
 
@@ -114,7 +114,27 @@ function ToolMain() {
 
 			<ToolActivity activity={Activity.Fetching}/>
 
-		) : agreement === null ? (
+		) : isTrace(agreement) ? (
+
+			<EmptyState
+				header={"Agreement Unavailable"}
+				description={"Failed to retrieve the agreement content.\n"+
+					"Try reloading the page or contact support if the problem persists."
+				}
+				primaryAction={<Icon label={""} glyph={"error"} size={"large"} color={"color.icon.danger"}/>}
+			/>
+
+		) : isTrace(policies) ? (
+
+			<EmptyState
+				header={"Policies Unavailable"}
+				description={"Failed to retrieve the policy catalogue.\n"+
+					"Try reloading the page or contact support if the problem persists."
+				}
+				primaryAction={<Icon label={""} glyph={"error"} size={"large"} color={"color.icon.danger"}/>}
+			/>
+
+		) :agreement === null ? (
 
 			<EmptyState
 				header={"Corrupted Document"}
@@ -124,7 +144,7 @@ function ToolMain() {
 				primaryAction={<Icon label={""} glyph={"error"} size={"large"} color={"color.icon.warning"}/>}
 			/>
 
-		) : !agreement ? (
+		) : !agreement.content ? (
 
 			<EmptyState
 				header={"No Agreement Text"}
@@ -139,15 +159,15 @@ function ToolMain() {
 
 		) : tab === Tab.Policies ? (
 
-			<ToolPolicies onActions={attachActions}/>
+			<ToolPolicies onActions={showActions}/>
 
 		) : tab === Tab.Issues ? (
 
-			<ToolIssues onActions={attachActions}/>
+			<ToolIssues onActions={showActions}/>
 
 		) : tab === Tab.Dashboard ? (
 
-			<ToolDashboard onActions={attachActions}/>
+			<ToolDashboard onActions={showActions}/>
 
 		) : null}
 

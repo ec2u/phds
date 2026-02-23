@@ -23,6 +23,7 @@
  */
 
 import Resolver from "@forge/resolver";
+import { getAgreement } from "./agreement";
 import { analyseIssues, clearIssues, getIssues, updateIssues } from "./issues";
 import { clearPolicy, getPolicies, getPolicy } from "./policies";
 
@@ -32,9 +33,10 @@ import { clearPolicy, getPolicies, getPolicy } from "./policies";
  */
 export const handler = new Resolver()
 
+	.define(getAgreement.name, getAgreement)
+
 	.define(getPolicies.name, getPolicies)
 	.define(getPolicy.name, getPolicy)
-
 	.define(clearPolicy.name, clearPolicy)
 
 	.define(getIssues.name, getIssues)

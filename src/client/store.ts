@@ -39,6 +39,7 @@ import type { Catalogue, Document } from "../shared/items/documents";
 import type { Issue, IssueUpdate } from "../shared/items/issues";
 import {
 	Activity,
+	agreementKey,
 	isActivity,
 	issueKey,
 	issuesKey,
@@ -60,6 +61,17 @@ import { createCache } from "./store.core";
  * avoiding round-trips through the corresponding read methods.
  */
 export interface ClientStore extends PageStore {
+
+	/**
+	 * Observes changes to the agreement document.
+	 *
+	 * Notifies on each state change. The observer remains active until the returned cleanup function is called.
+	 *
+	 * @param observer The handler notified on changes
+	 *
+	 * @returns A cleanup function that stops observing
+	 */
+	observeAgreement(observer: StatusObserver<null | Document>): () => void;
 
 	/**
 	 * Observes changes to the policies catalogue.
@@ -130,6 +142,8 @@ export function createClientStore(page: string, store: PageStore): {
 
 			page,
 
+			getAgreement,
+
 			getPolicies,
 			getPolicy,
 			clearPolicy,
@@ -139,6 +153,7 @@ export function createClientStore(page: string, store: PageStore): {
 			clearIssues,
 			updateIssues,
 
+			observeAgreement,
 			observePolicies,
 			observePolicy,
 			observeIssues
@@ -147,7 +162,11 @@ export function createClientStore(page: string, store: PageStore): {
 
 		dispatcher(event: PageEvent): void {
 
-			if ( event.type === "policy-updated" ) {
+			if ( event.type === "agreement-updated" ) {
+
+				cache.insert(agreementKey(page), event.status);
+
+			} else if ( event.type === "policy-updated" ) {
 
 				const key = policyKey(page, event.source, event.language);
 
@@ -168,12 +187,18 @@ export function createClientStore(page: string, store: PageStore): {
 	});
 
 
+	async function getAgreement(): Promise<Status<null | Document>> {
+		return cache.lookup(agreementKey(page), () =>
+			store.getAgreement().catch(message)
+		) ?? Activity.Submitting;
+	}
+
+
 	async function getPolicies(): Promise<Status<Catalogue>> {
 		return cache.lookup(policiesKey(page), () =>
 			store.getPolicies().catch(message)
 		) ?? Activity.Submitting;
 	}
-
 
 	async function getPolicy(source: string, language?: string): Promise<Status<Document>> {
 		return cache.lookup(policyKey(page, source, language), () =>
@@ -238,6 +263,12 @@ export function createClientStore(page: string, store: PageStore): {
 	}
 
 
+
+	function observeAgreement(observer: StatusObserver<null | Document>): () => void {
+		return cache.observe(agreementKey(page), () =>
+			getAgreement().then(observer)
+		);
+	}
 
 	function observePolicies(observer: StatusObserver<Catalogue>): () => void {
 		return cache.observe(policiesKey(page), () =>

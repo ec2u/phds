@@ -11,6 +11,8 @@ Changes deployed to development, pending production promotion.
 
 ### Added
 
+- Server-side agreement content management with observable store integration (#28)
+- Distinct error states for agreement and policy retrieval failures (#28)
 - Runtime schema validation for Gemini structured responses, replacing silent fallback on invalid output
 - Non-blank pattern constraints on Gemini analysis response schema
 

@@ -49,6 +49,7 @@ import {
 } from "../shared/store";
 import { immutable, message } from "../shared/tools/core";
 import type { Task } from "./tasks";
+import { fetchAgreement } from "./tools/agreement";
 import { getAttachment, listAttachments } from "./tools/attachments";
 import { deleteMatches, deleteValue, getMatches, getValue, setValue } from "./tools/kvs";
 import { pdf } from "./tools/mime";
@@ -124,6 +125,13 @@ export interface ServerStore extends PageStore {
 
 
 	/**
+	 * Publishes an {@link AgreementUpdated} event on the page channel.
+	 *
+	 * @param status The current status
+	 */
+	publishAgreementUpdated(status: Status<null | Document>): Promise<void>;
+
+	/**
 	 * Publishes a {@link PolicyUpdated} event on the page channel.
 	 *
 	 * @param source The source attachment identifier
@@ -162,8 +170,9 @@ export function createServerStore(page: string): ServerStore {
 
 		page,
 
-		getPolicies: () => getPolicies(page),
+		getAgreement: () => getAgreement(page),
 
+		getPolicies: () => getPolicies(page),
 		getPolicy: (source, language) => getPolicy(page, source, language),
 		clearPolicy: (source, language) => clearPolicy(page, source, language),
 
@@ -174,6 +183,7 @@ export function createServerStore(page: string): ServerStore {
 
 		isActive: (jobId, task) => isActive(page, jobId, task),
 
+		publishAgreementUpdated: (status) => publishAgreementUpdated(page, status),
 		publishPolicyUpdated: (source, language, status) => publishPolicyUpdated(page, source, language, status),
 		publishIssuesUpdated: (status) => publishIssuesUpdated(page, status)
 
@@ -217,6 +227,26 @@ function issuesAnalyseKey(page: string): string {
 
 
 //// Store Operations //////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * Retrieves the agreement content from the Confluence page body.
+ *
+ * @param page The Confluence page identifier
+ *
+ * @returns The agreement document, or an error trace on failure
+ */
+async function getAgreement(page: string): Promise<Status<null | Document>> {
+	try {
+
+		return await fetchAgreement(page);
+
+	} catch ( error ) {
+
+		return message(error);
+
+	}
+}
+
 
 /**
  * Retrieves the policy catalogue for the current page, derived dynamically from PDF attachments.
@@ -461,6 +491,19 @@ async function updateIssues(page: string, issue: string, update: IssueUpdate): P
 
 
 //// Event Publishing //////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * Publishes an {@link AgreementUpdated} event on the page channel.
+ *
+ * Agreement content is not cached in KVS — the event is published directly.
+ *
+ * @param page The Confluence page identifier
+ * @param status The current status
+ */
+async function publishAgreementUpdated(page: string, status: Status<null | Document>): Promise<void> {
+	await publish(page, { type: "agreement-updated", page, status });
+}
+
 
 /**
  * Publishes a {@link PolicyUpdated} event, reactively caching the document on success.
