@@ -76,6 +76,7 @@ export function ToolIssues({
 
 	const [items, actions] = useIssues();
 
+	const [title, setTitle] = useStorage<readonly string[]>("issues-titles", []);
 	const [state, setState] = useStorage<readonly State[]>("issues-states", []);
 	const [severity, setSeverity] = useStorage<readonly Severity[]>("issues-severities", []);
 
@@ -87,6 +88,7 @@ export function ToolIssues({
 
 	function select(issues: readonly Issue[]): readonly Issue[] {
 		return [...issues]
+			.filter(issue => includes(title, issue.title))
 			.filter(issue => includes(state, issue.state))
 			.filter(issue => includes(severity, issue.severity))
 			.sort((x, y) => {
@@ -107,6 +109,7 @@ export function ToolIssues({
 
 
 	function clear() {
+		setTitle([]);
 		setState([]);
 		setSeverity([]);
 	}
@@ -162,13 +165,23 @@ export function ToolIssues({
 
 		const sorted = select(issues);
 
+		const filtered = title.length > 0
+			|| state.length > 0
+			|| severity.length > 0;
+
 		const count = sorted.length;
 		const total = issues.length;
+
+		const titles = [...new Set(issues.map(issue => issue.title))].sort()
+			.filter(value => includes(severity, issues.find(i => i.title === value)?.severity))
+			.filter(value => includes(state, issues.find(i => i.title === value)?.state))
+			.map(value => ({ value, label: value }));
 
 		const states = States.map(value => ({
 			value,
 			label: stateLabel(value),
 			isDisabled: disabled || !issues
+				.filter(issue => includes(title, issue.title))
 				.filter(issue => includes(severity, issue.severity))
 				.some(({ state }) => value === state)
 		}));
@@ -177,11 +190,30 @@ export function ToolIssues({
 			value,
 			label: severityLabel(value),
 			isDisabled: disabled || !issues
+				.filter(issue => includes(title, issue.title))
 				.filter(issue => includes(state, issue.state))
 				.some(({ severity }) => value === severity)
 		}));
 
 		return <Stack space={"space.200"}>
+
+			<Select
+
+				isMulti={true}
+				isClearable={false}
+				isDisabled={disabled || total === 0}
+
+				spacing={"compact"}
+				placeholder={"Title"}
+
+				value={title?.map(value => titles.find(option => option.value === value))}
+				options={titles}
+
+				onChange={(options: undefined | typeof titles[number][]) =>
+					setTitle(options?.map(option => option.value) ?? [])
+				}
+
+			/>
 
 			<Select
 
@@ -222,13 +254,13 @@ export function ToolIssues({
 			{!disabled && total > 0 && <Inline space={"space.050"} spread={"space-between"}>
 
                 <Text weight={"bold"}>{
-					state?.length || severity?.length ? `${count}/${total} Issue${total === 1 ? "" : "s"}`
+					filtered ? `${count}/${total} Issue${total === 1 ? "" : "s"}`
 						: `${total} Issue${total === 1 ? "" : "s"}`
 				}</Text>
 
                 <Button
 
-                    isDisabled={!(state.length > 0 || severity.length > 0)}
+                    isDisabled={!filtered}
 
                     appearance={"subtle"}
                     iconAfter="cross-circle"

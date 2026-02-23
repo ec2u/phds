@@ -11,6 +11,7 @@ Changes deployed to development, pending production promotion.
 
 ### Added
 
+- Title filter in issues sidebar for narrowing displayed issues by title (#15)
 - Server-side agreement content management with observable store integration (#28)
 - Distinct error states for agreement and policy retrieval failures (#28)
 - Dismiss action on error traces across all views (#18)
