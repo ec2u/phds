@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg version="1.1" xmlns:xl="http://www.w3.org/1999/xlink" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns="http://www.w3.org/2000/svg" viewBox="16.79275 6 520 50" width="520" height="50">
+  <defs>
+    <style type="text/css">
+      @import url('https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&amp;display=swap');
+    </style>
+  </defs>
+  <g id="cc-64x64_1" stroke-dasharray="none" fill="none" stroke-opacity="1" fill-opacity="1" stroke="none">
+    <title>cc-64x64 1</title>
+    <g id="cc-64x64_1_Layer_1">
+      <title>Layer 1</title>
+      <g id="Group_36">
+        <g id="Graphic_35">
+          <path d="M 58 48.730543 L 47.024215 34.71381 C 45.748236 33.08431 45.748236 30.794605 47.024215 29.165104 L 57.947395 15.21555 C 57.88643 15.15327 57.82506 15.091241 57.763286 15.029464 C 48.390715 5.656845 33.194786 5.656845 23.822215 15.029464 C 14.449596 24.402036 14.449596 39.597964 23.822215 48.970536 C 33.194786 58.343155 48.390715 58.343155 57.763286 48.970536 C 57.842866 48.890956 57.92177 48.810956 58 48.730543 Z" fill="white"/>
+        </g>
+        <g id="Graphic_27">
+          <path d="M 53.96776 48.355164 L 49.576094 42.903443 C 44.078256 47.343376 36.002504 47.00872 30.893282 41.899474 C 25.42592 36.432144 25.42592 27.567856 30.893282 22.100526 C 36.002504 16.99128 44.078256 16.656624 49.576094 21.096557 L 53.96776 15.644836 C 45.721004 8.984936 33.607376 9.48692 25.943542 17.150789 C 17.7425 25.351785 17.7425 38.648215 25.943542 46.84921 C 33.607376 54.51308 45.721004 55.015064 53.96776 48.355164 Z" fill="#1c275d"/>
+        </g>
+        <g id="Graphic_29">
+          <path d="M 47.38026 40.17758 L 42.988594 34.72586 C 41.614135 35.835844 39.595197 35.75218 38.31789 34.47487 C 36.95105 33.108036 36.95105 30.891964 38.31789 29.52513 C 39.595197 28.24782 41.614135 28.164156 42.988594 29.27414 L 47.38026 23.822418 C 43.25688 20.492468 37.20007 20.74346 33.36815 24.575394 C 29.26763 28.675892 29.26763 35.324108 33.36815 39.424606 C 37.20007 43.25654 43.25688 43.50753 47.38026 40.17758 Z" fill="#c0a72b"/>
+        </g>
+      </g>
+      <g id="Graphic_37">
+        <text transform="translate(73 6)" fill="black">
+          <tspan font-family="Roboto Condensed" font-size="36" fill="black" x="0" y="38" xml:space="preserve">EC2U PhDs Agreements Tool</tspan>
+        </text>
+      </g>
+    </g>
+  </g>
+</svg>

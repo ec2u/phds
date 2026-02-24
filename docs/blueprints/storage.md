@@ -48,6 +48,15 @@ Data types stored in the key-value store are defined in the shared layer:
 - **Status Types:** Defined in `src/shared/tasks.ts` (Status<T>, Activity enum)
 - **Language Types:** Defined in `src/shared/languages.ts`
 
+# Catalogue Caching
+
+The two resource catalogues differ in caching and unpacking:
+
+- **Policies catalogue** (`getPolicies`): derived dynamically from attached PDF documents — not cached itself.
+  Individual policy content (`policyKey`) is extracted, optionally translated, and cached independently.
+- **Issues catalogue** (`getIssues`): an aggregate of individual issue entries (`issueKey`). The array is unpacked into
+  individual cache entries on the client.
+
 # Caching Strategies
 
 ## Timestamp-Based Validation

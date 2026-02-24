@@ -1,0 +1,47 @@
+{
+  "root": ".",
+  "title": "EC2U PhD Agreements Tool",
+  "description": "Reference documentation for the collaborative AI-assisted cotutelle PhD agreement drafting tool",
+  "language": "en",
+  "structure": {
+    "readme": "index.md",
+    "summary": "contents.md"
+  },
+  "plugins": [
+    "flexible-alerts",
+    "intopic-toc",
+    "page-footer-ex",
+    "toolbar",
+    "insert-logo"
+  ],
+  "pluginsConfig": {
+    "insert-logo": {
+      "url": "/index.svg",
+      "style": "background: none; max-width: 100%; padding: 10px; display: block;"
+    },
+    "toolbar": {
+      "buttons": [
+        {
+          "label": "EC2U",
+          "icon": "fa fa-university",
+          "url": "https://www.ec2u.eu/"
+        },
+        {
+          "label": "GitHub",
+          "icon": "fa fa-github",
+          "url": "https://github.com/ec2u/phds"
+        }
+      ]
+    },
+    "intopic-toc": {
+      "selector": ".markdown-section h2, .markdown-section h3",
+      "visible": true,
+      "label": "On This Page"
+    },
+    "page-footer-ex": {
+      "copyright": "Copyright © 2025-2026 EC2U Alliance",
+      "update_label": "Updated ",
+      "update_format": "YYYY-MM-DD"
+    }
+  }
+}

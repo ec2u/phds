@@ -18,8 +18,11 @@
   "scripts": {
     "clean": "rm -rf .forge node_modules",
     "setup": "npm install --legacy-peer-deps",
-    "issue": "forge deploy -e production && forge install --non-interactive --upgrade -s https://ec2u.atlassian.net/ -p confluence -e production",
-    "serve": "npx dotenv -- forge tunnel --debug --debugStartingPort 9229 --debugFunctionHandlers server/ports/index.handler server/tasks/async/index.handler"
+    "check": "npx vitest --typecheck run",
+    "build": "npx honkit build docs/reference",
+    "serve": "npx dotenv -- forge tunnel --debug --debugStartingPort 9229 --debugFunctionHandlers server/ports/index.handler server/tasks/async/index.handler",
+    "proof": "npx honkit serve --port 4100 --open docs/reference",
+    "issue": "forge deploy -e production && forge install --non-interactive --upgrade -s https://ec2u.atlassian.net/ -p confluence -e production"
   },
   "dependencies": {
     "@forge/bridge": "^4.5.2",
@@ -38,7 +41,13 @@
     "@types/node": "^22.15.18",
     "@types/react": "^19.1.4",
     "dotenv-cli": "^8.0.0",
-    "typescript": "^5.8.3",
-    "supports-color": "^10.2.2"
+    "gitbook-plugin-flexible-alerts": "^1.0.4",
+    "gitbook-plugin-insert-logo": "^0.1.5",
+    "gitbook-plugin-intopic-toc": "^1.1.1",
+    "gitbook-plugin-page-footer-ex": "^0.1.2",
+    "gitbook-plugin-toolbar": "^0.6.0",
+    "honkit": "^6.1.6",
+    "supports-color": "^10.2.2",
+    "typescript": "^5.8.3"
   }
 }
