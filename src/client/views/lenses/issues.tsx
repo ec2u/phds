@@ -32,7 +32,8 @@ import {
 	ModalTitle,
 	Select,
 	Stack,
-	Text
+	Text,
+	Textfield
 } from "@forge/react";
 import React, { type ReactNode, useEffect, useState } from "react";
 import { Issue, Severities, Severity, State, States } from "../../../shared/items/issues";
@@ -76,7 +77,7 @@ export function ToolIssues({
 
 	const [items, actions] = useIssues();
 
-	const [title, setTitle] = useStorage<readonly string[]>("issues-titles", []);
+	const [title, setTitle] = useStorage<string>("issues-title", "");
 	const [state, setState] = useStorage<readonly State[]>("issues-states", []);
 	const [severity, setSeverity] = useStorage<readonly Severity[]>("issues-severities", []);
 
@@ -88,7 +89,7 @@ export function ToolIssues({
 
 	function select(issues: readonly Issue[]): readonly Issue[] {
 		return [...issues]
-			.filter(issue => includes(title, issue.title))
+			.filter(issue => matches(issue.title, title))
 			.filter(issue => includes(state, issue.state))
 			.filter(issue => includes(severity, issue.severity))
 			.sort((x, y) => {
@@ -103,13 +104,9 @@ export function ToolIssues({
 			});
 	}
 
-	function includes<T>(values: readonly T[], value: T) {
-		return values.length === 0 || values.includes(value);
-	}
-
 
 	function clear() {
-		setTitle([]);
+		setTitle("");
 		setState([]);
 		setSeverity([]);
 	}
@@ -119,9 +116,18 @@ export function ToolIssues({
 
 		side={on(items, {
 
-			state: () => <Sidebar disabled={true}/>,
-			trace: () => <Sidebar disabled={true}/>,
-			value: issues => <Sidebar disabled={false} issues={issues}/>
+			state: () => <ToolIssuesSidebar disabled={true}
+				title={title} state={state} severity={severity}
+				onTitle={setTitle} onState={setState} onSeverity={setSeverity} onClear={clear}
+			/>,
+			trace: () => <ToolIssuesSidebar disabled={true}
+				title={title} state={state} severity={severity}
+				onTitle={setTitle} onState={setState} onSeverity={setSeverity} onClear={clear}
+			/>,
+			value: issues => <ToolIssuesSidebar disabled={false} issues={issues}
+				title={title} state={state} severity={severity}
+				onTitle={setTitle} onState={setState} onSeverity={setSeverity} onClear={clear}
+			/>
 
 		})}
 
@@ -161,121 +167,23 @@ export function ToolIssues({
 	})}</ToolSplit>;
 
 
-	function Sidebar({ disabled, issues = [] }: { disabled: boolean, issues?: readonly Issue[] }) {
-
-		const sorted = select(issues);
-
-		const filtered = title.length > 0
-			|| state.length > 0
-			|| severity.length > 0;
-
-		const count = sorted.length;
-		const total = issues.length;
-
-		const titles = [...new Set(issues.map(issue => issue.title))].sort()
-			.filter(value => includes(severity, issues.find(i => i.title === value)?.severity))
-			.filter(value => includes(state, issues.find(i => i.title === value)?.state))
-			.map(value => ({ value, label: value }));
-
-		const states = States.map(value => ({
-			value,
-			label: stateLabel(value),
-			isDisabled: disabled || !issues
-				.filter(issue => includes(title, issue.title))
-				.filter(issue => includes(severity, issue.severity))
-				.some(({ state }) => value === state)
-		}));
-
-		const severities = Severities.map(value => ({
-			value,
-			label: severityLabel(value),
-			isDisabled: disabled || !issues
-				.filter(issue => includes(title, issue.title))
-				.filter(issue => includes(state, issue.state))
-				.some(({ severity }) => value === severity)
-		}));
-
-		return <Stack space={"space.200"}>
-
-			<Select
-
-				isMulti={true}
-				isClearable={false}
-				isDisabled={disabled || total === 0}
-
-				spacing={"compact"}
-				placeholder={"Title"}
-
-				value={title?.map(value => titles.find(option => option.value === value))}
-				options={titles}
-
-				onChange={(options: undefined | typeof titles[number][]) =>
-					setTitle(options?.map(option => option.value) ?? [])
-				}
-
-			/>
-
-			<Select
-
-				isMulti={true}
-				isClearable={false}
-				isDisabled={disabled || total === 0}
-
-				spacing={"compact"}
-				placeholder={"State"}
-
-				value={state?.map(value => states.find(option => option.value === value))}
-				options={states}
-
-				onChange={(options: undefined | typeof states[number][]) =>
-					setState(options?.map(option => option.value) ?? [])
-				}
-
-			/>
-
-			<Select
-
-				isMulti={true}
-				isClearable={false}
-				isDisabled={disabled || total === 0}
-
-				spacing="compact"
-				placeholder={"Severity"}
-
-				value={severity?.map(value => severities.find(option => option.value === value))}
-				options={severities}
-
-				onChange={(options: undefined | typeof severities[number][]) =>
-					setSeverity(options?.map(option => option.value) ?? [])
-				}
-
-			/>
-
-			{!disabled && total > 0 && <Inline space={"space.050"} spread={"space-between"}>
-
-                <Text weight={"bold"}>{
-					filtered ? `${count}/${total} Issue${total === 1 ? "" : "s"}`
-						: `${total} Issue${total === 1 ? "" : "s"}`
-				}</Text>
-
-                <Button
-
-                    isDisabled={!filtered}
-
-                    appearance={"subtle"}
-                    iconAfter="cross-circle"
-
-                    onClick={clear}
-
-                >Clear</Button>
-
-            </Inline>}
-
-		</Stack>;
-
-	}
-
 }
+
+
+function matches(value: string, query: string) {
+
+	const words = query.trim().toLowerCase().split(/\s+/).filter(w => w.length > 0);
+	const lower = value.trim().toLowerCase();
+
+	return words.length === 0 || words.every(word => new RegExp(`\\b${word}`).test(lower));
+}
+
+function includes<T>(values: readonly T[], value: T) {
+	return values.length === 0 || values.includes(value);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
  * Renders the issues toolbar action group with "Update Analysis" and "Clear Analysis" buttons.
@@ -354,5 +262,155 @@ export function AnalysisNotPerformedPrompt({ onAnalyse }: { onAnalyse: () => voi
 		description={<Text>Check the agreement for compliance with policies.</Text>}
 		primaryAction={<Button appearance={"discovery"} onClick={onAnalyse}>Analyse</Button>}
 	/>;
+
+}
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * Sidebar filter controls for the issues catalogue: title text field, state and severity multi-selects, and issue
+ * count.
+ */
+function ToolIssuesSidebar({
+
+	disabled,
+
+	issues = [],
+	title,
+	state,
+	severity,
+
+	onTitle,
+	onState,
+	onSeverity,
+	onClear
+
+}: {
+
+	disabled: boolean
+
+	issues?: readonly Issue[]
+	title: string
+	state: readonly State[]
+	severity: readonly Severity[]
+
+	onTitle: (value: string) => void
+	onState: (value: readonly State[]) => void
+	onSeverity: (value: readonly Severity[]) => void
+	onClear: () => void
+
+}) {
+
+	const total = issues.length;
+
+	const filtered = title !== ""
+		|| state.length > 0
+		|| severity.length > 0;
+
+	const matched = issues.filter(issue => matches(issue.title, title));
+
+	const count = matched
+		.filter(issue => includes(state, issue.state))
+		.filter(issue => includes(severity, issue.severity))
+		.length;
+
+	const states = States.map(value => ({
+		value,
+		label: stateLabel(value),
+		isDisabled: disabled || !matched
+			.filter(issue => includes(severity, issue.severity))
+			.some(({ state }) => value === state)
+	}));
+
+	const severities = Severities.map(value => ({
+		value,
+		label: severityLabel(value),
+		isDisabled: disabled || !matched
+			.filter(issue => includes(state, issue.state))
+			.some(({ severity }) => value === severity)
+	}));
+
+	return <Stack space={"space.200"}>
+
+		<Textfield
+
+			isCompact={true}
+			isDisabled={disabled || total === 0}
+
+			placeholder={"Title"}
+
+			value={title}
+
+			elemAfterInput={title ? <Button
+
+				appearance={"subtle"}
+				iconAfter="cross-circle"
+
+				onClick={() => onTitle("")}
+
+			>{""}</Button> : undefined}
+
+			onChange={e => onTitle(e.target.value ?? "")}
+
+		/>
+
+		<Select
+
+			isMulti={true}
+			isClearable={false}
+			isDisabled={disabled || total === 0}
+
+			spacing={"compact"}
+			placeholder={"State"}
+
+			value={state?.map(value => states.find(option => option.value === value))}
+			options={states}
+
+			onChange={(options: undefined | typeof states[number][]) =>
+				onState(options?.map(option => option.value) ?? [])
+			}
+
+		/>
+
+		<Select
+
+			isMulti={true}
+			isClearable={false}
+			isDisabled={disabled || total === 0}
+
+			spacing="compact"
+			placeholder={"Severity"}
+
+			value={severity?.map(value => severities.find(option => option.value === value))}
+			options={severities}
+
+			onChange={(options: undefined | typeof severities[number][]) =>
+				onSeverity(options?.map(option => option.value) ?? [])
+			}
+
+		/>
+
+		{!disabled && total > 0 && <Inline space={"space.050"} spread={"space-between"}>
+
+            <Text weight={"bold"}>{
+				filtered ? `${count}/${total} Issue${total === 1 ? "" : "s"}`
+					: `${total} Issue${total === 1 ? "" : "s"}`
+			}</Text>
+
+            <Button
+
+                isDisabled={!filtered}
+
+                appearance={"subtle"}
+                iconAfter="cross-circle"
+
+                onClick={onClear}
+
+            >Clear</Button>
+
+        </Inline>}
+
+	</Stack>;
 
 }

@@ -11,7 +11,7 @@ Changes deployed to development, pending production promotion.
 
 ### Added
 
-- Title filter in issues sidebar for narrowing displayed issues by title (#15)
+- Title filter in issues sidebar with word-boundary stem matching (#15)
 - Server-side agreement content management with observable store integration (#28)
 - Distinct error states for agreement and policy retrieval failures (#28)
 - Dismiss action on error traces across all views (#18)
@@ -41,6 +41,7 @@ Changes deployed to development, pending production promotion.
 - Stale job-tracking entries left in KVS after async task completion (#31)
 - Analysis results lost on partial KVS write failure during issue caching (#31)
 - Issues endpoint returning stale results instead of current progress during analysis (#31)
+- Title filter losing focus after each keystroke due to nested sidebar component remounting (#15)
 
 ### Added
 
