@@ -16,7 +16,7 @@
   ],
   "pluginsConfig": {
     "insert-logo": {
-      "url": "/index.svg",
+      "url": "/phds/index.svg",
       "style": "background: none; max-width: 100%; padding: 10px; display: block;"
     },
     "toolbar": {
