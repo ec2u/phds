@@ -24,22 +24,26 @@ import {
 	Button,
 	ButtonGroup,
 	EmptyState,
+	Icon,
 	Inline,
 	Modal,
 	ModalBody,
 	ModalFooter,
 	ModalHeader,
 	ModalTitle,
+	Pressable,
 	Select,
 	Stack,
 	Text,
-	Textfield
+	Textfield,
+	xcss
 } from "@forge/react";
 import React, { type ReactNode, useEffect, useState } from "react";
 import { Issue, Severities, Severity, State, States } from "../../../shared/items/issues";
 import { isContent, on, type Status } from "../../../shared/store";
 import { type IssuesActions, useIssues } from "../../hooks/issues";
 import { useStorage } from "../../hooks/storage";
+import type { SafeXCSS } from "../index";
 import ToolSplit from "../layouts/split";
 import { ToolActivity } from "./activity";
 import ToolIssue, { severityLabel, stateLabel } from "./issue";
@@ -342,14 +346,17 @@ function ToolIssuesSidebar({
 
 			value={title}
 
-			elemAfterInput={title ? <Button
+			elemAfterInput={title ? <Pressable
 
-				appearance={"subtle"}
-				iconAfter="cross-circle"
+				xcss={xcss({
+					paddingBlock: "space.025",
+					paddingInline: "space.100",
+					backgroundColor: "color.background.neutral.subtle"
+				}) as SafeXCSS}
 
 				onClick={() => onTitle("")}
 
-			>{""}</Button> : undefined}
+			><Icon glyph={"cross-circle"} label={"Clear"} size={"small"}/></Pressable> : undefined}
 
 			onChange={e => onTitle(e.target.value ?? "")}
 
@@ -398,16 +405,22 @@ function ToolIssuesSidebar({
 					: `${total} Issue${total === 1 ? "" : "s"}`
 			}</Text>
 
-            <Button
+            <Pressable
+
+                xcss={xcss({
+					paddingBlock: "space.050",
+					paddingInline: "space.075",
+					backgroundColor: "color.background.neutral.subtle"
+				}) as SafeXCSS}
 
                 isDisabled={!filtered}
 
-                appearance={"subtle"}
-                iconAfter="cross-circle"
-
                 onClick={onClear}
 
-            >Clear</Button>
+            ><Inline alignBlock={"center"} space={"space.050"}>
+                Clear
+                <Icon glyph={"cross-circle"} label={"Clear"} size={"medium"}/>
+            </Inline></Pressable>
 
         </Inline>}
 
