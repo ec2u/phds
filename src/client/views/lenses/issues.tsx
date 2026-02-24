@@ -21,6 +21,7 @@
  */
 
 import {
+	Box,
 	Button,
 	ButtonGroup,
 	EmptyState,
@@ -36,6 +37,7 @@ import {
 	Stack,
 	Text,
 	Textfield,
+	Tooltip,
 	xcss
 } from "@forge/react";
 import React, { type ReactNode, useEffect, useState } from "react";
@@ -50,7 +52,7 @@ import ToolIssue, { severityLabel, stateLabel } from "./issue";
 import { ToolTrace } from "./trace";
 
 /**
- * Issue state ordering for the catalogue view: blocked < active < pending < resolved.
+ * Issue state ordering for the catalogue criteria: blocked < active < pending < resolved.
  */
 const CatalogStateOrder: Record<State, number> = {
 	blocked: 0,
@@ -58,6 +60,54 @@ const CatalogStateOrder: Record<State, number> = {
 	pending: 2,
 	resolved: 3
 };
+
+/**
+ * Composite comparators for each sort mode, in ascending order.
+ */
+const SortComparators: Record<SortMode, (x: Issue, y: Issue) => number> = {
+	title: (x, y) => byTitle(x, y) || bySeverity(x, y) || byState(x, y),
+	severity: (x, y) => bySeverity(x, y) || byState(x, y) || byTitle(x, y),
+	state: (x, y) => byState(x, y) || bySeverity(x, y) || byTitle(x, y)
+};
+
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * Sort mode for the issues catalogue: determines the primary, secondary, and tertiary sort keys.
+ *
+ * - `"title"` — title > severity > state
+ * - `"severity"` — severity > state > title
+ * - `"state"` — state > severity > title
+ */
+type SortMode =
+	| "title"
+	| "severity"
+	| "state";
+
+/**
+ * Sort direction for the issues catalogue.
+ *
+ * - `"asc"` — ascending (A→Z, low→high)
+ * - `"desc"` — descending (Z→A, high→low)
+ */
+type SortOrder =
+	| "asc"
+	| "desc";
+
+/**
+ * Persisted criteria state for the issues catalogue.
+ */
+interface Criteria {
+
+	readonly sort: SortMode;
+	readonly order: SortOrder;
+
+	readonly title: string;
+	readonly severity: readonly Severity[];
+	readonly state: readonly State[];
+
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -81,9 +131,16 @@ export function ToolIssues({
 
 	const [items, actions] = useIssues();
 
-	const [title, setTitle] = useStorage<string>("issues-title", "");
-	const [state, setState] = useStorage<readonly State[]>("issues-states", []);
-	const [severity, setSeverity] = useStorage<readonly Severity[]>("issues-severities", []);
+	const [criteria, setCriteria] = useStorage<Criteria>("issues-criteria", {
+
+		sort: "state",
+		order: "asc",
+
+		title: "",
+		severity: [],
+		state: []
+
+	});
 
 
 	useEffect(() => onActions(
@@ -92,27 +149,24 @@ export function ToolIssues({
 
 
 	function select(issues: readonly Issue[]): readonly Issue[] {
+
+		const dir = criteria.order === "asc" ? 1 : -1;
+		const compare = SortComparators[criteria.sort];
+
 		return [...issues]
-			.filter(issue => matches(issue.title, title))
-			.filter(issue => includes(state, issue.state))
-			.filter(issue => includes(severity, issue.severity))
-			.sort((x, y) => {
-
-				const xOrder = CatalogStateOrder[x.state] ?? -1;
-				const yOrder = CatalogStateOrder[y.state] ?? -1;
-
-				return xOrder !== yOrder ? xOrder-yOrder
-					: x.severity !== y.severity ? y.severity-x.severity
-						: x.title.localeCompare(y.title);
-
-			});
+			.filter(issue => matches(issue.title, criteria.title))
+			.filter(issue => includes(criteria.severity, issue.severity))
+			.filter(issue => includes(criteria.state, issue.state))
+			.sort((x, y) => compare(x, y)*dir);
 	}
 
 
+	function patch(update: Partial<Criteria>) {
+		setCriteria(current => ({ ...current, ...update }));
+	}
+
 	function clear() {
-		setTitle("");
-		setState([]);
-		setSeverity([]);
+		patch({ title: "", severity: [], state: [] });
 	}
 
 
@@ -121,16 +175,16 @@ export function ToolIssues({
 		side={on(items, {
 
 			state: () => <ToolIssuesSidebar disabled={true}
-				title={title} state={state} severity={severity}
-				onTitle={setTitle} onState={setState} onSeverity={setSeverity} onClear={clear}
+				criteria={criteria} onChange={patch} onClear={clear}
 			/>,
+
 			trace: () => <ToolIssuesSidebar disabled={true}
-				title={title} state={state} severity={severity}
-				onTitle={setTitle} onState={setState} onSeverity={setSeverity} onClear={clear}
+				criteria={criteria} onChange={patch} onClear={clear}
 			/>,
-			value: issues => <ToolIssuesSidebar disabled={false} issues={issues}
-				title={title} state={state} severity={severity}
-				onTitle={setTitle} onState={setState} onSeverity={setSeverity} onClear={clear}
+
+			value: issues => <ToolIssuesSidebar disabled={false}
+				issues={issues}
+				criteria={criteria} onChange={patch} onClear={clear}
 			/>
 
 		})}
@@ -171,6 +225,19 @@ export function ToolIssues({
 	})}</ToolSplit>;
 
 
+}
+
+
+function byTitle(x: Issue, y: Issue): number {
+	return x.title.localeCompare(y.title);
+}
+
+function bySeverity(x: Issue, y: Issue): number {
+	return x.severity-y.severity;
+}
+
+function byState(x: Issue, y: Issue): number {
+	return (CatalogStateOrder[x.state] ?? -1)-(CatalogStateOrder[y.state] ?? -1);
 }
 
 
@@ -273,59 +340,45 @@ export function AnalysisNotPerformedPrompt({ onAnalyse }: { onAnalyse: () => voi
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 /**
- * Sidebar filter controls for the issues catalogue: title text field, state and severity multi-selects, and issue
+ * Sidebar filter controls for the issues catalogue: title text field, severity and state multi-selects, and issue
  * count.
  */
 function ToolIssuesSidebar({
 
 	disabled,
 
+	criteria,
 	issues = [],
-	title,
-	state,
-	severity,
 
-	onTitle,
-	onState,
-	onSeverity,
+	onChange,
 	onClear
 
 }: {
 
 	disabled: boolean
 
+	criteria: Criteria
 	issues?: readonly Issue[]
-	title: string
-	state: readonly State[]
-	severity: readonly Severity[]
 
-	onTitle: (value: string) => void
-	onState: (value: readonly State[]) => void
-	onSeverity: (value: readonly Severity[]) => void
+	onChange: (update: Partial<Criteria>) => void
 	onClear: () => void
 
 }) {
 
+	const { title, severity, state } = criteria;
+
 	const total = issues.length;
 
 	const filtered = title !== ""
-		|| state.length > 0
-		|| severity.length > 0;
+		|| severity.length > 0
+		|| state.length > 0;
 
 	const matched = issues.filter(issue => matches(issue.title, title));
 
 	const count = matched
-		.filter(issue => includes(state, issue.state))
 		.filter(issue => includes(severity, issue.severity))
+		.filter(issue => includes(state, issue.state))
 		.length;
-
-	const states = States.map(value => ({
-		value,
-		label: stateLabel(value),
-		isDisabled: disabled || !matched
-			.filter(issue => includes(severity, issue.severity))
-			.some(({ state }) => value === state)
-	}));
 
 	const severities = Severities.map(value => ({
 		value,
@@ -335,68 +388,135 @@ function ToolIssuesSidebar({
 			.some(({ severity }) => value === severity)
 	}));
 
+	const states = States.map(value => ({
+		value,
+		label: stateLabel(value),
+		isDisabled: disabled || !matched
+			.filter(issue => includes(severity, issue.severity))
+			.some(({ state }) => value === state)
+	}));
+
+
+	function sort(mode: SortMode) {
+		onChange(criteria.sort === mode
+			? { order: criteria.order === "asc" ? "desc" : "asc" }
+			: { sort: mode, order: "asc" }
+		);
+	}
+
 	return <Stack space={"space.200"}>
 
-		<Textfield
+		<Inline grow={"fill"} alignBlock={"stretch"} space={"space.075"}>
 
-			isCompact={true}
-			isDisabled={disabled || total === 0}
+			<ToolSorting disabled={disabled || total === 0}
 
-			placeholder={"Title"}
+				mode={"title"}
+				criteria={criteria}
 
-			value={title}
+				onSort={sort}
 
-			elemAfterInput={title ? <Pressable
+			/>
 
-				xcss={xcss({
-					paddingBlock: "space.025",
-					paddingInline: "space.100",
-					backgroundColor: "color.background.neutral.subtle"
-				}) as SafeXCSS}
+			<Box xcss={xcss({ flexGrow: 1 })}><Textfield
 
-				onClick={() => onTitle("")}
+				isCompact={true}
+				isDisabled={disabled || total === 0}
 
-			><Icon glyph={"cross-circle"} label={"Clear"} size={"small"}/></Pressable> : undefined}
+				placeholder={"Title"}
 
-			onChange={e => onTitle(e.target.value ?? "")}
+				value={title}
 
-		/>
+				elemAfterInput={title ? <Pressable
 
-		<Select
+					xcss={xcss({
+						paddingBlock: "space.025",
+						paddingInline: "space.100",
+						backgroundColor: "color.background.neutral.subtle"
+					}) as SafeXCSS}
 
-			isMulti={true}
-			isClearable={false}
-			isDisabled={disabled || total === 0}
+					onClick={() => onChange({ title: "" })}
 
-			spacing={"compact"}
-			placeholder={"State"}
+				>
 
-			value={state?.map(value => states.find(option => option.value === value))}
-			options={states}
+					<Icon
 
-			onChange={(options: undefined | typeof states[number][]) =>
-				onState(options?.map(option => option.value) ?? [])
-			}
+						glyph={"cross-circle"}
+						label={"Clear"}
 
-		/>
+						size={"small"}
+						color={"color.icon.subtlest"}
 
-		<Select
+					/>
 
-			isMulti={true}
-			isClearable={false}
-			isDisabled={disabled || total === 0}
+				</Pressable> : undefined}
 
-			spacing="compact"
-			placeholder={"Severity"}
+				onChange={e => onChange({ title: e.target.value ?? "" })}
 
-			value={severity?.map(value => severities.find(option => option.value === value))}
-			options={severities}
+			/></Box>
 
-			onChange={(options: undefined | typeof severities[number][]) =>
-				onSeverity(options?.map(option => option.value) ?? [])
-			}
+		</Inline>
 
-		/>
+		<Inline grow={"fill"} alignBlock={"stretch"} space={"space.075"}>
+
+			<ToolSorting disabled={disabled || total === 0}
+
+				mode={"severity"}
+				criteria={criteria}
+
+				onSort={sort}
+
+			/>
+
+			<Box xcss={xcss({ flexGrow: 1 })}><Select
+
+				isMulti={true}
+				isClearable={false}
+				isDisabled={disabled || total === 0}
+
+				spacing="compact"
+				placeholder={"Severity"}
+
+				value={severity?.map(value => severities.find(option => option.value === value))}
+				options={severities}
+
+				onChange={(options: undefined | typeof severities[number][]) =>
+					onChange({ severity: options?.map(option => option.value) ?? [] })
+				}
+
+			/></Box>
+
+		</Inline>
+
+		<Inline grow={"fill"} alignBlock={"stretch"} space={"space.075"}>
+
+			<ToolSorting disabled={disabled || total === 0}
+
+				mode={"state"}
+				criteria={criteria}
+
+				onSort={sort}
+
+			/>
+
+			<Box xcss={xcss({ flexGrow: 1 })}><Select
+
+				isMulti={true}
+				isClearable={false}
+				isDisabled={disabled || total === 0}
+
+				spacing={"compact"}
+				placeholder={"State"}
+
+				value={state?.map(value => states.find(option => option.value === value))}
+				options={states}
+
+				onChange={(options: undefined | typeof states[number][]) =>
+					onChange({ state: options?.map(option => option.value) ?? [] })
+				}
+
+			/></Box>
+
+		</Inline>
 
 		{!disabled && total > 0 && <Inline space={"space.050"} spread={"space-between"}>
 
@@ -405,7 +525,7 @@ function ToolIssuesSidebar({
 					: `${total} Issue${total === 1 ? "" : "s"}`
 			}</Text>
 
-            <Pressable
+            {filtered && <Pressable
 
                 xcss={xcss({
 					paddingBlock: "space.050",
@@ -413,17 +533,115 @@ function ToolIssuesSidebar({
 					backgroundColor: "color.background.neutral.subtle"
 				}) as SafeXCSS}
 
-                isDisabled={!filtered}
-
                 onClick={onClear}
 
             ><Inline alignBlock={"center"} space={"space.050"}>
-                Clear
-                <Icon glyph={"cross-circle"} label={"Clear"} size={"medium"}/>
-            </Inline></Pressable>
+                <Text color={"color.text.subtlest"}>Clear All</Text>
+                <Icon glyph={"cross-circle"} label={"Clear"} size={"medium"} color={"color.icon.subtlest"}/>
+            </Inline></Pressable>}
 
         </Inline>}
 
 	</Stack>;
+
+}
+
+
+/**
+ * Sort control button for a single sort mode facet.
+ *
+ * Shows a directional chevron when the facet is the active sort mode, or a neutral up-down indicator when inactive.
+ * Clicking an inactive control activates it with ascending order; clicking the active control toggles the direction.
+ */
+function ToolSorting({
+
+	disabled,
+
+	mode,
+	criteria,
+
+	onSort
+
+}: {
+
+	disabled: boolean
+
+	mode: SortMode
+	criteria: Criteria
+
+	onSort: (mode: SortMode) => void
+
+}) {
+
+	const active = criteria.sort === mode;
+
+	const glyph = active
+		? criteria.order === "asc" ? "arrow-down-right" : "arrow-up-right"
+		: "grow-diagonal";
+
+	const label = active
+		? `Sorting by ${mode} ${criteria.order === "asc" ? "ascending" : "descending"}`
+		: `Sort by ${mode}`;
+
+	const color = active
+		? "color.icon.selected"
+		: "color.icon.disabled"; // ;( color.icon.subtlest still too heavy
+
+	return <Pressable
+
+		isDisabled={disabled}
+
+		xcss={xcss({
+
+			paddingBlock: "space.025",
+			paddingInline: "space.050",
+
+			borderRadius: "radius.small",
+
+			...(disabled ? {
+
+				backgroundColor: "color.background.disabled"
+
+			} : {
+
+				borderStyle: "solid",
+				borderWidth: "border.width",
+				borderColor: "color.border.input",
+
+				backgroundColor: "color.background.neutral.subtle"
+
+			})
+
+		}) as SafeXCSS}
+
+		onClick={() => onSort(mode)}
+
+	>{disabled
+
+		? <Icon
+
+			glyph={glyph}
+			label={label}
+
+			size={"medium"}
+			color={"color.icon.disabled"}
+
+		/>
+
+		: <Tooltip content={label}>
+
+			<Icon
+
+				glyph={glyph}
+				label={label}
+
+				size={"medium"}
+				color={color}
+
+			/>
+
+		</Tooltip>
+
+	}</Pressable>;
 
 }

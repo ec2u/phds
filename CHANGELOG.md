@@ -11,6 +11,7 @@ Changes deployed to development, pending production promotion.
 
 ### Added
 
+- Configurable sort mode and direction for issues list (#29)
 - Title filter in issues sidebar with word-boundary stem matching (#15)
 - Server-side agreement content management with observable store integration (#28)
 - Distinct error states for agreement and policy retrieval failures (#28)

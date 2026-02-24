@@ -70,14 +70,14 @@ export interface Issue {
 
 
 	/**
-	 * The current workflow state.
-	 */
-	readonly state: State;
-
-	/**
 	 * The severity level.
 	 */
 	readonly severity: Severity;
+
+	/**
+	 * The current workflow state.
+	 */
+	readonly state: State;
 
 
 	/**
@@ -117,8 +117,8 @@ export type IssueUpdate = Partial<Pick<Issue, "state" | "severity" | "annotation
 export function normalizeIssue(issue: Issue): Issue {
 	return {
 		...issue,
-		state: issue.state || "pending",
 		severity: issue.severity || 3,
+		state: issue.state || "pending",
 		title: (issue.title || "").replace(/\s+/g, " ").trim(),
 		description: (issue.description || []).map(item => typeof item === "string" ? item.trim() : item)
 	};

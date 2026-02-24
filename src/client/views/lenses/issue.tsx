@@ -17,7 +17,7 @@
 /**
  * Issue detail view component with inline editing capabilities.
  *
- * Provides the full issue detail card with state/severity selectors, annotation editing, expandable source
+ * Provides the full issue detail card with severity/state selectors, annotation editing, expandable source
  * references, and action buttons for managing individual compliance issues.
  *
  * @module
@@ -44,7 +44,7 @@ import {
 import React, { useRef, useState } from "react";
 import type { Reference } from "../../../shared/items/documents";
 import type { IssueUpdate } from "../../../shared/items/issues";
-import { Issue, Severities, State, States } from "../../../shared/items/issues";
+import { Issue, Severities, States, State } from "../../../shared/items/issues";
 import { isString } from "../../../shared/tools/core";
 import { adf } from "../../../shared/tools/text";
 import { ToolToggle } from "../elements/toggle";
@@ -70,6 +70,15 @@ export const GrayColors = toColors("gray");
 
 
 /**
+ * Colour mapping for issue severity levels.
+ */
+export const SeverityColors = {
+	3: toColors("purple"),
+	2: toColors("red"),
+	1: toColors("yellow")
+} as const;
+
+/**
  * Colour mapping for issue workflow states.
  */
 export const StateColors = {
@@ -79,26 +88,6 @@ export const StateColors = {
 	resolved: toColors("lime")
 } as const;
 
-/**
- * Colour mapping for issue severity levels.
- */
-export const SeverityColors = {
-	3: toColors("purple"),
-	2: toColors("red"),
-	1: toColors("yellow")
-} as const;
-
-
-/**
- * Formats a workflow state value as a capitalised display label.
- *
- * @param value the state value
- *
- * @return the display label
- */
-export function stateLabel(value: string) {
-	return value.charAt(0).toUpperCase()+value.slice(1);
-}
 
 /**
  * Formats a severity level as a star rating display label.
@@ -109,6 +98,17 @@ export function stateLabel(value: string) {
  */
 export function severityLabel(value: number) {
 	return "★".repeat(value)+"☆".repeat(3-value);
+}
+
+/**
+ * Formats a workflow state value as a capitalised display label.
+ *
+ * @param value the state value
+ *
+ * @return the display label
+ */
+export function stateLabel(value: string) {
+	return value.charAt(0).toUpperCase()+value.slice(1);
 }
 
 
@@ -142,14 +142,14 @@ export default function ToolIssue({
 	const references = issue.description.filter((entry): entry is Reference => !isString(entry));
 
 
-	const states = States.map(value => ({
-		value,
-		label: stateLabel(value)
-	}));
-
 	const severities = Severities.map(value => ({
 		value,
 		label: severityLabel(value)
+	}));
+
+	const states = States.map(value => ({
+		value,
+		label: stateLabel(value)
 	}));
 
 
@@ -157,13 +157,13 @@ export default function ToolIssue({
 		setExpanded(!expanded);
 	}
 
-	function transition(state: State) {
-		onUpdate({ state }).then(() => setMode("reading")).then(() => setExpanded(false));
+	function classify(severity: Issue["severity"]) {
+		onUpdate({ severity }).then(() => setMode("reading")).then(() => setExpanded(false));
 		setMode("updating");
 	}
 
-	function classify(severity: Issue["severity"]) {
-		onUpdate({ severity }).then(() => setMode("reading")).then(() => setExpanded(false));
+	function transition(state: State) {
+		onUpdate({ state }).then(() => setMode("reading")).then(() => setExpanded(false));
 		setMode("updating");
 	}
 
@@ -226,30 +226,6 @@ export default function ToolIssue({
 							borderWidth: "border.width",
 							borderRadius: "radius.small",
 
-							...(StateColors[issue.state])
-
-						})}>
-
-                            <Select isDisabled={active}
-
-                                appearance={"subtle"}
-                                spacing={"compact"}
-
-                                value={states.find(option => option.value === issue.state)}
-                                options={states}
-
-                                onChange={(option: typeof states[number]) => transition(option?.value)}
-
-                            />
-
-                        </Box>}
-
-						{mode !== "annotating" && <Box xcss={xcss({
-
-							borderStyle: "solid",
-							borderWidth: "border.width",
-							borderRadius: "radius.small",
-
 							...(SeverityColors[issue.severity])
 
 						})}>
@@ -263,6 +239,30 @@ export default function ToolIssue({
                                 options={severities}
 
                                 onChange={(option: typeof severities[number]) => classify(option.value)}
+
+                            />
+
+                        </Box>}
+
+						{mode !== "annotating" && <Box xcss={xcss({
+
+							borderStyle: "solid",
+							borderWidth: "border.width",
+							borderRadius: "radius.small",
+
+							...(StateColors[issue.state])
+
+						})}>
+
+                            <Select isDisabled={active}
+
+                                appearance={"subtle"}
+                                spacing={"compact"}
+
+                                value={states.find(option => option.value === issue.state)}
+                                options={states}
+
+                                onChange={(option: typeof states[number]) => transition(option?.value)}
 
                             />
 
