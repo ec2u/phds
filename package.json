@@ -21,9 +21,9 @@
     "setup": "npm install --legacy-peer-deps && npm audit fix; npm rebuild",
     "check": "npx vitest --typecheck run",
     "build": "npx honkit build docs/reference",
-    "serve": "npx dotenv -- forge tunnel --debug --debugStartingPort 9229 --debugFunctionHandlers server/ports/index.handler server/tasks/index.handler",
+    "serve": "npx dotenv -- forge tunnel",
     "proof": "npx honkit serve --port 4100 --open docs/reference",
-    "issue": "forge deploy -e development && forge install --non-interactive --upgrade -s https://ec2u.atlassian.net/ -p confluence -e development"
+    "issue": "forge install --non-interactive --upgrade -s https://ec2u.atlassian.net/ -p confluence -e development"
   },
   "dependencies": {
     "@forge/bridge": "^5.9.1",

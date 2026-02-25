@@ -11,6 +11,7 @@ Changes deployed to development, pending production promotion.
 
 ### Added
 
+- Automated Forge deployment via GitHub Actions on release branch push (#7)
 - Configurable sort mode and direction for issues list (#29)
 - Title filter in issues sidebar with word-boundary stem matching (#15)
 - Server-side agreement content management with observable store integration (#28)

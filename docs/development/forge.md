@@ -102,6 +102,24 @@ forge login
 
 This will prompt for re-authentication and update the CLI credentials in `~/.forge/`.
 
+### CI/CD Authentication
+
+In CI environments (GitHub Actions), the Forge CLI authenticates via environment variables instead of `forge login`:
+
+- `FORGE_EMAIL`: Atlassian account email of the CI service account
+- `FORGE_API_TOKEN`: API token generated at https://id.atlassian.com/manage-profile/security/api-tokens
+
+Both variables are stored as GitHub repository secrets and referenced in the
+[publish workflow](../../.github/workflows/publish.yml).
+
+> [!IMPORTANT]
+> The CI account must be added as a **contributor** to the Forge app in the
+> [Developer Console](https://developer.atlassian.com/console/myapps/). Deployment requires contributor access.
+
+> [!WARNING]
+> Installation and upgrade require **site admin** privileges on the target Confluence site, so `forge install` is
+> run manually via `npm run issue` rather than automated in CI.
+
 ## App Registration
 
 ### Initial Setup
@@ -246,8 +264,9 @@ For local development with `forge tunnel`, you can use environment variables fro
 
 3. **Deploy Changes**
    ```bash
-   forge deploy           # Deploy to Forge
-   forge install --upgrade # Upgrade installation
+   # Deployment is automated via GitHub Actions on push to release/* branches
+   # If manifest scopes change, manually upgrade the installation:
+   npm run issue
    ```
 
 ### Production Deployment
