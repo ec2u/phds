@@ -49,6 +49,15 @@ content keys are page-scoped — the page identifier is the root segment.
 - **Purge tracking:** `system:purged` stores the last global purge timestamp
 - **Purpose:** global system state and maintenance information
 
+# Catalogue Caching
+
+The two resource catalogues differ in caching and unpacking:
+
+- **Policies catalogue** (`getPolicies`): derived dynamically from attached PDF documents — not cached itself.
+  Individual policy content (`policyKey`) is extracted, optionally translated, and cached independently.
+- **Issues catalogue** (`getIssues`): an aggregate of individual issue entries (`issueKey`). The array is unpacked into
+  individual cache entries on the client.
+
 # Caching Strategies
 
 ## Timestamp-Based Validation

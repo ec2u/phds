@@ -57,6 +57,7 @@ The system is organised around two **resource collections**, each scoped to a Co
 - **Policies**: PDF attachments extracted and optionally translated into structured documents
 - **Issues**: compliance concerns detected by AI analysis, each with mutable state, severity, and annotations
 
+
 Both collections share the same two-level structure:
 
 - **Catalogue**: the collection as a whole (list of policies, list of issues)

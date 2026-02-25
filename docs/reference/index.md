@@ -1,6 +1,10 @@
-# EC2U PhD Agreements Tool
-
-AI-powered textual analysis for cotutelle PhD agreement drafting.
+---
+title: EC2U PhD Agreements Tool
+summary: AI-powered textual analysis for cotutelle PhD agreement drafting
+description: |
+  Reference documentation for the collaborative AI-assisted cotutelle PhD agreement drafting tool
+  developed within the EC2U European University Alliance.
+---
 
 The **EC2U PhD Agreements Tool** provides Large Language Model (LLM) based textual analysis supporting PhD coordinators
 and other relevant stakeholders of the [EC2U](https://ec2u.eu/) European University Alliance in drafting cotutelle PhD
@@ -41,15 +45,12 @@ Drafting these agreements has traditionally been slow, cumbersome, and error-pro
 - **Reduced delivery times** - streamlines drafting through consistent suggestions, early conflict identification, and
   translation support
 - **Improved compliance** - analyses current regulations with conflict highlights and legal references
-- **Improved consistency** - guides users towards standardised formats and shared editorial standards across the
-  alliance
+- **Improved consistency** - guides users towards standardised formats and shared editorial standards across the alliance
 
-# Documentation
+# Getting Started
 
-- **Confluence administrators** — see the [Setup Guide](https://ec2u.github.io/phds/setup.html) to install and configure
-  the macro
-- **PhD coordinators and drafters** — see the [User Manual](https://ec2u.github.io/phds/manual/) to start drafting
-  agreements
+- **Confluence administrators** — see the [Setup Guide](setup.md) to install and configure the macro
+- **PhD coordinators and drafters** — see the [User Manual](manual/index.md) to start drafting agreements
 
 # Support
 
@@ -61,10 +62,10 @@ process. Contributions, feedback, and suggestions from the community are welcome
 
 # License
 
-This project is licensed under the Apache 2.0 License – see [LICENSE](https://github.com/ec2u/gate/blob/main/LICENSE)
-file for details.
+This project is licensed under the Apache 2.0 License – see
+[LICENSE](https://github.com/ec2u/phds/blob/main/LICENSE) file for details.
 
 # Acknowledgements
 
-Development of the *EC2U PhD Agreements Tool* is funded by the European Commission under the [EC2U](https://ec2u.eu/)
-project.
+Development of the *EC2U PhD Agreements Tool* is funded by the European Commission under the
+[EC2U](https://ec2u.eu/) project.

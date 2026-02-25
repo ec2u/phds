@@ -19,6 +19,7 @@ This is an Atlassian Forge application built with React and TypeScript that runs
 - **API**: See @docs/blueprints/api.md for the resource-centric API design
 - **Forge Lifecycle**: See @docs/development/forge.md for deployment, authentication, and environment management
 - **Development Resources**: See @docs/development/resources.md for Forge documentation and tools
+- **User Documentation**: See @docs/development/honkit.md for the HonKit-based documentation site setup
 
 # Build Commands
 
@@ -27,8 +28,15 @@ This is an Atlassian Forge application built with React and TypeScript that runs
 npm run clean       # Remove build cache and node_modules
 npm run setup       # Install dependencies (with legacy peer deps)
 
+# Quality
+npm run check       # Run Vitest tests with type checking
+
 # Development
 npm run serve       # Start Forge tunnel for local development (requires .env file)
+
+# Documentation
+npm run build       # Build HonKit reference docs (see @docs/development/honkit.md)
+npm run proof       # Serve HonKit reference docs locally on port 4100
 
 # Deployment
 npm run issue       # Deploy and install to development environment (see @docs/development/forge.md)
@@ -43,10 +51,6 @@ npm run issue       # Deploy and install to development environment (see @docs/d
 - Prefer using type checking utilities from `shared/index.ts` (e.g., `isString()`, `isDefined()`) instead of native
   `typeof` checks for consistency
 - Deployment is continuous: changes are deployed to development on each release and later promoted to production
-
-# Architecture Notes
-
-- **Policies catalogue** (`getPolicies`): derived dynamically from attached PDF documents — not cached itself.
-  Individual policy content (`policyKey`) is extracted, optionally translated, and cached independently.
-- **Issues catalogue** (`getIssues`): an aggregate of individual issue entries (`issueKey`). The array is unpacked into
-  individual cache entries on the client. This distinction affects caching and unpacking strategies.
+- `README.md` and `docs/reference/index.md` share overlapping content and must be kept in sync when either is updated,
+  adapting links and references to the respective context (for instance, absolute GitHub Pages URLs in the README versus
+  relative paths in the documentation site)

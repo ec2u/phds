@@ -18,9 +18,11 @@
   "main": "index",
   "scripts": {
     "clean": "rm -rf .forge node_modules",
-    "setup": "npm install --legacy-peer-deps",
+    "setup": "npm install --legacy-peer-deps && npm audit fix; npm rebuild",
     "check": "npx vitest --typecheck run",
+    "build": "npx honkit build docs/reference",
     "serve": "npx dotenv -- forge tunnel --debug --debugStartingPort 9229 --debugFunctionHandlers server/ports/index.handler server/tasks/index.handler",
+    "proof": "npx honkit serve --port 4100 --open docs/reference",
     "issue": "forge deploy -e development && forge install --non-interactive --upgrade -s https://ec2u.atlassian.net/ -p confluence -e development"
   },
   "dependencies": {
@@ -42,6 +44,12 @@
     "@types/node": "^22.15.18",
     "@types/react": "^19.1.4",
     "dotenv-cli": "^8.0.0",
+    "gitbook-plugin-flexible-alerts": "^1.0.4",
+    "gitbook-plugin-insert-logo": "^0.1.5",
+    "gitbook-plugin-intopic-toc": "^1.1.1",
+    "gitbook-plugin-page-footer-ex": "^0.1.2",
+    "gitbook-plugin-toolbar": "^0.6.0",
+    "honkit": "^6.1.6",
     "supports-color": "^10.2.2",
     "typescript": "^5.8.3",
     "vitest": "^4.0.18"
