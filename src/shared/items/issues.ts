@@ -20,7 +20,7 @@
  * @module
  */
 
-import { Instant, Source } from "./documents";
+import { Instant, type Reference } from "./documents";
 
 
 /**
@@ -46,6 +46,7 @@ export type State = typeof States[number];
  */
 export type Severity = typeof Severities[number];
 
+
 /**
  * A compliance issue identified during policy analysis.
  */
@@ -55,6 +56,7 @@ export interface Issue {
 	 * The unique issue identifier.
 	 */
 	readonly id: string;
+
 
 	/**
 	 * The creation timestamp.
@@ -66,15 +68,17 @@ export interface Issue {
 	 */
 	readonly updated?: Instant;
 
-	/**
-	 * The current workflow state.
-	 */
-	readonly state: State;
 
 	/**
 	 * The severity level.
 	 */
 	readonly severity: Severity;
+
+	/**
+	 * The current workflow state.
+	 */
+	readonly state: State;
+
 
 	/**
 	 * The issue title.
@@ -94,33 +98,28 @@ export interface Issue {
 }
 
 /**
- * A reference to a specific location within a source document.
+ * Subset of mutable {@link Issue} fields accepted by update operations.
  */
-export interface Reference {
+export type IssueUpdate = Partial<Pick<Issue, "state" | "severity" | "annotations">>;
 
-	/**
-	 * The source attachment identifier.
-	 */
-	readonly source: Source;
 
-	/**
-	 * The referenced document title.
-	 */
-	readonly title: string;
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-	/**
-	 * The quoted text excerpt from the source.
-	 */
-	readonly excerpt: string;
-
-	/**
-	 * The character offset within the source content.
-	 */
-	readonly offset: number;
-
-	/**
-	 * The character length of the referenced content.
-	 */
-	readonly length: number;
-
+/**
+ * Defaults missing fields on issues retrieved from the KVS.
+ *
+ * Guards against store entries that may lack fields added after initial creation.
+ *
+ * @param issue the raw issue from the store
+ *
+ * @return the issue with all required fields guaranteed
+ */
+export function normalizeIssue(issue: Issue): Issue {
+	return {
+		...issue,
+		severity: issue.severity || 3,
+		state: issue.state || "pending",
+		title: (issue.title || "").replace(/\s+/g, " ").trim(),
+		description: (issue.description || []).map(item => typeof item === "string" ? item.trim() : item)
+	};
 }

@@ -22,46 +22,28 @@
 
 import { AdfRenderer } from "@forge/react";
 import React from "react";
-import { Source } from "../../../shared/items/documents";
-import { on } from "../../../shared/tasks";
+import type { Document } from "../../../shared/items/documents";
 import { adf } from "../../../shared/tools/text";
-import { usePolicy } from "../../hooks/policy";
-import { ToolActivity } from "./activity";
-import { ToolTrace } from "./trace";
 
 /**
  * Renders a policy document as ADF content, with optional table-of-contents mode.
  *
- * Activity and error states are displayed only in the main view mode (not in TOC mode).
- *
  * @param props the component props
- * @param props.source the source attachment identifier
+ * @param props.document the policy document to render
  * @param props.as the rendering mode: `"text"` for full content (default) or `"toc"` for table of contents
  */
 export function ToolPolicy({
 
-	source,
+	document,
 	as
 
 }: {
 
-	source: Source
+	document: Document
 	as?: Parameters<typeof adf>[1]
 
 }) {
 
-	const policy = usePolicy(source);
-
-
-	return on(policy, {
-
-		// report only on the manin view
-
-		state: activity => as === undefined ? <ToolActivity activity={activity}/> : null,
-		trace: trace => as === undefined ? <ToolTrace trace={trace}/> : null,
-
-		value: document => <AdfRenderer document={adf(document.content, as)}/>
-
-	});
+	return <AdfRenderer document={adf(document.content, as)}/>;
 
 }

@@ -20,8 +20,9 @@
  * @module
  */
 
+import { Icon, Pressable, Tooltip, xcss } from "@forge/react";
 import React from "react";
-import { ToolAction } from "./action";
+import type { SafeXCSS } from "../index";
 
 /**
  * Renders a chevron toggle button for expanding and collapsing content sections.
@@ -55,19 +56,31 @@ export function ToolToggle({
 	const isVertical = direction === "vertical";
 	const content = label || "content";
 
-	const glyphExpanded = isVertical ? "chevron-up" : "chevron-left";
-	const glyphCollapsed = isVertical ? "chevron-down" : "chevron-right";
-
 	const labelExpanded = `Hide ${content}`;
 	const labelCollapsed = `Show ${content}`;
 
-	return <ToolAction
+	const glyphExpanded = isVertical ? "chevron-up" : "chevron-left";
+	const glyphCollapsed = isVertical ? "chevron-down" : "chevron-right";
 
-		icon={expanded ? glyphExpanded : glyphCollapsed}
-		label={expanded ? labelExpanded : labelCollapsed}
+	return <Pressable
+
+		xcss={xcss({
+			backgroundColor: "color.background.neutral.subtle"
+		}) as SafeXCSS}
 
 		onClick={onToggle}
 
-	/>;
+	>
+
+		<Tooltip content={expanded ? labelExpanded : labelCollapsed}>
+
+			<Icon size={"medium"}
+				label={""}
+				glyph={expanded ? glyphExpanded : glyphCollapsed}
+			/>
+
+		</Tooltip>
+
+	</Pressable>;
 
 }

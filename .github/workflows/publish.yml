@@ -1,0 +1,58 @@
+name: Publish
+
+on:
+  push:
+    branches: [ 'release/*' ]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-${{ github.ref_name }}
+  cancel-in-progress: false
+
+jobs:
+
+  deploy:
+
+    runs-on: ubuntu-latest
+
+    env:
+      FORGE_EMAIL: ${{ secrets.FORGE_EMAIL }}
+      FORGE_API_TOKEN: ${{ secrets.FORGE_API_TOKEN }}
+
+    steps:
+
+      - name: Resolve environment
+        run: echo "FORGE_ENV=${GITHUB_REF_NAME#release/}" >> "$GITHUB_ENV"
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Update npm
+        run: npm install -g npm@latest
+
+      - name: Install Forge CLI
+        run: npm install -g @forge/cli
+
+      - name: Install dependencies
+        run: npm ci --legacy-peer-deps
+
+      - name: Test
+        run: npm run check
+
+      - name: Configure Forge # suppress interactive prompts in non-TTY environment
+        run: |
+          forge settings set usage-analytics true
+          forge settings set default-environment ${{ env.FORGE_ENV }}
+
+      - name: Deploy
+        run: >
+          forge deploy
+          --non-interactive
+          -e ${{ env.FORGE_ENV }}

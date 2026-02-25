@@ -17,18 +17,16 @@
 /**
  * Compliance issues management hook.
  *
- * Provides reactive access to the list of compliance issues with actions for triggering analysis, transitioning
- * issue states, updating severity levels, and adding annotations.
+ * Provides reactive access to the list of compliance issues with actions for triggering analysis and clearing.
  *
  * @module
  */
 
-import { useEffect, useState } from "react";
-import { isArray } from "../../shared";
-import { Issue, State } from "../../shared/items/issues";
-import { Status } from "../../shared/tasks";
-import { execute } from "../ports/index";
-import { useCache } from "./cache";
+import { useEffect, useMemo, useState } from "react";
+import type { Issue, IssueUpdate } from "../../shared/items/issues";
+import { Activity, type Status } from "../../shared/store";
+import { useStore } from "./store";
+
 
 /**
  * Available actions for managing compliance issues.
@@ -36,33 +34,27 @@ import { useCache } from "./cache";
 export interface IssuesActions {
 
 	/**
-	 * Triggers a new compliance analysis and refreshes the issues list.
+	 * Persists changes to a compliance issue. State transitions are handled reactively by the store.
+	 *
+	 * @param issue The unique issue identifier
+	 * @param update The mutable fields to update
 	 */
-	refresh: () => Promise<void>;
+	update: (issue: string, update: IssueUpdate) => Promise<void>;
 
 	/**
-	 * Transitions an issue to a new workflow state.
-	 *
-	 * @param issue the issue identifier
-	 * @param state the target state
+	 * Triggers a new compliance analysis. State transitions are handled reactively by the store.
 	 */
-	transition: (issue: string, state: State) => Promise<void>;
+	analyse: () => Promise<void>;
 
 	/**
-	 * Updates the severity level of an issue.
-	 *
-	 * @param issue the issue identifier
-	 * @param severity the target severity level
+	 * Clears all cached issue data. State transitions are handled reactively by the store.
 	 */
-	classify: (issue: string, severity: Issue["severity"]) => Promise<void>;
+	clear: () => Promise<void>;
 
 	/**
-	 * Updates the annotations for an issue.
-	 *
-	 * @param issue the issue identifier
-	 * @param notes the markdown annotations content
+	 * Dismisses errors and resets the issues cache, triggering a re-fetch from the server.
 	 */
-	annotate: (issue: string, notes: string) => Promise<void>;
+	reset: () => void;
 
 }
 
@@ -72,127 +64,44 @@ export interface IssuesActions {
 /**
  * Manages the lifecycle of compliance issues for the current page.
  *
- * Loads cached issues on mount, supports triggering new analyses, and provides optimistic mutation actions for state
- * transitions, severity classification, and annotations.
+ * Loads issues on mount and subscribes to reactive updates via the store's observation system. Provides actions
+ * for triggering analysis and clearing.
  *
  * @return a tuple of `[status, actions]` where status is the current issues list or activity/error state
  */
 export function useIssues(): [Status<ReadonlyArray<Issue>>, IssuesActions] {
 
-	const { getCache, setCache } = useCache();
+	const store = useStore();
 
-	const key = "issues";
-	const cached = getCache<ReadonlyArray<Issue>>(key);
-
-	const [issues, setIssues] = useState<Status<ReadonlyArray<Issue>>>(cached ?? []);
+	const [issues, setIssues] = useState<Status<ReadonlyArray<Issue>>>(Activity.Submitting);
 
 
-	function update(issues: Status<ReadonlyArray<Issue>>) {
+	useEffect(() => store.observeIssues(setIssues), [store]);
 
-		setIssues(issues);
 
-		if ( isArray<Issue>(issues) ) {
-			setCache(key, issues);
+	// ;) stable ref prevents render loops in consumers that include actions in useEffect deps
+
+	const actions = useMemo(() => ({
+
+		async update(issue: string, changes: IssueUpdate): Promise<void> {
+			await store.updateIssues(issue, changes);
+		},
+
+		async analyse(): Promise<void> {
+			await store.analyseIssues();
+		},
+
+		async clear(): Promise<void> {
+			await store.clearIssues();
+		},
+
+		reset(): void {
+			store.resetIssues();
 		}
 
-	}
-
-	function mutate(id: string, changes: Partial<Issue>) {
-
-		setIssues(current => {
-			if ( isArray<Issue>(current) ) {
-
-				const updated = current.map(issue => issue.id === id
-					? { ...issue, ...changes }
-					: issue
-				);
-
-				setCache(key, updated);
-
-				return updated;
-
-			} else {
-
-				return current;
-
-			}
-		});
-
-	}
+	}), [store]);
 
 
-	async function refresh(): Promise<void> {
-
-		await execute<ReadonlyArray<Issue>>(update, {
-			type: "analyze"
-		});
-
-	}
-
-	async function transition(issue: string, state: State): Promise<void> {
-
-		await execute<void>(() => { }, {
-			type: "transition",
-			issue,
-			state
-		});
-
-		mutate(issue, { state });
-
-	}
-
-	async function classify(issue: string, severity: Issue["severity"]): Promise<void> {
-
-		await execute<void>(() => { }, {
-			type: "classify",
-			issue,
-			severity
-		});
-
-		mutate(issue, { severity });
-
-	}
-
-	async function annotate(issue: string, annotations: string): Promise<void> {
-
-		await execute<void>(() => { }, {
-			type: "annotate",
-			issue,
-			annotations
-		});
-
-		mutate(issue, { annotations });
-
-	}
-
-
-	useEffect(() => {
-
-		if ( cached ) {
-
-			setIssues(cached);
-
-		} else {
-
-			execute<ReadonlyArray<Issue>>(update, {
-
-				type: "issues"
-
-			});
-
-		}
-
-	}, [cached]);
-
-
-	return [
-		issues,
-		{
-			refresh,
-			transition,
-			classify,
-			annotate
-		}
-	];
+	return [issues, actions];
 
 }

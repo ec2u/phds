@@ -20,48 +20,52 @@
  * @module
  */
 
-import { useEffect, useState } from "react";
-import { Catalog } from "../../shared/items/documents";
-import { Status } from "../../shared/tasks";
-import { execute } from "../ports/index";
-import { useCache } from "./cache";
+import { useEffect, useMemo, useState } from "react";
+import type { Catalogue } from "../../shared/items/documents";
+import { Activity, type Status } from "../../shared/store";
+import { useStore } from "./store";
+
 
 /**
- * Fetches and caches the catalogue of available policy documents.
- *
- * Returns the current status of the policies catalogue, loading from the in-memory cache on subsequent renders.
- *
- * @return the catalogue status: the source-to-title mapping, an activity state, or an error trace
+ * Available actions for managing the policies catalogue.
  */
-export function usePolicies(): Status<Catalog> {
+export interface PoliciesActions {
 
-	const { getCache, setCache } = useCache();
+	/**
+	 * Dismisses errors and resets the policies catalogue cache, triggering a re-fetch from the server.
+	 */
+	reset: () => void;
 
-	const key = "policies";
-	const cached = getCache<Catalog>(key);
-
-	const [policies, setPolicies] = useState<Status<Catalog>>(cached ?? {});
-
-
-	const update = (policies: Status<Catalog>) => {
-		setPolicies(policies);
-		setCache(key, policies);
-	};
+}
 
 
-	useEffect(() => {
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		if ( cached ) { setPolicies(cached); } else {
+/**
+ * Fetches the catalogue of available policy documents and subscribes to reactive updates.
+ *
+ * @return a tuple of `[status, actions]` where status is the current policies catalogue or activity/error state
+ */
+export function usePolicies(): [Status<Catalogue>, PoliciesActions] {
 
-			execute<Catalog>(update, {
+	const store = useStore();
 
-				type: "policies"
+	const [policies, setPolicies] = useState<Status<Catalogue>>(Activity.Submitting);
 
-			});
 
+	useEffect(() => store.observePolicies(setPolicies), [store]);
+
+
+	// ;) stable ref prevents render loops in consumers that include actions in useEffect deps
+
+	const actions = useMemo(() => ({
+
+		reset(): void {
+			store.resetPolicies();
 		}
 
-	}, [cached]);
+	}), [store]);
 
-	return policies;
+
+	return [policies, actions];
 }

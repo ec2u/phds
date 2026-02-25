@@ -17,20 +17,31 @@
 /**
  * Forge resolver handler for client-server communication.
  *
- * Registers the task submission and monitoring endpoints as Forge resolver definitions.
+ * Registers resource-centric resolver endpoints as Forge resolver definitions.
  *
  * @module index
  */
 
 import Resolver from "@forge/resolver";
-import { monitorTask, submitTask } from "./tasks";
+import { getAgreement } from "./agreement";
+import { analyseIssues, clearIssues, getIssues, updateIssues } from "./issues";
+import { clearPolicy, getPolicies, getPolicy } from "./policies";
+
 
 /**
  * The Forge resolver handler definitions for the macro backend.
  */
 export const handler = new Resolver()
 
-	.define(submitTask.name, submitTask as any)
-	.define(monitorTask.name, monitorTask as any)
+	.define(getAgreement.name, getAgreement)
+
+	.define(getPolicies.name, getPolicies)
+	.define(getPolicy.name, getPolicy)
+	.define(clearPolicy.name, clearPolicy)
+
+	.define(getIssues.name, getIssues)
+	.define(analyseIssues.name, analyseIssues)
+	.define(clearIssues.name, clearIssues)
+	.define(updateIssues.name, updateIssues)
 
 	.getDefinitions();

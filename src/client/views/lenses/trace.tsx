@@ -20,34 +20,49 @@
  * @module
  */
 
-import { EmptyState, Icon } from "@forge/react";
+import { Button, EmptyState, Icon, Stack } from "@forge/react";
 import React from "react";
-import { Trace } from "../../../shared";
+import type { Trace } from "../../../shared/store";
 
 /**
- * Renders an error trace as an empty state with the error message and status code.
+ * Renders an error trace as an empty state with a dismiss action.
  *
  * @param props the component props
  * @param props.trace the error trace to display
+ * @param props.onDismiss optional dismiss callback
  */
 export function ToolTrace({
 
-	trace
+	trace,
+
+	onDismiss
 
 }: {
 
 	trace: Trace
 
+	onDismiss?: () => void
+
 }) {
 
-	const code = trace.code;
-	const text = trace.text
-		? trace.text.replace(/^./, c => c.toUpperCase())
+	const text = trace
+		? trace.replace(/^(\(\d+\)\s*)?(.)/, (_, prefix, c) => (prefix ?? "")+c.toUpperCase())
 		: "Unable to process document";
 
 	return <EmptyState width={"narrow"}
+
 		header={"Processing Error"}
-		description={`${text} (${code})`}
-		primaryAction={<Icon label={""} glyph={"error"} size={"large"} color={"color.icon.warning"}/>}
+
+		description={<Stack alignInline={"center"} space={"space.100"}>
+			<Icon label={""} glyph={"error"} size={"large"} color={"color.icon.warning"}/>
+			{text}
+		</Stack>}
+
+		primaryAction={onDismiss
+			? <Button appearance={"default"} iconBefore={"cross"} onClick={onDismiss}>Dismiss</Button>
+			: undefined
+		}
+
 	/>;
+
 }

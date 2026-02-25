@@ -1,0 +1,103 @@
+<!--
+  - Copyright © 2025-2026 EC2U Alliance
+  -
+  - Licensed under the Apache License, Version 2.0 (the "License");
+  - you may not use this file except in compliance with the License.
+  - You may obtain a copy of the License at
+  -
+  -     http://www.apache.org/licenses/LICENSE-2.0
+  -
+  - Unless required by applicable law or agreed to in writing, software
+  - distributed under the License is distributed on an "AS IS" BASIS,
+  - WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  - See the License for the specific language governing permissions and
+  - limitations under the License.
+  -->
+
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 980 180" font-family="system-ui, sans-serif" font-size="13">
+
+    <!-- Background -->
+    <rect width="980" height="180" fill="#fafafa"/>
+
+    <!-- Clients -->
+    <g transform="translate(40, 20)">
+        <rect width="160" height="140" rx="8" fill="#e3f2fd" stroke="#1565c0" stroke-width="1.5"/>
+        <text x="80" y="24" text-anchor="middle" font-weight="bold" fill="#1565c0">Clients (N)</text>
+        <rect x="16" y="40" width="128" height="32" rx="4" fill="#bbdefb" stroke="#1565c0" stroke-width="1"/>
+        <text x="80" y="61" text-anchor="middle" fill="#0d47a1">Local Store</text>
+        <text x="80" y="96" text-anchor="middle" font-size="11" fill="#546e7f">read on demand</text>
+        <text x="80" y="112" text-anchor="middle" font-size="11" fill="#546e7f">update from events</text>
+        <text x="80" y="128" text-anchor="middle" font-size="11" fill="#546e7f">optimistic on submit</text>
+    </g>
+
+    <!-- Server -->
+    <g transform="translate(300, 20)">
+        <rect width="160" height="140" rx="8" fill="#e8f5e9" stroke="#2e7d32" stroke-width="1.5"/>
+        <text x="80" y="24" text-anchor="middle" font-weight="bold" fill="#2e7d32">Server (1)</text>
+        <rect x="16" y="40" width="128" height="32" rx="4" fill="#c8e6c9" stroke="#2e7d32" stroke-width="1"/>
+        <text x="80" y="61" text-anchor="middle" fill="#1b5e20">Main Store (SSoT)</text>
+        <text x="80" y="96" text-anchor="middle" font-size="11" fill="#546e7f">direct KVS writes</text>
+        <text x="80" y="112" text-anchor="middle" font-size="11" fill="#546e7f">reactive KVS updates</text>
+        <text x="80" y="128" text-anchor="middle" font-size="11" fill="#546e7f">event publishing</text>
+    </g>
+
+    <!-- Async Tasks -->
+    <g transform="translate(560, 20)">
+        <rect width="160" height="140" rx="8" fill="#fff3e0" stroke="#e65100" stroke-width="1.5"/>
+        <text x="80" y="24" text-anchor="middle" font-weight="bold" fill="#e65100">Async Tasks (N)</text>
+        <rect x="16" y="40" width="128" height="32" rx="4" fill="#ffe0b2" stroke="#e65100" stroke-width="1"/>
+        <text x="80" y="61" text-anchor="middle" fill="#bf360c">Workers</text>
+        <text x="80" y="96" text-anchor="middle" font-size="11" fill="#546e7f">long-running work</text>
+        <text x="80" y="112" text-anchor="middle" font-size="11" fill="#546e7f">progress via store</text>
+        <text x="80" y="128" text-anchor="middle" font-size="11" fill="#546e7f">results via store</text>
+    </g>
+
+    <!-- Gemini LLM -->
+    <g transform="translate(820, 20)">
+        <rect width="120" height="140" rx="8" fill="#fce4ec" stroke="#c62828" stroke-width="1.5"/>
+        <text x="60" y="24" text-anchor="middle" font-weight="bold" fill="#c62828">Gemini LLM</text>
+        <text x="60" y="80" text-anchor="middle" font-size="11" fill="#546e7f">PDF extraction</text>
+        <text x="60" y="96" text-anchor="middle" font-size="11" fill="#546e7f">policy translation</text>
+        <text x="60" y="112" text-anchor="middle" font-size="11" fill="#546e7f">compliance analysis</text>
+    </g>
+
+    <!-- Left gap: Clients ↔ Server -->
+    <line x1="200" y1="58" x2="298" y2="58" stroke="#546e7f" stroke-width="1.5" marker-end="url(#arrowGrey)"/>
+    <text x="250" y="52" text-anchor="middle" font-size="11" fill="#546e7f">request</text>
+
+    <line x1="300" y1="78" x2="202" y2="78" stroke="#546e7f" stroke-width="1.5" marker-end="url(#arrowGrey)"/>
+    <text x="250" y="72" text-anchor="middle" font-size="11" fill="#546e7f">response</text>
+
+    <line x1="300" y1="118" x2="202" y2="118" stroke="#7b1fa2" stroke-width="1.5" stroke-dasharray="4 3"
+            marker-end="url(#arrowPurple)"/>
+    <text x="250" y="112" text-anchor="middle" font-size="11" fill="#7b1fa2">events</text>
+
+    <!-- Middle gap: Server ↔ Async Tasks -->
+    <line x1="460" y1="58" x2="558" y2="58" stroke="#546e7f" stroke-width="1.5" marker-end="url(#arrowGrey)"/>
+    <text x="510" y="52" text-anchor="middle" font-size="11" fill="#546e7f">spawn</text>
+
+    <line x1="560" y1="118" x2="462" y2="118" stroke="#7b1fa2" stroke-width="1.5" stroke-dasharray="4 3"
+            marker-end="url(#arrowPurple)"/>
+    <text x="510" y="112" text-anchor="middle" font-size="11" fill="#7b1fa2">events</text>
+
+    <!-- Right gap: Async Tasks ↔ Gemini LLM -->
+    <line x1="720" y1="70" x2="818" y2="70" stroke="#546e7f" stroke-width="1.5" marker-end="url(#arrowGrey)"/>
+    <text x="770" y="64" text-anchor="middle" font-size="11" fill="#546e7f">content</text>
+
+    <line x1="720" y1="90" x2="818" y2="90" stroke="#546e7f" stroke-width="1.5" marker-end="url(#arrowGrey)"/>
+    <text x="770" y="84" text-anchor="middle" font-size="11" fill="#546e7f">prompts</text>
+
+    <line x1="820" y1="110" x2="722" y2="110" stroke="#546e7f" stroke-width="1.5" marker-end="url(#arrowGrey)"/>
+    <text x="770" y="104" text-anchor="middle" font-size="11" fill="#546e7f">response</text>
+
+    <!-- Arrow Markers -->
+    <defs>
+        <marker id="arrowGrey" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+            <path d="M0,0 L8,3 L0,6" fill="#546e7f"/>
+        </marker>
+        <marker id="arrowPurple" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+            <path d="M0,0 L8,3 L0,6" fill="#7b1fa2"/>
+        </marker>
+    </defs>
+
+</svg>

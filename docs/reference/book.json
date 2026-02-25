@@ -34,9 +34,16 @@
       ]
     },
     "intopic-toc": {
-      "selector": ".markdown-section h2, .markdown-section h3",
+      "selector": ".markdown-section h1, .markdown-section h2, .markdown-section h3",
       "visible": true,
       "label": "On This Page"
+    },
+    "flexible-alerts": {
+      "important": {
+        "label": "Important",
+        "icon": "fa fa-exclamation-triangle",
+        "className": "danger"
+      }
     },
     "page-footer-ex": {
       "copyright": "Copyright © 2025-2026 EC2U Alliance",

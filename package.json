@@ -14,23 +14,26 @@
     "email": "cc@ml.ec2u.eu",
     "url": "https://www.ec2u.eu/"
   },
-  "main": "index.js",
+  "type": "commonjs",
+  "main": "index",
   "scripts": {
     "clean": "rm -rf .forge node_modules",
-    "setup": "npm install --legacy-peer-deps",
+    "setup": "npm install --legacy-peer-deps && npm audit fix; npm rebuild",
     "check": "npx vitest --typecheck run",
     "build": "npx honkit build docs/reference",
-    "serve": "npx dotenv -- forge tunnel --debug --debugStartingPort 9229 --debugFunctionHandlers server/ports/index.handler server/tasks/async/index.handler",
+    "serve": "npx dotenv -- forge tunnel",
     "proof": "npx honkit serve --port 4100 --open docs/reference",
-    "issue": "forge deploy -e production && forge install --non-interactive --upgrade -s https://ec2u.atlassian.net/ -p confluence -e production"
+    "issue": "forge install --non-interactive --upgrade -s https://ec2u.atlassian.net/ -p confluence -e production"
   },
   "dependencies": {
-    "@forge/bridge": "^4.5.2",
+    "@forge/bridge": "^5.9.1",
     "@forge/events": "^1.0.3",
     "@forge/kvs": "^1.0.4",
     "@forge/react": "^11.2.5",
+    "@forge/realtime": "^0.3.2",
     "@forge/resolver": "^1.6.10",
     "@google/genai": "1.30.0",
+    "bignumber.js": "^9.3.1",
     "react": "^18.2.0",
     "remark": "^15.0.1",
     "remark-gfm": "^4.0.1",
@@ -48,6 +51,7 @@
     "gitbook-plugin-toolbar": "^0.6.0",
     "honkit": "^6.1.6",
     "supports-color": "^10.2.2",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "vitest": "^4.0.18"
   }
 }

@@ -1,4 +1,4 @@
-Your task is to perform a rigorous compliance audit. You will analyze the provided document against the governing
+Your task is to perform a rigorous compliance audit. You will analyse the provided document against the governing
 policy. Your goal is to identify and report every instance of inconsistency, ambiguity, or non-compliance. Your final
 output must be a comprehensive and actionable report formatted as a single JSON object.
 
@@ -6,7 +6,7 @@ The name of the document is: {{document_name}} The name of the policy is: {{poli
 
 ### Objective
 
-Your task is to analyze the provided document (e.g., a course syllabus, departmental handbook, research proposal)
+Your task is to analyse the provided document (e.g., a course syllabus, departmental handbook, research proposal)
 against the reference policy (e.g., a university-wide academic integrity policy, research ethics code). You must
 identify and report every section, clause, or statement in the document that clashes with the policy.
 

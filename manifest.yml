@@ -28,13 +28,13 @@ modules:
       handler: server/ports/index.handler
 
     - key: executor
-      handler: server/tasks/async/index.handler
+      handler: server/tasks/index.handler
       timeoutSeconds: 600
 
 resources:
 
   - key: macro
-    path: src/client/macro.tsx
+    path: src/client/cards/main.tsx
 
 app:
 
@@ -43,7 +43,7 @@ app:
     name: nodejs22.x
   package:
     extraFiles:
-      - src/server/tasks/async/*.sys.md
+      - src/server/tasks/**/*.sys.md
 
 permissions:
 
@@ -61,4 +61,3 @@ remotes:
     baseUrl: https://generativelanguage.googleapis.com
     operations:
       - fetch
-
