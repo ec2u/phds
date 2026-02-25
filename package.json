@@ -23,7 +23,7 @@
     "build": "npx honkit build docs/reference",
     "serve": "npx dotenv -- forge tunnel",
     "proof": "npx honkit serve --port 4100 --open docs/reference",
-    "issue": "forge install --non-interactive --upgrade -s https://ec2u.atlassian.net/ -p confluence -e development"
+    "issue": "forge install --non-interactive --upgrade -s https://ec2u.atlassian.net/ -p confluence -e production"
   },
   "dependencies": {
     "@forge/bridge": "^5.9.1",
