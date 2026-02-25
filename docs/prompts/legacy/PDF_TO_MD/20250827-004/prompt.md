@@ -4,7 +4,7 @@ You are an expert AI data extraction specialist.
 
 ### Objective
 
-Your task is to analyze the provided document and generate a single, valid JSON object that encapsulates the document's
+Your task is to analyse the provided document and generate a single, valid JSON object that encapsulates the document's
 core information. This involves first converting the substantive content into high-quality GitHub Flavored Markdown (
 GFM) and then structuring it according to the specified JSON format.
 

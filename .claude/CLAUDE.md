@@ -16,7 +16,7 @@ This is an Atlassian Forge application built with React and TypeScript that runs
 
 - **Architecture**: See @docs/blueprints/architecture.md for system architecture and component details
 - **Storage**: See @docs/blueprints/storage.md for storage patterns and data lifecycle
-- **Adding Tasks**: See @docs/development/tasks.md for implementing new asynchronous task types
+- **API**: See @docs/blueprints/api.md for the resource-centric API design
 - **Forge Lifecycle**: See @docs/development/forge.md for deployment, authentication, and environment management
 - **Development Resources**: See @docs/development/resources.md for Forge documentation and tools
 - **User Documentation**: See @docs/development/honkit.md for the HonKit-based documentation site setup

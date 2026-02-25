@@ -53,52 +53,37 @@ Please take a screenshot showing:
 - Save to: [inbox path]
 ```
 
+## Screenshot Capture Tips
+
+**Full-page screenshots** are taken via Chrome DevTools: open the command menu (`Cmd+Shift+P` on macOS, `Ctrl+Shift+P`
+on Windows/Linux) and select **"Capture full size screenshot"**. Screenshots are saved to Chrome's default download
+folder (`~/Downloads/` on macOS/Linux). Partial screenshots (macOS `Cmd+Shift+4`) are at Retina 2x resolution — do not
+composite partial crops onto full-page shots without scaling; the pixel densities differ.
+
+**Forge UI dropdowns** (Select, Popup, and other focus-dependent components) lose focus when DevTools or the screenshot
+tool steals it. **Workaround**: in Chrome DevTools, go to the **Rendering** tab and enable **"Emulate a focused
+page"** — this keeps the dropdown open while taking the screenshot.
+
+## Screenshot Reuse
+
+The same base screenshot can be copied to multiple OmniGraffle canvases (or SVG files) and annotated differently. For
+instance, a populated Issues view serves as base for: `filter-issues`, `update-analysis`, `clear-issues-1-2`,
+`collapse-references`, `classify-issue`, `transition-issue`, `annotate-issue-1-2`. Annotations (callout markers) are
+added as overlay groups on each copy.
+
 ## Processing Screenshots
 
-After the operator places raw screenshots in the inbox:
+After the operator exports annotated PNGs from OmniGraffle:
 
-1. **Inspect**: read each PNG to verify it shows the correct UI state
-1. **Rename**: move the file from the inbox to the target location with a kebab-case name matching the documentation
-   section
-1. **Embed**: run the embedding script to quantise and embed the PNG into a self-contained SVG
-1. **Annotate**: if the screenshot needs callouts, delegate to the `screenshot-processor` skill with specific
-   instructions on which UI elements to highlight and number
+1. **Inspect**: read each PNG to verify it shows the correct UI state and annotations
+1. **Verify naming**: confirm filenames follow kebab-case convention and match the documentation sections
 1. **Reference**: add or update image references in the markdown content
 
-## Inbox Convention
+## Export Convention
 
-- **Inbox folder**: `docs/reference/manual/screenshots.inbox/`
-- **Operator** saves raw PNGs here with any temporary name
-- **This skill** inspects, renames, annotates, and moves files to their final locations
-
-## Embedding Pipeline
-
-Raw PNGs from the inbox are quantised and embedded as base64 data URIs inside SVG files. This produces self-contained
-SVGs that render correctly via markdown `![](image.svg)` syntax (external PNG references are blocked by `<img>` tag
-security).
-
-Use the embedding script to convert OmniGraffle SVG exports:
-
-```bash
-# embed all SVGs in a directory
-python3 .claude/skills/docs-manager/scripts/embed-screenshots.py docs/reference/manual/screenshots/*.svg
-
-# embed a specific file
-python3 .claude/skills/docs-manager/scripts/embed-screenshots.py docs/reference/manual/screenshots/new-shot.svg
-```
-
-The script is idempotent — already-embedded SVGs are skipped. It quantises PNGs to 256 colours (~75% size reduction),
-embeds them as base64 data URIs, and fixes OmniGraffle matrix transforms that cause vertical compression. Requires
-Python3 + Pillow (available on macOS by default).
-
-Typical sizes:
-
-| Stage | Size |
-|---|---|
-| Raw PNG (1280x800) | ~127 KB |
-| Quantised PNG | ~31 KB |
-| Base64 overhead (+33%) | ~42 KB |
-| Final SVG (with annotations) | ~47 KB |
+- **OmniGraffle source**: `docs/reference/manual/screenshots.graffle`
+- **Export folder**: `docs/reference/manual/screenshots/`
+- **Operator** annotates in OmniGraffle and exports each canvas as PNG at 72 dpi
 
 # Documentation Authoring
 
@@ -111,12 +96,30 @@ Follow the `markdown-writer` skill guidelines for all markdown content. Key poin
 - Use screenshots to illustrate each major action
 - Reference screenshots with descriptive alt text
 
-## Image References
+## Ordered Lists and Embedded Content
 
-Reference screenshots in markdown using relative paths to self-contained SVGs:
+Images and blockquote callouts (`> [!NOTE]`, `> [!IMPORTANT]`, etc.) between numbered list items break list continuity
+and restart numbering. **Fix**: indent these elements with 3 spaces so they become part of the preceding list item:
 
 ```markdown
-![Analyze agreement button highlighted](screenshots/analyze-agreement.svg)
+1. First step
+
+   ![Screenshot](screenshots/step-1.svg)
+
+2. Second step
+
+   > [!IMPORTANT]
+   > Critical note between steps.
+
+3. Third step
+```
+
+## Image References
+
+Reference screenshots in markdown using relative paths to exported PNGs:
+
+```markdown
+![Analyse agreement button highlighted](screenshots/analyse-agreement.png)
 ```
 
 # Documentation Workflows
@@ -160,7 +163,7 @@ Before finalizing documentation, verify:
 
 - Every referenced image exists at the specified path
 - All screenshots are annotated where steps reference numbered callouts
-- SVG is self-contained (embedded quantised PNG, no external references)
+- PNGs are exported at 72 dpi from OmniGraffle
 - Image alt text is descriptive
 
 **Structure:**

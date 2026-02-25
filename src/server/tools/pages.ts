@@ -86,3 +86,67 @@ export async function fetchPage(page: string): Promise<{ title: string; content:
 		content: content ? JSON.parse(content) : {}
 	};
 }
+
+/**
+ * Updates a Confluence page's body content in Atlassian Document Format.
+ *
+ * Fetches the current page version, then performs a PUT with the new ADF content and an incremented version number.
+ *
+ * @param page The Confluence page identifier
+ * @param content The new ADF content to write
+ *
+ * @returns The updated page title and ADF content
+ *
+ * @throws {Error} If the page cannot be updated
+ */
+export async function storePage(page: string, content: unknown): Promise<{ title: string; content: unknown }> {
+
+	// fetch current version
+
+	const versionUrl = route`/wiki/api/v2/pages/${page}`;
+
+	const versionResponse = await api.asApp().requestConfluence(versionUrl, {
+		headers: { "Accept": "application/json" }
+	});
+
+	if ( !versionResponse.ok ) {
+		throw new Error(`failed to fetch page version: ${versionResponse.status} ${versionResponse.statusText}`);
+	}
+
+	const version = await versionResponse.json();
+
+	// update page
+
+	const updateUrl = route`/wiki/api/v2/pages/${page}`;
+
+	const response = await api.asApp().requestConfluence(updateUrl, {
+		method: "PUT",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify({
+			id: page,
+			status: "current",
+			title: version.title,
+			body: {
+				representation: "atlas_doc_format",
+				value: JSON.stringify(content)
+			},
+			version: {
+				number: version.version.number + 1,
+				message: "Updated via macro"
+			}
+		})
+	});
+
+	if ( !response.ok ) {
+		throw new Error(`failed to update page: ${response.status} ${response.statusText}`);
+	}
+
+	const data = await response.json();
+	const body = data.body?.atlas_doc_format?.value;
+
+	return {
+		title: data.title || "",
+		content: body ? JSON.parse(body) : {}
+	};
+
+}

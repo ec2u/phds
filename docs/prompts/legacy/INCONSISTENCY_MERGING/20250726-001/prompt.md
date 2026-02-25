@@ -49,7 +49,7 @@ Example 3: These are DIFFERENT and UNIQUE inconsistencies
 
 # INSTRUCTIONS
 
-1. Carefully analyze the list of raw inconsistencies provided in the INPUT DATA section.
+1. Carefully analyse the list of raw inconsistencies provided in the INPUT DATA section.
 2. For each item, identify the core policy point (e.g., intellectual property, study duration, committee composition).
 3. Group together all items that describe the exact same factual discrepancy.
 4. For each group of duplicates, formulate one single, clear, and concise canonical description that summarizes the core

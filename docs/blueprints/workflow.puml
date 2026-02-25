@@ -1,47 +1,155 @@
-@startuml EC2U PhD Agreements Tool Flow
+@startuml Event-Driven Workflow
 !theme plain
 
-participant "Client" as client
+participant "Client A" as clientA
+participant "Client B" as clientB
+participant "Client Store" as cstore
 participant "Server" as server
-participant "Key-Value Store" as store
-participant "Async Worker" as worker
+participant "Server Store" as sstore
+participant "Event Bus" as bus
+participant "Async Task" as task
 participant "Gemini" as gemini
 
-client -> server: launch task
+== Read (Cache Hit) ==
+
+clientA -> cstore: get resource
+activate cstore
+cstore -> server: read resource
 activate server
-server -> store: initialize task status
-server -> worker: delegate task
-activate worker
-server --> client: task id
+server -> sstore: read
+sstore --> server: value (fresh)
+server --> cstore: 200 value
 deactivate server
+cstore --> clientA: value
+deactivate cstore
 
-par
-    group loop [task execution]
-        worker -> worker: load prompt
-        worker -> gemini: execute prompt
-        activate gemini
-        gemini --> worker: response
-        deactivate gemini
-        worker -> store: update task status
-    end
-    worker -> worker: assemble task results
-    worker -> store: store task results
-    deactivate worker
-else
-    group loop [polling]
-        client -> server: check status
-        activate server
-        server -> store: retrieve task status
-        store --> server: task status
-        server --> client: task status
-        deactivate server
-    end
+== Sync Update ==
 
-end
+clientA -> cstore: submit update
+activate cstore
+
+cstore -> cstore: optimistic update
+cstore --> clientA: optimistic value
+
+cstore -> server: submit update
 activate server
-server -> store: retrieve task results
-store --> server: task results
-server -> store: clear task status
-server --> client: task results
+server -> sstore: write result
+server ->> bus: event(Updated, result)
+activate bus
+server --> cstore: 200 accepted
+deactivate server
+deactivate cstore
+
+bus ->> cstore: event(Updated, result)
+note right: server writes KVS and\npublishes event within\nthe same resolver call
+deactivate bus
+
+== Async Action Request ==
+
+clientA -> cstore: request action
+activate cstore
+
+cstore -> cstore: purge & optimistically\nupdate to Submitting
+cstore --> clientA: Submitting
+
+cstore -> server: submit action
+activate server
+
+server -> sstore: write JobState(Scheduling)
+server -> task: push to queue
+activate task
+
+server --> cstore: Activity.Scheduling
+deactivate server
+deactivate cstore
+
+note right of server: no event published\nfor scheduling — the\nresponse carries the activity
+
+== Async Task Execution ==
+
+note over task: Worker gate:\nread JobState + getStats(jobId)\nexit if another worker active
+
+task -> gemini: execute prompt
+activate gemini
+
+task -> sstore: report(Fetching)
+task ->> bus: event(Fetching)
+activate bus
+bus ->> cstore: event(Fetching)
+deactivate bus
+
+gemini --> task: response
+deactivate gemini
+
+task -> gemini: execute prompt
+activate gemini
+
+task -> sstore: report(Extracting)
+task ->> bus: event(Extracting)
+activate bus
+bus ->> cstore: event(Extracting)
+deactivate bus
+
+gemini --> task: response
+deactivate gemini
+
+task -> sstore: write result to cache
+task ->> bus: event(Complete, result)
+activate bus
+bus ->> cstore: event(Complete, result)
+note right: events carry full state;\nno server roundtrip needed
+deactivate bus
+deactivate task
+
+cstore --> clientA: value
+
+== Idempotent Duplicate Request ==
+
+clientB -> cstore: request action
+activate cstore
+cstore -> server: submit action
+activate server
+
+note over server: Resolver gate:\nread JobState + getStats(jobId)
+server -> server: inProgress > 0 → skip queue
+
+server --> cstore: stored activity
+deactivate server
+cstore --> clientB: current progress
+deactivate cstore
+
+note over bus: Client B receives\nongoing events from bus
+
+== Stale Task Recovery ==
+
+note over server: Triggered during schedule()\nwhen JobState exists but\njob is done or expired
+
+server -> server: getStats() → inProgress === 0\nor JobDoesNotExistError
+server -> sstore: delete stale JobState
+
+note over server: Falls through to re-queue\ntransparently — no event published
+
+== Error ==
+
+task ->> bus: event(Error, trace)
+activate bus
+bus ->> cstore: event(Error, trace)
+note right: UI components\nhandle error display
+deactivate bus
+
+note over sstore: JobState remains in KVS;\ncleaned up by next schedule() call
+
+== New Client Joins ==
+
+clientB -> cstore: get resource
+activate cstore
+cstore -> server: read resource
+activate server
+server -> sstore: read JobState
+note right of server: schedule() detects\nrunning job via getStats()
+server --> cstore: stored activity
+deactivate server
+cstore --> clientB: current progress
+deactivate cstore
 
 @enduml

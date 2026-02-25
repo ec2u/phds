@@ -24,10 +24,12 @@
  */
 
 import { File, GenerationConfig, GoogleGenAI, Schema } from "@google/genai";
-import { asTrace } from "../../shared";
-import { secret } from "../index";
 
+import { message } from "../../shared/tools/core";
+
+import { matches, trace } from "./gemini.core";
 import { json } from "./mime";
+import { secret } from "./secrets";
 
 
 /**
@@ -104,7 +106,7 @@ export async function upload({
 
 		console.error(error);
 
-		throw asTrace(error);
+		throw trace(error);
 
 	}
 
@@ -251,15 +253,15 @@ export async function process({
 
 		if ( schema ) {
 
-			try {
+			const parsed = responseText.trim() ? JSON.parse(responseText) : {};
 
-				return responseText.trim() ? JSON.parse(responseText) : {};
+			if ( matches(parsed, schema) ) {
 
-			} catch ( parseError ) {
+				return parsed;
 
-				console.warn(`malformed JSON response <${responseText}>`);
+			} else {
 
-				return {};
+				throw message(new Error(`invalid gemini response <${responseText.substring(0, 500)}>`));
 
 			}
 
@@ -273,7 +275,7 @@ export async function process({
 
 		console.error(error);
 
-		throw asTrace(error);
+		throw trace(error);
 
 	}
 

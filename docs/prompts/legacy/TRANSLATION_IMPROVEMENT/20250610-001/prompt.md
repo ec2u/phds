@@ -4,7 +4,7 @@ to review and perfect an initial machine translation.
 Your goal is to produce a final translation that is of human-expert quality, perfectly mirroring the original text in
 every aspect.
 
-**Analyze the following texts:**
+**Analyse the following texts:**
 
 <original_text>
 {{source_content}}

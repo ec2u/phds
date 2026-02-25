@@ -15,38 +15,51 @@
  */
 
 /**
- * Document model types for policy sources and their content.
+ * Document model types for agreement and policy source documents.
  *
  * @module
  */
-
-import { Language } from "./languages";
 
 
 /**
  * Mapping from source identifiers to their display titles.
  */
-export type Catalog = Readonly<Record<Source, Title>>;
+export type Catalogue =
+	| Readonly<Record<Source, Title>>;
+
+/**
+ * BCP 47 language tag identifying document content language.
+ *
+ * @see {@link https://www.rfc-editor.org/info/bcp47 BCP 47 language tags}
+ */
+export type Language =
+	| string
 
 /**
  * Source attachment identifier; empty string for Confluence page body.
  */
-export type Source = "" | string
+export type Source =
+	| ""
+	| string
 
 /**
  * UTC ISO date-time string with millisecond precision.
  */
-export type Instant = string
+export type Instant =
+	| string
 
 /**
  * Human-readable document title.
  */
-export type Title = string
+export type Title =
+	| string
 
 /**
  * Markdown-formatted text content.
  */
-export type Markdown = string
+export type Markdown =
+	| string
+
 
 /**
  * A policy document with its content and metadata.
@@ -82,5 +95,27 @@ export interface Document {
 	 * The document content in markdown format.
 	 */
 	readonly content: Markdown;
+
+}
+
+/**
+ * A reference to a specific location within a source document.
+ */
+export interface Reference {
+
+	/**
+	 * The source attachment identifier.
+	 */
+	readonly source: Source;
+
+	/**
+	 * The referenced document title.
+	 */
+	readonly title: string;
+
+	/**
+	 * The quoted text excerpt from the source.
+	 */
+	readonly excerpt: string;
 
 }

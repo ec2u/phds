@@ -21,15 +21,17 @@
  */
 
 import { Box, Popup, Pressable, Text, xcss } from "@forge/react";
-import React, { useState } from "react";
+import React, { type ReactNode, useEffect, useState } from "react";
+import type { IssueUpdate } from "../../../shared/items/issues";
 import { Issue, Severities, Severity, State, States } from "../../../shared/items/issues";
-import { on } from "../../../shared/tasks";
-import { IssuesActions } from "../../hooks/issues";
+import { on } from "../../../shared/store";
+import { useIssues } from "../../hooks/issues";
 import { useStorage } from "../../hooks/storage";
-import { AnalysisNotPerformedPrompt } from "../elements/analyze";
+import type { SafeXCSS } from "../index";
 import ToolKanban, { Lane } from "../layouts/kanban";
 import { ToolActivity } from "./activity";
 import ToolIssue, { BlueColors, RedColors, SeverityColors, severityLabel, StateColors, stateLabel } from "./issue";
+import { AnalysisNotPerformedPrompt, ToolIssuesActions } from "./issues";
 import { ToolTrace } from "./trace";
 
 
@@ -54,29 +56,34 @@ const initialCollapsed = {
  *
  * Persists lane collapse states to browser localStorage for the current page.
  *
- * @param props the component props
- * @param props.page the Confluence page identifier
- * @param props.issues the issues data and action callbacks
+ * Uses {@link useIssues} internally for data and actions.
+ *
  */
 export function ToolDashboard({
 
-	page,
-	issues: [items, actions]
+	onActions
 
 }: {
 
-	page: string,
-	issues: [ReadonlyArray<Issue>, IssuesActions]
+	onActions: (actions: ReactNode) => () => void;
 
 }) {
 
+	const [items, actions] = useIssues();
+
 	const [stateCollapsed, setStateCollapsed] = useStorage<Record<string, boolean>>(
-		page, "dashboard-states", initialCollapsed.states
+		"dashboard-states", initialCollapsed.states
 	);
 
 	const [severityCollapsed, setSeverityCollapsed] = useStorage<Record<string, boolean>>(
-		page, "dashboard-severities", initialCollapsed.severities
+		"dashboard-severities", initialCollapsed.severities
 	);
+
+
+	useEffect(() => onActions(
+		<ToolIssuesActions items={items} actions={actions}/>
+	), [items, actions, onActions]);
+
 
 	const states: readonly Lane<State>[] = States.map(state => ({
 		value: state,
@@ -105,13 +112,13 @@ export function ToolDashboard({
 	return on(items, {
 
 		state: activity => <ToolActivity activity={activity}/>,
-		trace: trace => <ToolTrace trace={trace}/>,
+		trace: trace => <ToolTrace trace={trace} onDismiss={actions.reset}/>,
 
 		value: issues => {
 
 			return issues.length === 0 ? (
 
-				<AnalysisNotPerformedPrompt onAnalyze={actions.refresh}/>
+				<AnalysisNotPerformedPrompt onAnalyse={actions.analyse}/>
 
 			) : (
 
@@ -124,12 +131,8 @@ export function ToolDashboard({
 					toCol={(issue) => issue.state}
 					toRow={(issue) => issue.severity}
 
-					toCard={(item: Issue) => <Card key={item.id}
-
-						issue={item}
-						actions={actions}
-
-					/>}
+					toCard={(item: Issue) => <Card key={item.id} issue={item}
+						onUpdate={(changes) => actions.update(item.id, changes)}/>}
 
 					onToggleRow={toggleSeverity}
 					onToggleCol={toggleState}
@@ -152,12 +155,14 @@ export function ToolDashboard({
 function Card({
 
 	issue,
-	actions
+
+	onUpdate
 
 }: {
 
 	issue: Issue;
-	actions: IssuesActions;
+
+	onUpdate: (update: IssueUpdate) => Promise<void>;
 
 }) {
 
@@ -183,13 +188,13 @@ function Card({
 				paddingBlock: "space.050",
 				paddingInline: "space.100",
 
-				borderRadius: "border.radius",
+				borderRadius: "radius.small",
 				borderWidth: "border.width",
 				borderStyle: "solid",
 
 				...(isOpen ? RedColors : BlueColors)
 
-			})}
+			}) as SafeXCSS}
 
 			onClick={() => setIsOpen(true)}
 
@@ -200,7 +205,7 @@ function Card({
 		</Pressable>}
 
 		content={() => <Box xcss={xcss({ maxWidth: "75em" })}>
-			<ToolIssue issue={issue} actions={actions}/>
+			<ToolIssue issue={issue} onUpdate={onUpdate}/>
 		</Box>}
 
 		onClose={close}

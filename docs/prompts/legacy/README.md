@@ -58,14 +58,14 @@ Cross-cutting analyses reconstructing the evolution of each prompt family from t
 
 # Prompts
 
-| Prompt | Versions | Period | Description |
-|---|---|---|---|
-| `INCONSISTENCY_DETECTION` | 23 | 2025-06 to 2025-10 | Compliance audit identifying clashes between a document and a policy |
-| `INCONSISTENCY_MERGING` | 2 | 2025-07 to 2025-10 | Deduplication of raw inconsistency reports into unique findings |
-| `JSON_OUTPUT` | 1 | 2025-08 | Reusable fragment enforcing strict JSON output formatting |
-| `PDF_TO_MD` | 4 | 2025-06 to 2025-08 | PDF-to-Markdown conversion with metadata extraction |
-| `PDF_TO_MD_EVALUATION` | 4 | 2025-08 | Quality evaluation of PDF-to-Markdown conversions |
-| `TRANSLATION` | 8 | 2025-06 to 2025-10 | Academic document translation preserving formal register |
-| `TRANSLATION_DRAFTING` | 2 | 2025-08 | First-pass translation draft generation |
-| `TRANSLATION_EVALUATION` | 5 | 2025-08 | Translation quality comparison against ground truth |
-| `TRANSLATION_IMPROVEMENT` | 6 | 2025-06 to 2025-08 | Second-pass translation refinement |
+| Prompt                    | Versions | Period             | Description                                                          |
+|---------------------------|----------|--------------------|----------------------------------------------------------------------|
+| `INCONSISTENCY_DETECTION` | 23       | 2025-06 to 2025-10 | Compliance audit identifying clashes between a document and a policy |
+| `INCONSISTENCY_MERGING`   | 2        | 2025-07 to 2025-10 | Deduplication of raw inconsistency reports into unique findings      |
+| `JSON_OUTPUT`             | 1        | 2025-08            | Reusable fragment enforcing strict JSON output formatting            |
+| `PDF_TO_MD`               | 4        | 2025-06 to 2025-08 | PDF-to-Markdown conversion with metadata extraction                  |
+| `PDF_TO_MD_EVALUATION`    | 4        | 2025-08            | Quality evaluation of PDF-to-Markdown conversions                    |
+| `TRANSLATION`             | 8        | 2025-06 to 2025-10 | Academic document translation preserving formal register             |
+| `TRANSLATION_DRAFTING`    | 2        | 2025-08            | First-pass translation draft generation                              |
+| `TRANSLATION_EVALUATION`  | 5        | 2025-08            | Translation quality comparison against ground truth                  |
+| `TRANSLATION_IMPROVEMENT` | 6        | 2025-06 to 2025-08 | Second-pass translation refinement                                   |

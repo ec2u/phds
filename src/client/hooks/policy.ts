@@ -20,56 +20,86 @@
  * @module
  */
 
-import { useEffect, useState } from "react";
-import { Document, Source } from "../../shared/items/documents";
-import { Language } from "../../shared/items/languages";
-import { Activity, Status } from "../../shared/tasks";
-import { execute } from "../ports/index";
-import { useCache } from "./cache";
+import { useEffect, useMemo, useState } from "react";
+import { Document, type Language, Source } from "../../shared/items/documents";
+import { Activity, type Status } from "../../shared/store";
+import { useStore } from "./store";
+
 
 /**
- * Fetches and caches a single policy document in the requested language.
- *
- * Returns the current status of the document retrieval, loading from the in-memory cache on subsequent renders.
- * Triggers extraction and translation via the backend when no cached version is available.
- *
- * @param source the source attachment identifier
- * @param language the target language code (defaults to `"en"`)
- *
- * @return the document status: the policy document, an activity state, or an error trace
+ * Available actions for managing a single policy document.
  */
-export function usePolicy(source: Source, language: Language = "en"): Status<Document> {
+export interface PolicyActions {
 
-	const { getCache, setCache } = useCache();
+	/**
+	 * Clears the cached policy content and retriggers extraction from the source PDF.
+	 */
+	clear: () => Promise<void>;
 
-	const key = `policy:${source}-${language}`;
-	const cached = getCache<Document>(key);
+	/**
+	 * Dismisses errors and resets the policy document cache, triggering a re-fetch from the server.
+	 */
+	reset: () => void;
 
-	const [policy, setPolicy] = useState<Status<Document>>(cached || Activity.Submitting);
+}
 
 
-	function update(policy: Status<Document>) {
-		setPolicy(policy);
-		setCache(key, policy);
-	}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * Fetches a single policy document in the requested language and subscribes to reactive updates.
+ *
+ * Returns the current status of the document retrieval and available actions. Triggers extraction and translation via
+ * the backend when no cached version is available. When `source` is `undefined`, status holds `undefined` and actions
+ * are no-ops.
+ *
+ * @param source The source attachment identifier, or `undefined` to skip fetching
+ * @param language The target language code (defaults to `"en"`)
+ *
+ * @returns A tuple of `[status, actions]`
+ */
+export function usePolicy(source: undefined | Source, language: Language = "en"): [Status<undefined | Document>, PolicyActions] {
+
+	const store = useStore();
+
+	const [policy, setPolicy] = useState<Status<undefined | Document>>(source ? Activity.Submitting : undefined);
+
 
 	useEffect(() => {
 
-		if ( cached ) { setPolicy(cached); } else {
+		if ( source ) {
 
-			execute<Document>(update, {
+			return store.observePolicy(source, language, setPolicy);
 
-				type: "policy",
+		} else {
 
-				source,
-				language
+			setPolicy(undefined);
 
-			});
+			return undefined;
 
 		}
 
-	}, [cached, source, language]);
+	}, [store, source, language]);
 
-	return policy;
+
+	// ;) stable ref prevents render loops in consumers that include actions in useEffect deps
+
+	const actions = useMemo(() => ({
+
+		async clear(): Promise<void> {
+			if ( source ) {
+				await store.clearPolicy(source, language);
+			}
+		},
+
+		reset(): void {
+			if ( source ) {
+				store.resetPolicy(source, language);
+			}
+		}
+
+	}), [store, source, language]);
+
+	return [policy, actions];
 
 }

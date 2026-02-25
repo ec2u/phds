@@ -5,7 +5,7 @@ high-fidelity comparison between the content of a source PDF document and a targ
 determine if the Markdown file is a semantically accurate and complete representation of the source PDF's textual and
 structural content.
 
-# TASK: Analyze and Report Discrepancies
+# TASK: Analyse and Report Discrepancies
 
 You are provided with two files: a source PDF and a replica MD file. Your task is to analyse whether the replica file
 accurately reflects the content and structure of the source PDF. You must identify and report all discrepancies as a

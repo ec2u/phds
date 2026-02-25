@@ -1,130 +1,111 @@
 ---
 title: System Architecture
+summary: Event-driven client-server architecture with async task execution
+description: |
+  Describes the event-driven store model, application layers, and async
+  execution flow for the EC2U PhD Agreements Tool.
 ---
 
 The EC2U PhD Agreements Tool is a **client-server Atlassian Forge application** for drafting cotutelle PhD agreements
 within Confluence.
 
-# Project Structure
+![System topology](architecture.svg)
 
-## Key Components
+# Topology
 
-- `src/client/body.tsx`: Main React component with tabbed UI interface
-- `src/server/ports/index.ts`: Forge resolver exposing task submission and monitoring endpoints
-- `src/server/tasks/index.ts`: Async task executor handling long-running background tasks
-- `src/shared/`: Shared type definitions and utilities used by both client and server
-- `manifest.yml`: Forge app configuration defining the macro, resolvers, and async consumers
+The system comprises three component types:
 
-## Application Layers
+- **N clients**: browser instances viewing the same Confluence page
+- **1 server**: stateless Forge resolvers acting as the single source of truth
+- **N async tasks**: queue-based workers performing long-running operations
 
-### 1. Client Layer (`src/client/`)
+Forge functions are stateless and request-scoped — no long-lived process can hold a subscription.
 
-- **Entry Point**: `body.tsx` provides the main tabbed UI interface
-- **View Components**: React components in `views/` providing Agreement, Policies, Issues, Chat interfaces
-- **Hooks**: Custom React hooks in `hooks/` for data management (cache, agreement, policies, issues)
-- **Cache System**: `ToolCache` context provider for client-side state management
+# Application Layers
 
-### 2. Server Layer (`src/server/`)
+## Client Layer
 
-- **Ports**: `ports/index.ts` defines Forge resolver functions callable from client via `invoke()`
-- **Task Dispatcher**: `tasks/index.ts` routes different task types to specific handlers
-- **Task Handlers**: Individual modules (policies, policy, issues, classify, annotate, transition, clear)
-- **Tools**: Utilities for external integrations (Gemini AI, Confluence pages, caching)
+- **Entry Point**: tabbed UI interface rendered as a Confluence macro
+- **View Components**: Agreement, Policies, Issues, and Chat interfaces
+- **Hooks**: custom React hooks for resource data management
+- **Ports**: bridge functions wrapping `invoke()` calls to server resolvers
 
-### 3. Shared Layer (`src/shared/`)
+## Server Layer
 
-- **Task System**: `tasks.ts` defines task types, status tracking, and activity states
-- **Type Definitions**: Common types for documents, issues, languages across client/server
-- **Utilities**: Type checking functions (`isString()`, `isDefined()`, etc.)
+- **Ports**: Forge resolver functions implementing resource-centric handlers
+- **Store**: event-driven store providing the single source of truth with KVS persistence and event publishing
+- **Task Handlers**: policy extraction/translation and compliance analysis
+- **Task Dispatcher**: routes queued tasks to the appropriate handler
 
-### 4. External Systems
+## Shared Layer
 
-- **Key-Value Store**: Forge's persistent storage for caching documents, issues, and task status
-- **Async Worker**: Background task execution system for long-running operations
-- **Gemini AI**: Google's AI service for document analysis and natural language processing
+- **Store Model**: `Activity` enum, event types, and type guards shared between client and server
+- **Type Definitions**: documents, issues, and languages
+- **Utilities**: type checking and text processing functions
 
-# Forge Application Architecture
+## External Systems
 
-## Application Structure
+- **Key-Value Store (KVS)**: Forge persistent storage for documents, issues, and job state
+- **Forge Queue**: async task execution via queue consumer
+- **Forge Realtime**: event publishing via `publishGlobal`/`subscribeGlobal`
+- **Gemini AI**: document analysis and natural language processing
 
-The application follows Atlassian Forge architecture with async task execution:
+# Resource-Centric Data Model
 
-1. **Frontend Components**: React components using Forge UI library that render within Confluence
-2. **Resolver Functions**: Server-side functions that can be invoked from the client via `invoke()`
-3. **Async Task System**: Long-running tasks executed via queue consumers with job-based status tracking
-4. **Configuration System**: UI for macro configuration (currently disabled in manifest.yml)
+The system is organised around two **resource collections**, each scoped to a Confluence page:
 
-## Component Communication
+- **Policies**: PDF attachments extracted and optionally translated into structured documents
+- **Issues**: compliance concerns detected by AI analysis, each with mutable state, severity, and annotations
 
-- Frontend components use `invoke()` from `@forge/bridge` to call resolver functions
-- Long-running tasks are submitted via `submitTask()` and monitored via `monitorTask()` resolvers
-- Task execution uses Forge queue consumers with job IDs for tracking
-- Configuration data is accessed through `useConfig()` hook
 
-## Key Patterns
+Both collections share the same two-level structure:
 
-- All React components are wrapped in `React.StrictMode`
-- Resolver functions are defined using `Resolver.define()` and exported as `handler`
-- Tasks extend `Provider<T>` interface and include a `readonly type` discriminator
-- Task implementations use `setStatus(job, Activity.X)` for progress updates
-- Resource locking prevents concurrent task execution on the same resources
+- **Catalogue**: the collection as a whole (list of policies, list of issues)
+- **Items**: individual resources within the collection (a single document, a single issue)
 
-# System Workflow
+Each operation targets a specific resource by identity. Reads, writes, and async triggers all address the same resource
+key — two clients requesting the same resource naturally converge on the same state without coordination. This
+resource-centric model maps directly to REST semantics (see [Evolution Opportunities](evolution.md) for the target REST
+API).
 
-The system follows an asynchronous task execution pattern with multiple interacting components:
+`Status<T>` unifies the possible states of any resource: a value (`T`), an `Activity` (async operation in progress), or
+a `Trace` (error). The same `Status<T>` type flows through the server store, client store, events, and UI hooks.
 
-## Task Execution Flow
+# Event-Driven Store
 
-### 1. Task Initiation
+## Server Store
 
-- **Client** launches task via UI interaction
-- **Server** receives task request through Forge resolver
-- **Key-Value Store** initialized with task status (Activity.Submitting)
-- **Async Worker** receives delegated task for background processing
-- **Client** receives task ID for status polling
+The server holds the **main store** acting as the single source of truth for the whole system. The server updates KVS
+directly when handling requests or completing async tasks, then publishes events to notify all connected clients.
 
-### 2. Background Processing
+Events carry full updated state so client caches update directly without server roundtrips.
 
-The async worker executes tasks through iterative AI operations:
+## Client Store
 
-- **Prompt Loading**: Worker reads local prompt templates from co-located `.sys.md` files
-- **Gemini AI Processing**: Worker executes prompts against Gemini API for document analysis
-- **Status Updates**: Worker continuously updates task status in Key-Value Store with Activity states
-- **Result Assembly**: Worker processes AI responses and assembles final task results
+Each client maintains a **local store** kept in sync with the server store through three mechanisms:
 
-### 3. Status Monitoring
+- **Read on demand**: cache hit returns the value; cache miss triggers a server action
+- **Update from events**: Forge Realtime events carry full state, updating the local cache directly
+- **Optimistic on submit**: clients purge local state and optimistically update to the submitting activity
 
-Parallel to background processing:
+## Client/Server Interaction
 
-- **Client Polling**: Client periodically checks task status via server resolver
-- **Server Mediation**: Server retrieves current status from Key-Value Store
-- **Status Propagation**: Current activity state returned to client for UI updates
+All client requests are routed through the store, not sent directly to backend endpoints:
 
-### 4. Task Completion
+- **Synchronous updates**: server handles the request, writes KVS, and publishes an event to clients
+- **Asynchronous actions**: server spawns an async task; the task writes KVS and publishes progress and results to
+  clients via the store
 
-- **Result Storage**: Worker stores final results in Key-Value Store
-- **Status Cleanup**: Server clears task status after successful result retrieval
-- **Result Delivery**: Final task results delivered to client
+See [Interaction Workflows](workflow.md) for the detailed execution flow covering reads, sync updates, async operations,
+deduplication, error handling, and stale task recovery.
 
-## Component Interactions
+# Concurrency
 
-### Client Layer Interactions
+Progress is **state-based**: resource state tracks ongoing async operations, so new clients joining mid-operation get a
+sensible initial state reporting progress.
 
-- **UI State Management**: `ToolCache` context maintains local state for immediate UI responsiveness
-- **Task Orchestration**: React hooks coordinate multiple concurrent tasks and status updates
-- **Forge Bridge**: All server communication flows through `@forge/bridge` invoke mechanism
+**Lockless two-stage deduplication** prevents duplicate job execution without distributed locks. The resolver gate
+checks job state before queuing; the worker gate checks on task entry. If both gates are bypassed by a race condition,
+idempotent work ensures the duplicate produces an equivalent result.
 
-### Server Layer Interactions
-
-- **Task Dispatch**: Central dispatcher routes tasks to appropriate handlers based on task type
-- **Resource Management**: Tools layer manages external service connections and caching strategies
-- **Data Persistence**: All persistent state managed through Key-Value Store with hierarchical keys
-
-### External System Integration
-
-- **Gemini AI**: Provides document analysis, issue detection, and natural language processing
-- **Key-Value Store**: Serves as both cache and persistent state store with timestamp-based validation
-- **Async Worker**: Ensures long-running AI operations don't block user interface interactions
-
-This architecture enables responsive user experience while handling computationally intensive AI operations, with
-comprehensive status tracking and robust error handling throughout the execution pipeline.
+See [Job Scheduling](scheduling.md) for the full deduplication gate design.
