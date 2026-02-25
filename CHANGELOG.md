@@ -28,9 +28,6 @@ Changes deployed to development, pending production promotion.
 
 - Tighten border radii across UI components from medium/large to small
 - Error traces cached uniformly — errors persist until explicitly dismissed instead of silently retried (#18)
-- Reassign state colours: pending=red, active=yellow
-- Use catalogue-specific state ordering (blocked < active < pending < resolved) in issues list
-- Migrate prompt management from Langfuse to local codebase files
 
 ### Fixed
 
@@ -55,6 +52,14 @@ Changes deployed to development, pending production promotion.
 - Analysis results lost on partial KVS write failure during issue caching (#31)
 - Issues endpoint returning stale results instead of current progress during analysis (#31)
 - Title filter losing focus after each keystroke due to nested sidebar component remounting (#15)
+
+## [2026-02-12]
+
+### Changed
+
+- Reassign state colours: pending=red, active=yellow
+- Use catalogue-specific state ordering (blocked < active < pending < resolved) in issues list
+- Migrate prompt management from Langfuse to local codebase files
 
 ### Removed
 
