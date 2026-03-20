@@ -6,18 +6,21 @@ description: |
   covering agreements, policies, issues, and dashboard.
 ---
 
-> [!WARNING]
+The **EC2U PhD Agreements Tool** helps draft cotutelle PhD agreements using an AI‑based approach to compare agreement
+text against institutional policy documents and identify potential compliance issues. It supports local PhD coordinators
+and other stakeholders in managing agreement drafts, attaching and translating institutional policy documents, running
+automated compliance analyses, and tracking identified issues through resolution.
+
+The system is not intended to fully automate processes requiring professional expertise: think of it as a junior
+assistant you can delegate to in order to speed up work, but keeping control over decisions.
+
+> [!IMPORTANT]
 > [AI-based tools can make mistakes](../ai-usage.md): double check results and use them with caution.
 
-The **EC2U PhD Agreements Tool** helps draft cotutelle PhD agreements by comparing agreement text against institutional
-policy documents and identifying potential compliance issues. It runs as a Confluence macro: agreements are authored and
-stored directly within a Confluence workspace.
 
-The system is not intended to fully automate processes requiring professional expertise. Think of it as a junior
-assistant: delegate to speed up work, but keep control over decisions.
-
-All documents are safely stored within the Confluence platform. Data is shared only with certified external cloud
-systems for the duration strictly necessary to complete processing and is never disclosed to third parties.
+The tool runs as a Confluence macro: agreements are authored and stored directly within a Confluence workspace, sharing
+documents and data with certified external cloud systems only for the duration strictly necessary to complete
+processing.
 
 > [!IMPORTANT]
 > To further enhance privacy, share personally identifiable information only when strictly necessary: draft with
